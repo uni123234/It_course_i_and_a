@@ -1,3 +1,35 @@
 import { Routes } from '@angular/router';
+import { EditEmailComponent } from './edit-email/edit-email.component';
+import { EditPasswordComponent } from './edit-password/edit-password.component';
+import { EditPointComponent } from './edit-point/edit-point.component';
+import { GroupChatComponent } from './group-chat/group-chat.component';
+import { HelpCHComponent } from './help-c-h/help-c-h.component';
+import { HomeComponent } from './home/home.component';
+import { LmsForItComponent } from './lms-for-it/lms-for-it.component';
+import { LoginComponent } from './login/login.component';
+import { ResetEmailComponent } from './reset-email/reset-email.component';
+import { ResetPasswordComponent } from './reset-password/reset-password.component';
+import { SignInComponent } from './sign-in/sign-in.component';
+import { TeacherChatComponent } from './teacher-chat/teacher-chat.component';
+import { TeacherLoginComponent } from './teacher-login/teacher-login.component';
+import { TeacherPointAddAndEditComponent } from './teacher-point-add-and-edit/teacher-point-add-and-edit.component';
+import { TeacherSignInComponent } from './teacher-sign-in/teacher-sign-in.component';
 
-export const routes: Routes = [];
+export const routes: Routes = [
+  { path: '', component: HomeComponent },
+  { path: 'edit-email', component: EditEmailComponent },
+  { path: 'edit-password', component: EditPasswordComponent },
+  { path: 'edit-point', component: EditPointComponent },
+  { path: 'group-chat', component: GroupChatComponent },
+  { path: 'help-c-h', component: HelpCHComponent },
+  { path: 'home', component: HomeComponent },
+  { path: 'lms-for-it', component: LmsForItComponent },
+  { path: 'login', component: LoginComponent },
+  { path: 'reset-email', component: ResetEmailComponent },
+  { path: 'reset-password', component: ResetPasswordComponent },
+  { path: 'sign-in', component: SignInComponent },
+  { path: 'teacher-chat', component: TeacherChatComponent },
+  { path: 'teacher-login', component: TeacherLoginComponent },
+  { path: 'teacher-point-add-and-edit', component: TeacherPointAddAndEditComponent },
+  { path: 'teacher-sign-in', component: TeacherSignInComponent },
+];
