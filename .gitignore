@@ -1,6 +1,6 @@
 *pycache*
-/home/user/project/It_course_i_and_a/backend/it_course_backend/db.sqlite3
 *idea*
 *.vscode*    
 *venv*
 backend/it_course_backend/it_course_backend/.env
+backend/it_course_backend/db.sqlite3
