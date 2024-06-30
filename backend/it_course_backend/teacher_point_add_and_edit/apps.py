@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class EditPassswordConfig(AppConfig):
+class TeacherPointAddAndEditConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "edit_passsword"
+    name = "teacher_point_add_and_edit"

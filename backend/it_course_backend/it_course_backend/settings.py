@@ -36,6 +36,23 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "course",
+    "edit_email",
+    "edit_password",
+    "group_chat",
+    "help_and_help_for_course",
+    "home",
+    "lms_for_it",
+    "login_in",
+    "sign_in",
+    "reset_email",
+    "reset_password",
+    "teacher_login",
+    "teacher_sign_in",
+    "teacher_chat",
+    "teacher_point_add_and_edit",
+
+
 ]
 
 MIDDLEWARE = [
