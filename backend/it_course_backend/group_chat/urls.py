@@ -1,8 +1,9 @@
+# group_chat/urls.py
 from django.urls import path
-from . import views
+from .views import GroupChatListCreateView
 
-app_name = 'group_chat'
+app_name = "group_chat"
 
 urlpatterns = [
-    path("", views.group_chat)
+    path("messages/", GroupChatListCreateView.as_view(), name="group_chat"),
 ]

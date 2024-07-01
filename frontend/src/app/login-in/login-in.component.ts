@@ -5,28 +5,28 @@ import { DataService } from '../data.service';
 import { ReactiveFormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-help-c-h',
+  selector: 'app-login-in',
   standalone: true,
   imports: [ReactiveFormsModule, HttpClientModule],
-  templateUrl: './help-c-h.component.html',
-  styleUrls: ['./help-c-h.component.css'],
+  templateUrl: './login-in.component.html',
+  styleUrls: ['./login-in.component.css'],
   providers: [DataService],
 })
-export class HelpCHComponent {
-  helpRequestForm: FormGroup;
+export class LoginInComponent {
+  loginForm: FormGroup;
   message: string = '';
 
   constructor(private fb: FormBuilder, private dataService: DataService) {
-    this.helpRequestForm = this.fb.group({
-      courseId: ['', [Validators.required]],
-      request: ['', [Validators.required]],
+    this.loginForm = this.fb.group({
+      username: ['', [Validators.required]],
+      password: ['', [Validators.required]],
     });
   }
 
-  submitHelpRequest() {
-    if (this.helpRequestForm.valid) {
-      const helpRequestData = this.helpRequestForm.value;
-      this.dataService.submitHelpRequest(helpRequestData).subscribe(
+  login() {
+    if (this.loginForm.valid) {
+      const credentials = this.loginForm.value;
+      this.dataService.userLogin(credentials).subscribe(
         (response) => {
           this.message = response.message;
         },

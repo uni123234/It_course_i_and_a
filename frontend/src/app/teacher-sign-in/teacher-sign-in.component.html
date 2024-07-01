@@ -1,1 +1,34 @@
-<p>teacher-sign-in works!</p>
+<!-- <form [FormGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <div>
+        <label for="username">Username</label>
+        <input id="username" formControlName="username" />
+        <div *ngIf="registerForm.get('username').invalid && registerForm.get('username').touched">
+            Username is required.
+        </div>
+    </div>
+    <div>
+        <label for="email">Email</label>
+        <input id="email" formControlName="email" />
+        <div *ngIf="registerForm.get('email').invalid && registerForm.get('email').touched">
+            Valid email is required.
+        </div>
+    </div>
+    <div>
+        <label for="password1">Password</label>
+        <input id="password1" type="password" formControlName="password1" />
+        <div *ngIf="registerForm.get('password1').invalid && registerForm.get('password1').touched">
+            Password is required.
+        </div>
+    </div>
+    <div>
+        <label for="password2">Confirm Password</label>
+        <input id="password2" type="password" formControlName="password2" />
+        <div *ngIf="registerForm.get('password2').invalid && registerForm.get('password2').touched">
+            Confirm Password is required.
+        </div>
+        <div *ngIf="registerForm.hasError('passwordMismatch') && registerForm.get('password2').touched">
+            Passwords must match.
+        </div>
+    </div>
+    <button type="submit" [disabled]="registerForm.invalid">Register</button>
+</form> -->

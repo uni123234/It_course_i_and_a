@@ -23,8 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'frontend/dist/frontend'),  # Path to the Angular build directory
+    os.path.join(BASE_DIR, "/home/user/project/It_course_i_and_a/frontend/dist/"),
 ]
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -40,28 +41,29 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'users',
-    'course',
-    'edit_email',
-    'edit_password',
-    'group_chat',
-    'help_and_help_for_course',
-    'home',
-    'lms_for_it',
-    'login_in',
-    'sign_in',
-    'reset_email',
-    'reset_password',
-    'teacher_login',
-    'teacher_sign_in',
-    'teacher_chat',
-    'teacher_point_add_and_edit',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "users",
+    "course",
+    "edit_email",
+    "edit_password",
+    "group_chat",
+    "help_and_help_for_course",
+    "home",
+    "lms_for_it",
+    "login_in",
+    "sign_in",
+    "reset_email",
+    "reset_password",
+    "teacher_login",
+    "teacher_sign_in",
+    "teacher_chat",
+    "teacher_point_add_and_edit",
+    "rest_framework",
 ]
 
 MIDDLEWARE = [
@@ -91,6 +93,14 @@ TEMPLATES = [
         },
     },
 ]
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
+    ]
+}
 
 WSGI_APPLICATION = 'it_course_backend.wsgi.application'
 

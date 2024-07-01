@@ -20,20 +20,20 @@ from django.urls import path, include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("course/", include("course.urls", namespace="course")),
-    path("edit_email/", include("edit_email.urls", namespace="edit")),
-    path("edit_password/", include("edit_password.urls", namespace="edit2")),
-    path("group_chat", include("group_chat.urls", namespace="group_chat")),
+    path("", include("course.urls", namespace="course")),
+    path("edit/", include("edit_email.urls", namespace="edit")),
+    path("edit2/", include("edit_password.urls", namespace="edit2")),
+    path("group_chat/", include("group_chat.urls", namespace="group_chat")),
     path("help/", include("help_and_help_for_course.urls", namespace="help")),
     path("", include("home.urls", namespace="home")),
     path("lms/", include("lms_for_it.urls", namespace="lms")),
     path("login/", include("login_in.urls", namespace="login")),
     path("reset_email/", include("reset_email.urls", namespace="reset1")),
     path("reset_password/", include("reset_password.urls", namespace="reset2")),
-    path("sign_in/", include("sign_in.urls", namespace="sign_in")),
+    path("", include("sign_in.urls", namespace="sign_in")),
     path("chat_su/", include("teacher_chat.urls", namespace="chat_su")),
     path("t_login/", include("teacher_login.urls", namespace="t_login")),
     path("points/", include("teacher_point_add_and_edit.urls", namespace="points")),
-    path("t_sign_in/", include("teacher_sign_in.urls", namespace="t_sign_in")),
+    path("", include("teacher_sign_in.urls", namespace="t_sign_in")),
 
 ]

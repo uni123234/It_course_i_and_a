@@ -1,8 +1,12 @@
-# login_in/models.py
 from django.db import models
-from django.conf import settings
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
 
 class LoginAttempt(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    success = models.BooleanField()
-    attempted_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Login attempt by {self.user.username} on {self.timestamp}"
