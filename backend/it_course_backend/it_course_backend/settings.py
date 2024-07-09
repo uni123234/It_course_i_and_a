@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "/home/user/project/It_course_i_and_a/frontend/dist/"),
+    os.path.join(BASE_DIR, '..', '..', 'frontend', 'dist'),
 ]
 
 

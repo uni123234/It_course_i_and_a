@@ -6,10 +6,10 @@ import { GroupChatComponent } from './group-chat/group-chat.component';
 import { HelpCHComponent } from './help-c-h/help-c-h.component';
 import { HomeComponent } from './home/home.component';
 import { LmsForItComponent } from './lms-for-it/lms-for-it.component';
-import { LoginComponent } from './login/login.component';
+import { LoginInComponent } from './login-in/login-in.component';
 import { ResetEmailComponent } from './reset-email/reset-email.component';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
-import { SignInComponent } from './sign-in/sign-in.component';
+import { Sign_InComponent } from './sign-in/sign-in.component';
 import { TeacherChatComponent } from './teacher-chat/teacher-chat.component';
 import { TeacherLoginComponent } from './teacher-login/teacher-login.component';
 import { TeacherPointAddAndEditComponent } from './teacher-point-add-and-edit/teacher-point-add-and-edit.component';
@@ -17,19 +17,19 @@ import { TeacherSignInComponent } from './teacher-sign-in/teacher-sign-in.compon
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
-  { path: 'edit-email', component: EditEmailComponent },
-  { path: 'edit-password', component: EditPasswordComponent },
-  { path: 'edit-point', component: EditPointComponent },
-  { path: 'group-chat', component: GroupChatComponent },
-  { path: 'help-c-h', component: HelpCHComponent },
+  { path: 'edit_email', component: EditEmailComponent },
+  { path: 'edit_password', component: EditPasswordComponent },
+  { path: 'edit_point', component: EditPointComponent },
+  { path: 'group_chat', component: GroupChatComponent },
+  { path: 'help_c_h', component: HelpCHComponent },
   { path: 'home', component: HomeComponent },
-  { path: 'lms-for-it', component: LmsForItComponent },
-  { path: 'login', component: LoginComponent },
-  { path: 'reset-email', component: ResetEmailComponent },
+  { path: 'lms_for_it', component: LmsForItComponent },
+  { path: 'login_in', component: LoginInComponent },
+  { path: 'reset_email', component: ResetEmailComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
-  { path: 'sign-in', component: SignInComponent },
-  { path: 'teacher-chat', component: TeacherChatComponent },
-  { path: 'teacher-login', component: TeacherLoginComponent },
-  { path: 'teacher-point-add-and-edit', component: TeacherPointAddAndEditComponent },
-  { path: 'teacher-sign-in', component: TeacherSignInComponent },
+  { path: 'sign_in', component: Sign_InComponent },
+  { path: 'teacher_chat', component: TeacherChatComponent },
+  { path: 'teacher_login', component: TeacherLoginComponent },
+  { path: 'teacher_point_add_and_edit', component: TeacherPointAddAndEditComponent },
+  { path: 'teacher_sign_in', component: TeacherSignInComponent },
 ];
