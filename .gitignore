@@ -2,5 +2,5 @@
 *idea*
 *.vscode*    
 *venv*
-backend/it_course_backend/it_course_backend/.env
 backend/it_course_backend/db.sqlite3
+backend/it_course_backend/it_course_backend/.env
