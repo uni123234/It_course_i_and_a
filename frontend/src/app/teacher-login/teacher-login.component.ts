@@ -2,11 +2,12 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DataService } from '../data.service';
 import { HttpClientModule } from '@angular/common/http';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-teacher-login',
   standalone: true,
-  imports: [ReactiveFormsModule, HttpClientModule],
+  imports: [ReactiveFormsModule, HttpClientModule,RouterOutlet],
   templateUrl: './teacher-login.component.html',
   styleUrls: ['./teacher-login.component.css'],
   providers: [DataService],

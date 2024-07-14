@@ -7,13 +7,16 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { DataService } from '../data.service';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
-  selector: 'app-teacher-sign-in',
-  templateUrl: './teacher-sign-in.component.html',
-  styleUrls: ['./teacher-sign-in.component.css'],
+  selector: 'app-teacher-register',
+  standalone: true,
+  imports: [ReactiveFormsModule, RouterOutlet],
+  templateUrl: './teacher-register.component.html',
+  styleUrls: ['./teacher-register.component.css'],
 })
-export class TeacherSignInComponent {
+export class TeacherRegisterInComponent {
   registerForm: FormGroup;
 
   constructor(private fb: FormBuilder, private dataService: DataService) {

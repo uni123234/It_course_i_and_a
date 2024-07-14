@@ -5,5 +5,5 @@ from .views import GroupChatListCreateView
 app_name = "group_chat"
 
 urlpatterns = [
-    path("messages/", GroupChatListCreateView.as_view(), name="group_chat"),
+    path("", GroupChatListCreateView.as_view(), name="group_chat"),
 ]

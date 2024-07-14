@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class TeacherSignInConfig(AppConfig):
+class RegisterConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "teacher_sign_in"
+    name = "register"

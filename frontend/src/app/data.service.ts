@@ -1,28 +1,27 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, provideHttpClient, withFetch } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DataService {
-  private apiUrl = '/api/'; // Use /api prefix for the proxy
-
+  private apiUrl = '/';
   constructor(private http: HttpClient) {}
 
   // Method to fetch all courses
   getCourses(): Observable<any> {
-    return this.http.get(`${this.apiUrl}courses/`);
+    return this.http.get(`${this.apiUrl}course/`);
   }
 
   // Method to enroll in a course
-  enrollInCourse(courseId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}courses/enroll/${courseId}/`, {});
-  }
+  // enrollInCourse(courseId: number): Observable<any> {
+  //   return this.http.post(`${this.apiUrl}course/enroll/${courseId}/`, {});
+  // }
 
   // Method to request email change
   requestEmailChange(newEmail: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}edit/email-change/`, {
+    return this.http.post(`${this.apiUrl}edit_email/`, {
       new_email: newEmail,
     });
   }
@@ -33,12 +32,12 @@ export class DataService {
     newPassword: string;
     token: string;
   }): Observable<any> {
-    return this.http.post(`${this.apiUrl}edit2/password-change/`, data);
+    return this.http.post(`${this.apiUrl}edit_password/`, data);
   }
 
   // Method to get group chat messages
   getGroupChatMessages(courseId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}group_chat/messages/`, {
+    return this.http.get(`${this.apiUrl}group_chat/`, {
       params: { course_id: courseId.toString() },
     });
   }
@@ -49,12 +48,12 @@ export class DataService {
     userId: number;
     message: string;
   }): Observable<any> {
-    return this.http.post(`${this.apiUrl}group_chat/messages/`, data);
+    return this.http.post(`${this.apiUrl}group_chat/`, data);
   }
 
   // Method to submit help request
   submitHelpRequest(helpRequestData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}help/request-help/`, helpRequestData);
+    return this.http.post(`${this.apiUrl}help/`, helpRequestData);
   }
 
   // Method for user login
@@ -62,7 +61,7 @@ export class DataService {
     username: string;
     password: string;
   }): Observable<any> {
-    return this.http.post(`${this.apiUrl}login_in/login-in/`, credentials);
+    return this.http.post(`${this.apiUrl}login_in/`, credentials);
   }
 
   // Method for teacher login
@@ -70,7 +69,7 @@ export class DataService {
     username: string;
     password: string;
   }): Observable<any> {
-    return this.http.post(`${this.apiUrl}t_login/t-login/`, credentials);
+    return this.http.post(`${this.apiUrl}t-login/`, credentials);
   }
 
   userRegister(credentials: {
@@ -79,7 +78,7 @@ export class DataService {
     password1: string;
     password2: string;
   }): Observable<any> {
-    return this.http.post(`${this.apiUrl}sign_in/register/`, credentials);
+    return this.http.post(`${this.apiUrl}register/`, credentials);
   }
 
   teacherRegister(credentials: {
@@ -89,7 +88,7 @@ export class DataService {
     password2: string;
   }): Observable<any> {
     return this.http.post(
-      `${this.apiUrl}teacher_sign_in/register/`,
+      `${this.apiUrl}register_t/`,
       credentials
     );
   }

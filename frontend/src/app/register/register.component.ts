@@ -1,13 +1,16 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DataService } from '../data.service';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
-  selector: 'app-sign_in',
-  templateUrl: './sign-in.component.html',
-  styleUrls: ['./sign-in.component.css'],
+  selector: 'app-register',
+  standalone: true,
+  imports: [RouterOutlet],
+  templateUrl: './register.component.html',
+  styleUrls: ['./register.component.css'],
 })
-export class Sign_InComponent {
+export class RegisterComponent {
   registerForm: FormGroup;
 
   constructor(private fb: FormBuilder, private dataService: DataService) {

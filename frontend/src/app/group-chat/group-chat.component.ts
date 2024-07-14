@@ -1,9 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DataService } from '../data.service';
+import { RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-group-chat',
+  standalone: true, // Mark the component as standalone
+  imports: [CommonModule, RouterOutlet],
   templateUrl: './group-chat.component.html',
   styleUrls: ['./group-chat.component.css'],
 })

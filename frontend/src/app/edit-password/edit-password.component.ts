@@ -3,11 +3,12 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { DataService } from '../data.service';
 import { ReactiveFormsModule } from '@angular/forms';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-edit-password',
   standalone: true,
-  imports: [ReactiveFormsModule, HttpClientModule],
+  imports: [ReactiveFormsModule, HttpClientModule, RouterOutlet],
   templateUrl: './edit-password.component.html',
   styleUrls: ['./edit-password.component.css'],
   providers: [DataService],

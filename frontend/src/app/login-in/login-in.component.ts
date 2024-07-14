@@ -3,11 +3,13 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { DataService } from '../data.service';
 import { ReactiveFormsModule } from '@angular/forms';
+import { RouterOutlet } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login-in',
   standalone: true,
-  imports: [ReactiveFormsModule, HttpClientModule],
+  imports: [ReactiveFormsModule, HttpClientModule, RouterOutlet],
   templateUrl: './login-in.component.html',
   styleUrls: ['./login-in.component.css'],
   providers: [DataService],
@@ -16,7 +18,7 @@ export class LoginInComponent {
   loginForm: FormGroup;
   message: string = '';
 
-  constructor(private fb: FormBuilder, private dataService: DataService) {
+  constructor(private fb: FormBuilder, private dataService: DataService, private router: Router) {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
       password: ['', [Validators.required]],
@@ -29,6 +31,7 @@ export class LoginInComponent {
       this.dataService.userLogin(credentials).subscribe(
         (response) => {
           this.message = response.message;
+          this.router.navigate(['/some-route']); 
         },
         (error) => {
           this.message = 'An error occurred. Please try again.';

@@ -4,5 +4,5 @@ from . import views
 app_name = "edit2"
 
 urlpatterns = [
-    path("password-change/", views.edit_password, name="edit_password"),
+    path("", views.edit_password, name="edit_password"),
 ]

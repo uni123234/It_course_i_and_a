@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-edit-point',
   standalone: true,
-  imports: [],
+  imports: [RouterOutlet],
   templateUrl: './edit-point.component.html',
   styleUrl: './edit-point.component.css'
 })

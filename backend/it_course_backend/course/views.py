@@ -15,29 +15,29 @@ def course_list(request):
     )
 
 
-@csrf_exempt
-@login_required
-def enroll_in_course(request, course_id):
-    if request.method == "POST":
-        # Ensure the user is authenticated
-        if not request.user.is_authenticated:
-            return HttpResponseForbidden(
-                {"status": "error", "message": "User not authenticated"}
-            )
+# @csrf_exempt
+# @login_required
+# def enroll_in_course(request, course_id):
+#     if request.method == "POST":
+#         # Ensure the user is authenticated
+#         if not request.user.is_authenticated:
+#             return HttpResponseForbidden(
+#                 {"status": "error", "message": "User not authenticated"}
+#             )
 
-        # Get the course and handle the enrollment
-        course = get_object_or_404(Course, id=course_id)
-        enrollment, created = Enrollment.objects.get_or_create(
-            course=course, student=request.user
-        )
+#         # Get the course and handle the enrollment
+#         course = get_object_or_404(Course, id=course_id)
+#         enrollment, created = Enrollment.objects.get_or_create(
+#             course=course, student=request.user
+#         )
 
-        if created:
-            return JsonResponse(
-                {"status": "success", "message": "Enrolled successfully"}
-            )
-        else:
-            return JsonResponse({"status": "info", "message": "Already enrolled"})
+#         if created:
+#             return JsonResponse(
+#                 {"status": "success", "message": "Enrolled successfully"}
+#             )
+#         else:
+#             return JsonResponse({"status": "info", "message": "Already enrolled"})
 
-    return HttpResponseBadRequest(
-        {"status": "error", "message": "Invalid request method"}
-    )
+#     return HttpResponseBadRequest(
+#         {"status": "error", "message": "Invalid request method"}
+#     )

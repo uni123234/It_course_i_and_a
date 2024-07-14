@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, '..', '..', 'frontend', 'dist'),
+    os.path.join(BASE_DIR,'\\Users\\It_course_i_and_a\\frontend\\dist'),
 ]
 
 
@@ -56,11 +56,11 @@ INSTALLED_APPS = [
     "home",
     "lms_for_it",
     "login_in",
-    "sign_in",
+    "register",
     "reset_email",
     "reset_password",
     "teacher_login",
-    "teacher_sign_in",
+    "teacher_register",
     "teacher_chat",
     "teacher_point_add_and_edit",
     "rest_framework",
