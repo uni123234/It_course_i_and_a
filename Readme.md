@@ -4,12 +4,12 @@ python -m venv venv
 
 pip install -r requirements.txt
 
-add one 1 cmd
+add 1 cmd
 cd backend/it_course_backend
 
 python manage.py runserver
 
-add one 2 cmd
+add 2 cmd
 
 cd frontend
 
