@@ -6,7 +6,7 @@ from .forms import LoginForm
 
 
 @csrf_exempt
-def login_in(request):
+def login(request):
     if request.method == "POST":
         form = LoginForm(data=request.POST)
         if form.is_valid():

@@ -7,14 +7,14 @@ import { RouterOutlet } from '@angular/router';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'app-login-in',
+  selector: 'app-login',
   standalone: true,
   imports: [ReactiveFormsModule, HttpClientModule, RouterOutlet],
-  templateUrl: './login-in.component.html',
-  styleUrls: ['./login-in.component.css'],
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.css'],
   providers: [DataService],
 })
-export class LoginInComponent {
+export class LoginComponent {
   loginForm: FormGroup;
   message: string = '';
 
