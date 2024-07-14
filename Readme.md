@@ -5,6 +5,7 @@ python -m venv venv
 pip install -r requirements.txt
 
 add 1 cmd
+
 cd backend/it_course_backend
 
 python manage.py runserver
