@@ -69,7 +69,7 @@ export class DataService {
     username: string;
     password: string;
   }): Observable<any> {
-    return this.http.post(`${this.apiUrl}t-login/`, credentials);
+    return this.http.post(`${this.apiUrl}t_login/`, credentials);
   }
 
   userRegister(credentials: {
