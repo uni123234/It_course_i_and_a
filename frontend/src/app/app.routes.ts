@@ -6,7 +6,7 @@ import { GroupChatComponent } from './group-chat/group-chat.component';
 import { HelpCHComponent } from './help-c-h/help-c-h.component';
 import { HomeComponent } from './home/home.component';
 import { LmsForItComponent } from './lms-for-it/lms-for-it.component';
-import { LoginInComponent } from './login-in/login-in.component';
+import { LoginComponent } from './login/login.component';
 import { ResetEmailComponent } from './reset-email/reset-email.component';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
 import { RegisterComponent } from './register/register.component';
@@ -27,7 +27,7 @@ export const routes: Routes = [
   { path: 'help', component: HelpCHComponent },
   { path: 'home', component: HomeComponent },
   { path: 'lms_for_it', component: LmsForItComponent },
-  { path: 'login_in', component: LoginInComponent },
+  { path: 'login', component: LoginComponent},
   { path: 'reset_email', component: ResetEmailComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
   { path: 'register', component: RegisterComponent },

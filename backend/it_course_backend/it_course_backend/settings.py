@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     "help_and_help_for_course",
     "home",
     "lms_for_it",
-    "login_in",
+    "login",
     "register",
     "reset_email",
     "reset_password",

@@ -61,7 +61,7 @@ export class DataService {
     username: string;
     password: string;
   }): Observable<any> {
-    return this.http.post(`${this.apiUrl}login_in/`, credentials);
+    return this.http.post(`${this.apiUrl}login/`, credentials);
   }
 
   // Method for teacher login
