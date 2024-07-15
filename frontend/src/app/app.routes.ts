@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+import { RouterModule, Routes } from '@angular/router';
 import { EditEmailComponent } from './edit-email/edit-email.component';
 import { EditPasswordComponent } from './edit-password/edit-password.component';
 import { EditPointComponent } from './edit-point/edit-point.component';
@@ -15,17 +15,15 @@ import { TeacherLoginComponent } from './teacher-login/teacher-login.component';
 import { TeacherPointAddAndEditComponent } from './teacher-point-add-and-edit/teacher-point-add-and-edit.component';
 import { TeacherRegisterInComponent } from './teacher-register/teacher-register.component';
 import { CourseComponent } from './course/course.component';
+import { NgModule } from '@angular/core';
 
 export const routes: Routes = [
-  { path: '', component: HomeComponent },
   { path: 'course', component: CourseComponent},
-  
   { path: 'edit_email', component: EditEmailComponent },
   { path: 'edit_password', component: EditPasswordComponent },
   { path: 'edit_point', component: EditPointComponent },
   { path: 'group_chat', component: GroupChatComponent },
   { path: 'help', component: HelpCHComponent },
-  { path: 'home', component: HomeComponent },
   { path: 'lms_for_it', component: LmsForItComponent },
   { path: 'login', component: LoginComponent},
   { path: 'reset_email', component: ResetEmailComponent },
@@ -35,4 +33,12 @@ export const routes: Routes = [
   { path: 'teacher_login', component: TeacherLoginComponent },
   { path: 'teacher_point_add_and_edit', component: TeacherPointAddAndEditComponent },
   { path: 'register_t', component: TeacherRegisterInComponent },
+  { path: '', component: HomeComponent },
 ];
+
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule],
+})
+export class AppRoutingModule {}
