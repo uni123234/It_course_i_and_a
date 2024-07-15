@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, provideHttpClient, withFetch } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DataService {
-  private apiUrl = '/';
+  private apiUrl = 'http://localhost:8000/api/';
   constructor(private http: HttpClient) {}
 
   // Method to fetch all courses
@@ -15,9 +15,9 @@ export class DataService {
   }
 
   // Method to enroll in a course
-  // enrollInCourse(courseId: number): Observable<any> {
-  //   return this.http.post(`${this.apiUrl}course/enroll/${courseId}/`, {});
-  // }
+  enrollInCourse(courseId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}course/enroll/${courseId}/`, {});
+  }
 
   // Method to request email change
   requestEmailChange(newEmail: string): Observable<any> {
@@ -87,9 +87,6 @@ export class DataService {
     password1: string;
     password2: string;
   }): Observable<any> {
-    return this.http.post(
-      `${this.apiUrl}register_t/`,
-      credentials
-    );
+    return this.http.post(`${this.apiUrl}register_t/`, credentials);
   }
 }
