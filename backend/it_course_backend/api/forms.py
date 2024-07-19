@@ -6,7 +6,7 @@ User = get_user_model()
 
 
 class LoginForm(forms.Form):
-    username = forms.CharField(max_length=150)
+    identifier = forms.CharField(max_length=150, required=True, help_text="Username or Email")
     password = forms.CharField(widget=forms.PasswordInput)
 
     def __init__(self, *args, **kwargs):
@@ -15,16 +15,25 @@ class LoginForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
-        username = cleaned_data.get('username')
+        identifier = cleaned_data.get('identifier')
         password = cleaned_data.get('password')
-        self.user = authenticate(username=username, password=password)
-        if self.user is None:
-            raise forms.ValidationError("Invalid username or password")
+
+        user = User.objects.filter(username=identifier).first()
+        if not user:
+            user = User.objects.filter(email=identifier).first()
+
+        if user:
+            self.user = authenticate(username=user.username, password=password)
+            if self.user is None:
+                raise forms.ValidationError("Invalid password")
+        else:
+            raise forms.ValidationError("Invalid username/email")
+
         return cleaned_data
 
     def get_user(self):
         return self.user
-    
+
 
 class RegistrationForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput, required=True)

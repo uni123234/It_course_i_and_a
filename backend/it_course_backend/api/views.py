@@ -162,19 +162,26 @@ def home(request):
 @csrf_exempt
 def login(request):
     if request.method == "POST":
-        form = LoginForm(data=request.POST)
+        data = json.loads(request.body)
+        form = LoginForm(data=data)
         if form.is_valid():
             user = form.get_user()
             auth_login(request, user)
             LoginAttempt.objects.create(user=user, timestamp=timezone.now())
             return JsonResponse({"message": "Login successful"}, status=200)
         else:
-            username = request.POST.get('email')
-            user = User.objects.filter(username=username).first()
+            identifier = data.get('identifier')
+            user = None
+            if identifier:
+                user = User.objects.filter(username=identifier).first()
+                if not user:
+                    user = User.objects.filter(email=identifier).first()
+
             if user:
                 LoginAttempt.objects.create(user=user, timestamp=timezone.now())
             return JsonResponse({"errors": form.errors}, status=400)
     return JsonResponse({"error": "Invalid request method"}, status=400)
+
 
 @csrf_exempt
 def register(request):
