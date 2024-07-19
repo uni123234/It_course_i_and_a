@@ -1,19 +1,22 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate
 
-User = get_user_model()
+class LoginForm(forms.Form):
+    username = forms.CharField(max_length=150)
+    password = forms.CharField(widget=forms.PasswordInput)
 
+    def __init__(self, *args, **kwargs):
+        self.user = None
+        super().__init__(*args, **kwargs)
 
-class LoginForm(AuthenticationForm):
-    def confirm_login_allowed(self, user):
-        if not user.is_active:
-            raise forms.ValidationError(
-                ("This account is inactive."),
-                code="inactive",
-            )
-        if not user.is_email_verified():
-            raise forms.ValidationError(
-                ("Email is not verified."),
-                code="email_not_verified",
-            )
+    def clean(self):
+        cleaned_data = super().clean()
+        username = cleaned_data.get('username')
+        password = cleaned_data.get('password')
+        self.user = authenticate(username=username, password=password)
+        if self.user is None:
+            raise forms.ValidationError("Invalid username or password")
+        return cleaned_data
+
+    def get_user(self):
+        return self.user
