@@ -10,10 +10,6 @@ import { LoginComponent } from './login/login.component';
 import { ResetEmailComponent } from './reset-email/reset-email.component';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
 import { RegisterComponent } from './register/register.component';
-import { TeacherChatComponent } from './teacher-chat/teacher-chat.component';
-import { TeacherLoginComponent } from './teacher-login/teacher-login.component';
-import { TeacherPointAddAndEditComponent } from './teacher-point-add-and-edit/teacher-point-add-and-edit.component';
-import { TeacherRegisterInComponent } from './teacher-register/teacher-register.component';
 import { CourseComponent } from './course/course.component';
 import { NgModule } from '@angular/core';
 
@@ -29,10 +25,6 @@ export const routes: Routes = [
   { path: 'reset_email', component: ResetEmailComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
   { path: 'register', component: RegisterComponent },
-  { path: 'teacher_chat', component: TeacherChatComponent },
-  { path: 'teacher_login', component: TeacherLoginComponent },
-  { path: 'teacher_point_add_and_edit', component: TeacherPointAddAndEditComponent },
-  { path: 'register_t', component: TeacherRegisterInComponent },
   { path: '', component: HomeComponent },
 ];
 

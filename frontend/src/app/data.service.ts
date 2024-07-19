@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class DataService {
-  private apiUrl = 'http://localhost:8000/';
+  private apiUrl = 'http://localhost:8000/api/';
   constructor(private http: HttpClient) {}
 
   // Method to fetch all courses
@@ -61,6 +61,7 @@ export class DataService {
     email: string;
     password: string;
   }): Observable<any> {
+    console.log(credentials)
     return this.http.post(`${this.apiUrl}login/`, credentials);
   }
 
