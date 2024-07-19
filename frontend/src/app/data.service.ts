@@ -58,7 +58,7 @@ export class DataService {
 
   // Method for user login
   userLogin(credentials: {
-    username: string;
+    email: string;
     password: string;
   }): Observable<any> {
     return this.http.post(`${this.apiUrl}login/`, credentials);
@@ -75,8 +75,7 @@ export class DataService {
   userRegister(credentials: {
     username: string;
     email: string;
-    password1: string;
-    password2: string;
+    password: string;
   }): Observable<any> {
     return this.http.post(`${this.apiUrl}register/`, credentials);
   }

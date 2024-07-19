@@ -1,44 +1,64 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AfterViewInit, Component, HostListener, Inject, PLATFORM_ID, ViewEncapsulation } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, NgForm, Validators } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { DataService } from '../data.service';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterOutlet } from '@angular/router';
 import { Router } from '@angular/router';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, HttpClientModule, RouterOutlet],
+  imports: [ReactiveFormsModule, HttpClientModule, RouterOutlet, CommonModule, FormsModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
   providers: [DataService],
+  encapsulation: ViewEncapsulation.None,
 })
 export class LoginComponent {
-  loginForm: FormGroup;
-  message: string = '';
+  isAuthenticated: boolean = false;
+  loginObj: LoginTemplate;
+  credentialsError: string | null = null;
+  // message: string = '';
 
-  constructor(private fb: FormBuilder, private dataService: DataService, private router: Router) {
-    this.loginForm = this.fb.group({
-      username: ['', [Validators.required]],
-      password: ['', [Validators.required]],
-    });
+  constructor(
+    private fb: FormBuilder, 
+    private dataService: DataService, 
+    private router: Router, 
+  ) {
+    this.loginObj = new LoginTemplate();
   }
 
-  login() {
-    if (this.loginForm.valid) {
-      const credentials = this.loginForm.value;
-      this.dataService.userLogin(credentials).subscribe(
-        (response) => {
-          this.message = response.message;
-          this.router.navigate(['/some-route']); 
+  login(loginForm: NgForm) {
+    console.log(this.loginObj.email);
+    if (loginForm.valid) {
+      const loginData = { email: this.loginObj.email, password: this.loginObj.password };
+      this.dataService.userLogin(loginData).subscribe({
+        next: (response) => {
+          console.log('Login successful', response);
+          this.router.navigate(['/']);
         },
-        (error) => {
-          this.message = 'An error occurred. Please try again.';
-        }
-      );
-    } else {
-      this.message = 'Please fill out all fields.';
+        error: (error) => {
+          if (error.status === 401 && error.error.message === 'Invalid credentials') {
+            this.credentialsError = "Неправильне ім'я користувача або пароль";
+          } else {
+            console.error('Login failed', error);
+          }
+        },
+      });
+      // console.log("sfd " + this.authService.getToken());
     }
+  }
+
+}
+
+export class LoginTemplate {
+  email: string;
+  password: string;
+
+  constructor() {
+    this.email = "";
+    this.password = "";
   }
 }

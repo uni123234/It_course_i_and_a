@@ -8,3 +8,4 @@ backend/it_course_backend/it_course_backend/__pycache__/__init__.cpython-312.pyc
 backend/it_course_backend/it_course_backend/__pycache__/settings.cpython-312.pyc
 backend/it_course_backend/it_course_backend/__pycache__/urls.cpython-312.pyc
 
+backend/it_course_backend/it_course_backend/.env

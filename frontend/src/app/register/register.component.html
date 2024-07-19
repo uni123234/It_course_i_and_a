@@ -1,4 +1,37 @@
-<p>sign-in works!</p>
 <router-outlet>
-    <base href="/register/" />
+    <!-- <div class="background-container">
+    </div> -->
+    <div class="container">
+        <div class="image-section"></div>
+        <div class="form-section">
+            <div class="form-container">
+                <h2>Welcome Back!</h2>
+                <form #regForm="ngForm" (ngSubmit)="register(regForm)">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Your username"
+                      [(ngModel)]="regObj.username"
+                      minlength="6"
+                      required
+                      #username="ngModel">
+                    <label for="password">Email</label>
+                    <input type="text" id="email" name="email" placeholder="example@mail.com"
+                    [(ngModel)]="regObj.email"
+                    minlength="6"
+                    required
+                    #email="ngModel">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="********"
+                      [(ngModel)]="regObj.password"
+                      minlength="6"
+                      required
+                      #password="ngModel">
+                    <button type="submit" [disabled]="!regForm.valid">Login</button>
+                    <div class="signup-link">
+                        Don't have an account yet? <a href="#">Create an account</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+        
 </router-outlet>
