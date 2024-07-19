@@ -54,11 +54,13 @@ export class RegisterComponent {
 export class RegTemplate {
   email: string;
   password: string;
+  password2: string;
   username: string;
 
   constructor() {
     this.email = "";
     this.password = "";
+    this.password2 = ""
     this.username = "";
   }
 }

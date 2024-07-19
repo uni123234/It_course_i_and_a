@@ -59,12 +59,16 @@ body, html {
     box-shadow: inset 0 4px 4px rgba(0, 0, 0 , 0.25);
 }
 
-.form-container input[type="text"]::placeholder, .form-container input[type="password"]::placeholder {
+.form-container input[type="text"]::placeholder, .form-container input[type="password"]::placeholder .form-container input[type="password2"]::placeholder{
     color: #b3b3b3;
     line-height: 25px;
 }
 
 .form-container input[type="password"]::placeholder {
+    transform: translateY(20%);
+}
+
+.form-container input[type="password2"]::placeholder {
     transform: translateY(20%);
 }
 
