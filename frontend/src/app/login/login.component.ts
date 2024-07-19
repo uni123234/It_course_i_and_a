@@ -34,6 +34,7 @@ export class LoginComponent {
     console.log(this.loginObj.email);
     if (loginForm.valid) {
       const loginData = { email: this.loginObj.email, password: this.loginObj.password };
+      console.log(loginData)
       this.dataService.userLogin(loginData).subscribe({
         next: (response) => {
           console.log('Login successful', response);

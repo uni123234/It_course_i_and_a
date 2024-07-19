@@ -34,14 +34,14 @@ export class RegisterComponent {
       const regData = { email: this.regObj.email, password: this.regObj.password, username: this.regObj.username   };
       this.dataService.userRegister(regData).subscribe({
         next: (response) => {
-          console.log('Login successful', response);
+          console.log('Register successful', response);
           this.router.navigate(['/']);
         },
         error: (error) => {
           if (error.status === 401 && error.error.message === 'Invalid credentials') {
             this.credentialsError = "Неправильне ім'я користувача або пароль";
           } else {
-            console.error('Login failed', error);
+            console.error('Register failed', error);
           }
         },
       });
