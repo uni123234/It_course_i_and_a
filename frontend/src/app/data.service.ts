@@ -77,6 +77,7 @@ export class DataService {
     email: string;
     password: string;
   }): Observable<any> {
+    console.log(credentials)
     return this.http.post(`${this.apiUrl}register/`, credentials);
   }
 
