@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpErrorResponse, HttpResponse } from '@angular/common/http';
+import { catchError, map, Observable, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -57,12 +57,34 @@ export class DataService {
   }
 
   // Method for user login
-  userLogin(credentials: {
-    email: string;
-    password: string;
-  }): Observable<any> {
-    console.log(credentials)
-    return this.http.post(`${this.apiUrl}login/`, credentials);
+  userLogin(credentials: { email: string; password: string }): Observable<any> {
+    console.log(credentials);
+    return this.http.post(`${this.apiUrl}login/`, credentials, { observe: 'response' }).pipe(
+      map((response: HttpResponse<any>) => {
+        const body = response.body;
+        const token = body?.token;
+        console.log("token2 " + token);
+        if (token) {
+          // this.authService.setToken(token);
+          // const email: string = credentials.email;
+          // this.authService.setUser(email);
+        }
+        return body;
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  private handleError(error: HttpErrorResponse) {
+    let errorMessage = 'Unknown error!';
+    if (error.error instanceof ErrorEvent) {
+      // Client-side errors
+      errorMessage = `Error: ${error.error.message}`;
+    } else {
+      // Server-side errors
+      errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
+    }
+    return throwError(errorMessage);
   }
 
   userRegister(credentials: {
