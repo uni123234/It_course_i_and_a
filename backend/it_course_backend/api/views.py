@@ -64,14 +64,20 @@ class LoginView(APIView):
             LoginAttempt.objects.create(user=user)
 
             refresh = RefreshToken.for_user(user)
-            response = Response({
+            response_data = {
                 "message": "Login successful",
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
-            }, status=status.HTTP_200_OK)
+                "user": {
+                    "username": user.username,
+                    "email": user.email,
+                }
+            }
 
+            response = Response(response_data, status=status.HTTP_200_OK)
             response.set_cookie(key='sessionid', value=request.session.session_key, httponly=True, samesite='Lax')
             return response
+        logger.error('Login error: %s', serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

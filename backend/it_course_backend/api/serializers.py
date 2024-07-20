@@ -36,6 +36,7 @@ class LoginSerializer(serializers.Serializer):
             return user
         raise serializers.ValidationError("Invalid email or password")
 
+
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
