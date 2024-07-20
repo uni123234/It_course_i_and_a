@@ -20,14 +20,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # URL for static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, config('DIST_PATH')),
+    os.path.join(BASE_DIR, config('DIST_PATH', default='staticfiles')),
 ]
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = config('SECRET_KEY', default='your-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'api',
     'rest_framework',
+    'rest_framework.authtoken',
+    'rest_framework_simplejwt',  # Corrected the app name
 ]
 
 MIDDLEWARE = [
@@ -79,8 +81,11 @@ TEMPLATES = [
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
 }
 
 WSGI_APPLICATION = 'it_course_backend.wsgi.application'
