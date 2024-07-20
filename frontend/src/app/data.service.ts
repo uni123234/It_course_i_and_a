@@ -65,14 +65,6 @@ export class DataService {
     return this.http.post(`${this.apiUrl}login/`, credentials);
   }
 
-  // Method for teacher login
-  teacherLogin(credentials: {
-    username: string;
-    password: string;
-  }): Observable<any> {
-    return this.http.post(`${this.apiUrl}t_login/`, credentials);
-  }
-
   userRegister(credentials: {
     username: string;
     email: string;
@@ -80,14 +72,5 @@ export class DataService {
   }): Observable<any> {
     console.log(credentials)
     return this.http.post(`${this.apiUrl}register/`, credentials);
-  }
-
-  teacherRegister(credentials: {
-    username: string;
-    email: string;
-    password1: string;
-    password2: string;
-  }): Observable<any> {
-    return this.http.post(`${this.apiUrl}register_t/`, credentials);
   }
 }
