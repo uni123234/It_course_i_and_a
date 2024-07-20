@@ -59,7 +59,9 @@ class LoginView(APIView):
             user = serializer.validated_data
             auth_login(request, user)
             LoginAttempt.objects.create(user=user)
-            return Response({"message": "Login successful"}, status=status.HTTP_200_OK)
+            response = Response({"message": "Login successful"}, status=status.HTTP_200_OK)
+            response.set_cookie(key='sessionid', value=request.session.session_key, httponly=True, samesite='Lax')
+            return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @csrf_exempt
