@@ -1,12 +1,13 @@
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 User = get_user_model()
 
 
 class LoginForm(forms.Form):
-    identifier = forms.CharField(max_length=150, required=True, help_text="Username or Email")
+    email = forms.EmailField(required=True)
     password = forms.CharField(widget=forms.PasswordInput)
 
     def __init__(self, *args, **kwargs):
@@ -15,20 +16,17 @@ class LoginForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
-        identifier = cleaned_data.get('identifier')
+        email = cleaned_data.get('email')
         password = cleaned_data.get('password')
 
-        user = User.objects.filter(username=identifier).first()
-        if not user:
-            user = User.objects.filter(email=identifier).first()
-
-        if user:
+        if email and password:
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                raise forms.ValidationError("Invalid email or password")
             self.user = authenticate(username=user.username, password=password)
             if self.user is None:
-                raise forms.ValidationError("Invalid password")
-        else:
-            raise forms.ValidationError("Invalid username/email")
-
+                raise forms.ValidationError("Invalid email or password")
         return cleaned_data
 
     def get_user(self):
@@ -43,10 +41,20 @@ class RegistrationForm(forms.ModelForm):
         model = User
         fields = ("username", "email", "password")
 
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            return email
+        else:
+            raise forms.ValidationError("This email is not registered. Please use an existing account.")
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username=username).exists():
+            return username
+        else:
+            raise forms.ValidationError("This username is not registered. Please use an existing account.")
 
     def save(self, commit=True):
-        user = super().save(commit=False)
-        user.set_password(self.cleaned_data["password"])
-        if commit:
-            user.save()
-        return user
+        # Skip saving the user, just authenticate the existing one
+        return authenticate(username=self.cleaned_data['username'], password=self.cleaned_data['password'])

@@ -30,26 +30,27 @@ export class LoginComponent {
     this.loginObj = new LoginTemplate();
   }
 
-  login(loginForm: NgForm) {
-    console.log(this.loginObj.email);
-    if (loginForm.valid) {
-      const loginData = { email: this.loginObj.email, password: this.loginObj.password };
-      console.log(loginData)
-      this.dataService.userLogin(loginData).subscribe({
-        next: (response) => {
-          console.log('Login successful', response);
-          this.router.navigate(['/']);
-        },
-        error: (error) => {
-          if (error.status === 401 && error.error.message === 'Invalid credentials') {
-            this.credentialsError = "Неправильне ім'я користувача або пароль";
-          } else {
-            console.error('Login failed', error);
-          }
-        },
-      });
-      // console.log("sfd " + this.authService.getToken());
-    }
+    login(loginForm: NgForm) {;
+      if (loginForm.valid) {
+          const loginData = {
+              email: this.loginObj.email,
+              password: this.loginObj.password,
+              timestamp: new Date().toISOString()
+          };
+          this.dataService.userLogin(loginData).subscribe({
+              next: (response) => {
+                  console.log('Login successful', response);
+                  this.router.navigate(['/']);
+              },
+              error: (error) => {
+                  if (error.status === 401 && error.error.message === 'Invalid credentials') {
+                      this.credentialsError = "Неправильне ім'я користувача або пароль";
+                  } else {
+                      console.error('Login failed', error);
+                  }
+              },
+          });
+      }
   }
 
 }

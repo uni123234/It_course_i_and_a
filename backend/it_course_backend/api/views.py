@@ -58,6 +58,7 @@ class LoginView(APIView):
         if serializer.is_valid():
             user = serializer.validated_data
             auth_login(request, user)
+            LoginAttempt.objects.create(user=user)
             return Response({"message": "Login successful"}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -112,6 +113,7 @@ def request_email_change(request):
         return JsonResponse({"message": "Email change requested. Please check your new email for confirmation link."})
     return JsonResponse({"error": "Invalid request method"}, status=400)
 
+
 @csrf_exempt
 def edit_password(request):
     if request.method == "POST":
@@ -129,6 +131,7 @@ def edit_password(request):
             return JsonResponse({"error": "User does not exist."}, status=400)
     return JsonResponse({"error": "Invalid request method."}, status=400)
 
+
 class GroupChatListCreateView(generics.ListCreateAPIView):
     queryset = GroupChat.objects.all()
     serializer_class = GroupChatSerializer
@@ -142,6 +145,7 @@ class GroupChatListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
 
 @csrf_exempt
 def request_help(request):
@@ -159,6 +163,7 @@ def request_help(request):
 def home(request):
     return HttpResponse("Hello, world. You're at the home page.")
 
+
 @csrf_exempt
 def login(request):
     if request.method == "POST":
@@ -167,18 +172,16 @@ def login(request):
         if form.is_valid():
             user = form.get_user()
             auth_login(request, user)
-            LoginAttempt.objects.create(user=user, timestamp=timezone.now())
+            LoginAttempt.objects.create(user=user)
             return JsonResponse({"message": "Login successful"}, status=200)
         else:
-            identifier = data.get('identifier')
+            identifier = data.get('email')
             user = None
             if identifier:
-                user = User.objects.filter(username=identifier).first()
-                if not user:
-                    user = User.objects.filter(email=identifier).first()
+                user = User.objects.filter(email=identifier).first()
 
             if user:
-                LoginAttempt.objects.create(user=user, timestamp=timezone.now())
+                LoginAttempt.objects.create(user=user)
             return JsonResponse({"errors": form.errors}, status=400)
     return JsonResponse({"error": "Invalid request method"}, status=400)
 
