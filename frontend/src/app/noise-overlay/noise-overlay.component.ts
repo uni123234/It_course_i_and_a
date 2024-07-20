@@ -16,6 +16,7 @@ export class NoiseOverlayComponent implements AfterViewInit {
       this.generateNoiseTexture();
     }
   }
+  
   generateNoiseTexture(): void {
     const canvas = document.getElementById('noiseCanvas') as HTMLCanvasElement;
     const ctx = canvas.getContext('2d');

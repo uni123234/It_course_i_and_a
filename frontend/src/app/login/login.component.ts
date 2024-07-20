@@ -16,6 +16,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
   providers: [DataService],
   encapsulation: ViewEncapsulation.None,
 })
+
 export class LoginComponent {
   isAuthenticated: boolean = false;
   loginObj: LoginTemplate;

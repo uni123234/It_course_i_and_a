@@ -15,6 +15,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
   styleUrls: ['./register.component.css'],
   encapsulation: ViewEncapsulation.None,
 })
+
 export class RegisterComponent {
   regObj: RegTemplate;
   credentialsError: string | null = null;
