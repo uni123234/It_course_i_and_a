@@ -9,6 +9,9 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
+
 import json
 import secrets
 import logging
@@ -59,10 +62,33 @@ class LoginView(APIView):
             user = serializer.validated_data
             auth_login(request, user)
             LoginAttempt.objects.create(user=user)
-            response = Response({"message": "Login successful"}, status=status.HTTP_200_OK)
+
+            refresh = RefreshToken.for_user(user)
+            response = Response({
+                "message": "Login successful",
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            }, status=status.HTTP_200_OK)
+
             response.set_cookie(key='sessionid', value=request.session.session_key, httponly=True, samesite='Lax')
             return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"message": "Logout successful"}, status=status.HTTP_205_RESET_CONTENT)
+        except KeyError:
+            return Response({"error": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
+        except TokenError:
+            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 @csrf_exempt
 def course_list(request):
