@@ -10,11 +10,31 @@ body, html {
 .sidebar {
     width: 250px;
     height: 100vh;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.4) 25%, rgba(255,255, 255, 0) 100% );
     color: #fff;
-    padding: 20px;
+    padding-top: 80px;
+    padding-left: 20px;
+    padding-right: 20px;
     box-sizing: border-box;
     position: fixed;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+}
+
+.sidebar-content {
+    margin-top: 60px;
+}
+
+.sidebar::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, rgb(0,0,0) 35%, rgba(102, 102, 102, 0) 100%);
+    opacity: 0.2; /* 20% opacity */
+    z-index: -1; /* Ensure the gradient is behind the content */
 }
 
 .sidebar h2 {

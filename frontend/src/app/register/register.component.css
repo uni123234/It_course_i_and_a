@@ -16,6 +16,8 @@ body, html {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
     overflow: hidden;
+    position: relative; /* Ensure position is set relative to parent */
+    top: 30px; /* Adjust based on half of navbar height */
 }
 
 .image-section {
