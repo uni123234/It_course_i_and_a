@@ -1,13 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { catchError, map, Observable, throwError } from 'rxjs';
+import { AuthService } from './auth.service';
+import { jwtDecode } from 'jwt-decode';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DataService {
   private apiUrl = 'http://localhost:8000/api/';
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authService: AuthService) {}
 
   // Method to fetch all courses
   getCourses(): Observable<any> {
@@ -62,12 +64,11 @@ export class DataService {
     return this.http.post(`${this.apiUrl}login/`, credentials, { observe: 'response' }).pipe(
       map((response: HttpResponse<any>) => {
         const body = response.body;
-        const token = body?.token;
+        const token = body?.refresh;
+        const email: string = credentials.email;
         console.log("token2 " + token);
         if (token) {
-          // this.authService.setToken(token);
-          // const email: string = credentials.email;
-          // this.authService.setUser(email);
+          this.authService.setToken(token)
         }
         return body;
       }),
@@ -85,6 +86,14 @@ export class DataService {
       errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
     }
     return throwError(errorMessage);
+  }
+
+  logout(): void {
+    localStorage.removeItem('authToken');
+  }
+
+  isAuthenticated(): boolean {
+    return !!localStorage.getItem('authToken');
   }
 
   userRegister(credentials: {
