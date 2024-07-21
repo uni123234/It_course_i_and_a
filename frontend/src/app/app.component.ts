@@ -1,4 +1,4 @@
-import { Component, NgModule } from '@angular/core';
+import { Component, NgModule, ViewEncapsulation } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NoiseOverlayComponent } from './noise-overlay/noise-overlay.component';
 
@@ -7,7 +7,8 @@ import { NoiseOverlayComponent } from './noise-overlay/noise-overlay.component';
   standalone: true,
   imports: [RouterOutlet, NoiseOverlayComponent],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrl: './app.component.css',
+  encapsulation: ViewEncapsulation.None,
 })
 export class AppComponent {
   title = 'frontend';

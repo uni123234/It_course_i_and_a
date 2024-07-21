@@ -36,7 +36,7 @@ export class RegisterComponent {
       this.dataService.userRegister(regData).subscribe({
         next: (response) => {
           console.log('Register successful', response);
-          this.router.navigate(['/']);
+          this.router.navigate(['/login']);
         },
         error: (error) => {
           if (error.status === 401 && error.error.message === 'Invalid credentials') {

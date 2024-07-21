@@ -6,6 +6,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { RouterOutlet } from '@angular/router';
 import { Router } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { AuthService } from '../auth.service';
 
 @Component({
   selector: 'app-login',
@@ -26,7 +27,8 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder, 
     private dataService: DataService, 
-    private router: Router, 
+    private router: Router,
+    private authService: AuthService
   ) {
     this.loginObj = new LoginTemplate();
   }
@@ -41,6 +43,9 @@ export class LoginComponent {
           this.dataService.userLogin(loginData).subscribe({
               next: (response) => {
                   console.log('Login successful', response);
+                  const username = response['user']['username']
+                  if (username) {
+                  this.authService.setUser(username) }
                   this.router.navigate(['/']);
               },
               error: (error) => {
