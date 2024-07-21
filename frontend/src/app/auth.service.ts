@@ -19,10 +19,7 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    if (typeof localStorage !== 'undefined') {
-      return localStorage.getItem(this.TOKEN_KEY);
-    }
-    return null;
+    return localStorage.getItem(this.TOKEN_KEY);
   }
 
   removeToken(): void {
