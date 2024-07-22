@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 
 @Injectable({
@@ -9,6 +9,7 @@ export class AuthService {
 
   private readonly TOKEN_KEY = 'auth_token';
   private readonly USER_KEY = 'user_data';
+  private loggedIn = new BehaviorSubject<boolean>(this.isTokenPresent());
 
   constructor() { }
 
@@ -22,16 +23,20 @@ export class AuthService {
     return localStorage.getItem(this.TOKEN_KEY);
   }
 
+  isLoggedIn(): Observable<boolean> {
+    return this.loggedIn.asObservable();
+  }
+
   removeToken(): void {
     localStorage.removeItem(this.TOKEN_KEY);
   }
 
-  isAuthenticated(): boolean {
-    return this.getToken() !== null;
+  private isTokenPresent(): boolean {
+    return !!this.getToken();
   }
 
-  isAuthenticatedObservable(): Observable<boolean> {
-    return of(this.isAuthenticated());
+  getAuthorizationToken(): string | null {
+    return this.getToken();
   }
 
   setUser(email: string): void {

@@ -14,6 +14,8 @@ import { CourseComponent } from './course/course.component';
 import { NgModule } from '@angular/core';
 import { NoiseOverlayComponent } from './noise-overlay/noise-overlay.component';
 import { AppComponent } from './app.component';
+import { AuthGuard } from './auth.guard';
+import { LoginGuard } from './login.guard';
 
 export const routes: Routes = [
   { path: 'course', component: CourseComponent},
@@ -23,11 +25,11 @@ export const routes: Routes = [
   { path: 'group_chat', component: GroupChatComponent },
   { path: 'help', component: HelpCHComponent },
   { path: 'lms_for_it', component: LmsForItComponent },
-  { path: 'login', component: LoginComponent},
+  { path: 'login', component: LoginComponent, canActivate: [LoginGuard]},
   { path: 'reset_email', component: ResetEmailComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
-  { path: 'register', component: RegisterComponent },
-  { path: '', component: HomeComponent },
+  { path: 'register', component: RegisterComponent, canActivate: [LoginGuard] },
+  { path: '', component: HomeComponent, canActivate: [AuthGuard] },
 ];
 
 
