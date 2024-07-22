@@ -14,6 +14,8 @@ import { CourseComponent } from './course/course.component';
 import { NgModule } from '@angular/core';
 import { NoiseOverlayComponent } from './noise-overlay/noise-overlay.component';
 import { AppComponent } from './app.component';
+import { provideClientHydration } from '@angular/platform-browser';
+import { provideServerRendering } from '@angular/platform-server';
 
 export const routes: Routes = [
   { path: 'course', component: CourseComponent},
@@ -33,6 +35,10 @@ export const routes: Routes = [
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
+  providers: [
+    provideClientHydration(),
+    provideServerRendering(),
+  ]
 })
 export class AppRoutingModule {}

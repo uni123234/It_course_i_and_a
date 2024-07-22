@@ -19,7 +19,10 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem(this.TOKEN_KEY);
+    }
+    return null;
   }
 
   removeToken(): void {
@@ -54,11 +57,16 @@ export class AuthService {
     this.removeUser();
   }
 
-  getDecodedToken(): any {
-    const token = this.getToken();
-    if (token) {
+getDecodedToken(): any {
+  const token = this.getToken();
+  if (token) {
+    try {
       return jwtDecode(token);
+    } catch (error) {
+      console.error('Token decode error:', error);
+      return null;
     }
-    return null;
   }
+  return null;
+}
 }
