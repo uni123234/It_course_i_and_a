@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
-import { jwtDecode } from 'jwt-decode';
 
 @Injectable({
   providedIn: 'root',
@@ -59,22 +58,23 @@ export class DataService {
   }
 
   // Method for user login
-  userLogin(credentials: { email: string; password: string }): Observable<any> {
-    console.log(credentials);
-    return this.http.post(`${this.apiUrl}login/`, credentials, { observe: 'response' }).pipe(
-      map((response: HttpResponse<any>) => {
-        const body = response.body;
-        const token = body?.refresh;
-        const email: string = credentials.email;
-        console.log("token2 " + token);
-        if (token) {
-          this.authService.setToken(token)
-        }
-        return body;
-      }),
-      catchError(this.handleError)
-    );
-  }
+ userLogin(credentials: { email: string; password: string }): Observable<any> {
+  return this.http.post(`${this.apiUrl}login/`, credentials, { observe: 'response' }).pipe(
+    map((response: HttpResponse<any>) => {
+      const body = response.body;
+      const token = body?.refresh;
+      const email: string = credentials.email;
+      if (token) {
+        this.authService.setToken(token);
+      }
+      return body;
+    }),
+    catchError(error => {
+      console.error('Login error:', error);
+      return this.handleError(error);
+    })
+  );
+}
 
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'Unknown error!';
