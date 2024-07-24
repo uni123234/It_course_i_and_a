@@ -1,22 +1,25 @@
-import { Inject, Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { jwtDecode } from 'jwt-decode';
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { CookieService } from 'ngx-cookie-service';
 import { DOCUMENT } from '@angular/common';
-import { Token } from '@angular/compiler';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
-  private token: string;
-  private username: string;
+  private token: string | null;
+  private username: string | null;
 
-  constructor(@Inject(DOCUMENT) private document: Document, private cookieService: CookieService) {
-    const cookies = this.parseCookies(this.document.cookie);
-    this.token = cookies['token']
-    this.username = cookies['username']
+  constructor(@Inject(PLATFORM_ID) private platformId: Object, @Inject(DOCUMENT) private document: Document, private cookieService: CookieService) {
+    if (isPlatformBrowser(this.platformId)) {
+      const cookies = this.parseCookies(this.document.cookie);
+      this.token = cookies['token'];
+      this.username = cookies['username'];
+    } else {
+      this.token = null;
+      this.username = null;
+    }
   }
 
   private parseCookies(cookieString: string): { [key: string]: string } {
@@ -28,30 +31,42 @@ export class AuthService {
   }
 
   setToken(token: string) {
-    this.cookieService.set('token', token);
+    if (isPlatformBrowser(this.platformId)) {
+      this.cookieService.set('token', token);
+      this.token = token;
+    }
   }
 
-  getToken(): string {
+  getToken(): string | null {
     return this.token;
   }
   
-  isAuthenticated(): boolean { // fixed typo
+  isAuthenticated(): boolean {
     return !!this.getToken();
   }
 
   setUser(username: string) {
-    this.cookieService.set('username', username);
+    if (isPlatformBrowser(this.platformId)) {
+      this.cookieService.set('username', username);
+      this.username = username;
+    }
   }
 
-  getUsername(): string {
-    return this.cookieService.get('username');
+  getUsername(): string | null {
+    return this.username;
   }
 
   deleteToken() {
-    this.cookieService.delete('token');
+    if (isPlatformBrowser(this.platformId)) {
+      this.cookieService.delete('token');
+      this.token = null;
+    }
   }
 
   deleteUsername() {
-    this.cookieService.delete('username');
+    if (isPlatformBrowser(this.platformId)) {
+      this.cookieService.delete('username');
+      this.username = null;
+    }
   }
 }
