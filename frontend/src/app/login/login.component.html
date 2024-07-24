@@ -11,15 +11,18 @@
                       minlength="6"
                       required
                       #email="ngModel">
+                    <p *ngIf="loginForm.submitted && emailInvalid">Please write the correct email.</p>
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" placeholder="********"
                       [(ngModel)]="loginObj.password"
                       minlength="6"
                       required
                       #password="ngModel">
-                    <button type="submit" [disabled]="!loginForm.valid">Login</button>
+                    <p *ngIf="loginForm.submitted && passwordInvalid">Password must be at least 6 characters long.</p>
+                    <button type="submit">Login</button>
+                    <p *ngIf="credentialsError">{{ credentialsError }}</p>
                     <div class="signup-link">
-                        Don't have an account yet? <a href="#">Create an account</a>
+                        Don't have an account yet? <a href="/register">Create an account</a>
                     </div>
                 </form>
             </div>

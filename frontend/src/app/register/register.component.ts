@@ -29,9 +29,26 @@ export class RegisterComponent {
     this.regObj = new RegTemplate();
   }
 
+  get emailInvalid(): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return !emailRegex.test(this.regObj.email);
+  }
+
+  get usernameInvalid(): boolean {
+    return this.regObj.username.length < 6;
+  }
+
+  get passwordInvalid(): boolean {
+    return this.regObj.password.length < 6;
+  }
+
+  get confirmInvalid(): boolean {
+    return this.regObj.password != this.regObj.password2
+  }
+
   register(regForm: NgForm) {
     console.log(this.regObj.email);
-    if (regForm.valid) {
+    if (regForm.valid && !this.emailInvalid && !this.passwordInvalid && !this.confirmInvalid && !this.usernameInvalid) {
       const regData = { email: this.regObj.email, password: this.regObj.password, username: this.regObj.username   };
       this.dataService.userRegister(regData).subscribe({
         next: (response) => {
@@ -39,11 +56,8 @@ export class RegisterComponent {
           this.router.navigate(['/login']);
         },
         error: (error) => {
-          if (error.status === 401 && error.error.message === 'Invalid credentials') {
-            this.credentialsError = "Неправильне ім'я користувача або пароль";
-          } else {
-            console.error('Register failed', error);
-          }
+          this.credentialsError = "Неправильне ім'я користувача або пароль";
+          console.error('Register failed', error);
         },
       });
       // console.log("sfd " + this.authService.getToken());

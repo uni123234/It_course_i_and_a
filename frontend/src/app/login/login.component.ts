@@ -33,24 +33,23 @@ export class LoginComponent {
     this.loginObj = new LoginTemplate();
   }
 
+  get emailInvalid(): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return !emailRegex.test(this.loginObj.email);
+  }
+
+  get passwordInvalid(): boolean {
+    return this.loginObj.password.length < 6;
+  }
+
     login(loginForm: NgForm) {;
-      if (loginForm.valid) {
+      if (loginForm.valid && !this.emailInvalid && !this.passwordInvalid) {
           const loginData = {
               email: this.loginObj.email,
               password: this.loginObj.password,
               timestamp: new Date().toISOString()
           };
-
-            
-      // get emailInvalid(): boolean {
-      //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      //   return !emailRegex.test(this.loginObj.email);
-      // }
-
-      // get passwordInvalid(): boolean {
-      //   return this.loginObj.password.length < 6;
-      // }
-
+          console.log('abc')
           this.dataService.userLogin(loginData).subscribe({
               next: (response) => {
                   console.log('Login successful', response);
@@ -60,11 +59,8 @@ export class LoginComponent {
                   this.router.navigate(['/']);
               },
               error: (error) => {
-                  if (error.status === 401 && error.error.message === 'Invalid credentials') {
-                      this.credentialsError = "Неправильне ім'я користувача або пароль";
-                  } else {
-                      console.error('Login failed', error);
-                  }
+                this.credentialsError = "Неправильне ім'я користувача або пароль";
+                console.error('Register failed', error);
               },
           });
       }

@@ -11,27 +11,32 @@
                       minlength="6"
                       required
                       #username="ngModel">
+                      <p *ngIf="regForm.submitted && usernameInvalid">Username must be at least 6 characters long.</p>
                     <label for="email">Email</label>
                     <input type="text" id="email" name="email" placeholder="example@mail.com"
-                    [(ngModel)]="regObj.email"
-                    minlength="6"
-                    required
-                    #email="ngModel">
+                      [(ngModel)]="regObj.email"
+                      minlength="6"
+                      required
+                      #email="ngModel">
+                    <p *ngIf="regForm.submitted && emailInvalid">Please write the correct email.</p>
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" placeholder="********"
                       [(ngModel)]="regObj.password"
                       minlength="6"
                       required
                       #password="ngModel">
+                    <p *ngIf="regForm.submitted && passwordInvalid">Password must be at least 6 characters long.</p>
                     <label for="password2">Confirm your password</label>
                     <input type="password" id="password2" name="password2" placeholder="********"
                       [(ngModel)]="regObj.password2"
                       minlength="6"
                       required
-                      #password="ngModel">
-                    <button type="submit" [disabled]="!regForm.valid">Register</button>
+                      #password="ngModel">  
+                    <p *ngIf="regForm.submitted && confirmInvalid">Passwords do not match.</p>
+                    <button type="submit">Register</button>
+                    <p *ngIf="credentialsError">{{ credentialsError }}</p>
                     <div class="signup-link">
-                        Don't have an account yet? <a href="#">Create an account</a>
+                        Already have an account? <a href="/login">Login</a>
                     </div>
                 </form>
             </div>
