@@ -13,7 +13,7 @@ if (process.env['NODE_ENV'] === 'production') {
 }
 
 bootstrapApplication(AppComponent, {
-  providers: [
+  providers: [provideHttpClient(),
     importProvidersFrom(ReactiveFormsModule),
     provideHttpClient(withFetch()),
     provideRouter(routes),

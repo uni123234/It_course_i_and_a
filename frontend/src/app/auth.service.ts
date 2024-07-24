@@ -1,77 +1,57 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
+import { CookieService } from 'ngx-cookie-service';
+import { DOCUMENT } from '@angular/common';
+import { Token } from '@angular/compiler';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
-  private readonly TOKEN_KEY = 'auth_token';
-  private readonly USER_KEY = 'user_data';
-  private loggedIn = new BehaviorSubject<boolean>(this.isTokenPresent());
+  private token: string;
+  private username: string;
 
-  constructor() { }
-
-  setToken(token: string): void {
-    localStorage.setItem(this.TOKEN_KEY, token);
-    const decodedToken = this.getDecodedToken();
-    console.log(decodedToken)
+  constructor(@Inject(DOCUMENT) private document: Document, private cookieService: CookieService) {
+    const cookies = this.parseCookies(this.document.cookie);
+    this.token = cookies['token']
+    this.username = cookies['username']
   }
 
-  getToken(): string | null {
-    if (typeof localStorage !== 'undefined') {
-      return localStorage.getItem(this.TOKEN_KEY);
-    }
-    return null;
+  private parseCookies(cookieString: string): { [key: string]: string } {
+    return cookieString.split(';').reduce((cookies, cookie) => {
+      const [name, value] = cookie.split('=').map(c => c.trim());
+      cookies[name] = value;
+      return cookies;
+    }, {} as { [key: string]: string });
   }
 
-  isLoggedIn(): Observable<boolean> {
-    return this.loggedIn.asObservable();
+  setToken(token: string) {
+    this.cookieService.set('token', token);
   }
 
-  removeToken(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
+  getToken(): string {
+    return this.token;
   }
-
-  private isTokenPresent(): boolean {
+  
+  isAuthenticated(): boolean { // fixed typo
     return !!this.getToken();
   }
 
-  getAuthorizationToken(): string | null {
-    return this.getToken();
+  setUser(username: string) {
+    this.cookieService.set('username', username);
   }
 
-  setUser(email: string): void {
-    localStorage.setItem(this.USER_KEY, email);
+  getUsername(): string {
+    return this.cookieService.get('username');
   }
 
-  getUser(): string | null {
-    if (typeof localStorage !== 'undefined') {
-      return localStorage.getItem(this.USER_KEY);
-    }
-    return null;
+  deleteToken() {
+    this.cookieService.delete('token');
   }
 
-  removeUser(): void {
-    localStorage.removeItem(this.USER_KEY);
+  deleteUsername() {
+    this.cookieService.delete('username');
   }
-
-  logout(): void {
-    this.removeToken();
-    this.removeUser();
-  }
-
-getDecodedToken(): any {
-  const token = this.getToken();
-  if (token) {
-    try {
-      return jwtDecode(token);
-    } catch (error) {
-      console.error('Token decode error:', error);
-      return null;
-    }
-  }
-  return null;
-}
 }
