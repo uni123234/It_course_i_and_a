@@ -40,6 +40,17 @@ export class LoginComponent {
               password: this.loginObj.password,
               timestamp: new Date().toISOString()
           };
+
+            
+      // get emailInvalid(): boolean {
+      //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      //   return !emailRegex.test(this.loginObj.email);
+      // }
+
+      // get passwordInvalid(): boolean {
+      //   return this.loginObj.password.length < 6;
+      // }
+
           this.dataService.userLogin(loginData).subscribe({
               next: (response) => {
                   console.log('Login successful', response);
