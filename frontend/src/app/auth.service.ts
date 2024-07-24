@@ -1,57 +1,72 @@
-import { Inject, Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { jwtDecode } from 'jwt-decode';
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { BehaviorSubject, map, Observable } from 'rxjs';
 import { CookieService } from 'ngx-cookie-service';
-import { DOCUMENT } from '@angular/common';
-import { Token } from '@angular/compiler';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+  private tokenSubject: BehaviorSubject<string | null>;
+  private usernameSubject: BehaviorSubject<string | null>;
+  public token$: Observable<string | null>;
+  public username$: Observable<string | null>;
+  private isBrowser: boolean;
 
-  private token: string;
-  private username: string;
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private cookieService: CookieService
+  ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
 
-  constructor(@Inject(DOCUMENT) private document: Document, private cookieService: CookieService) {
-    const cookies = this.parseCookies(this.document.cookie);
-    this.token = cookies['token']
-    this.username = cookies['username']
-  }
+    // Initialize subjects with current cookie values or null
+    const token = this.isBrowser ? this.cookieService.get('token') : null;
+    const username = this.isBrowser ? this.cookieService.get('username') : null;
 
-  private parseCookies(cookieString: string): { [key: string]: string } {
-    return cookieString.split(';').reduce((cookies, cookie) => {
-      const [name, value] = cookie.split('=').map(c => c.trim());
-      cookies[name] = value;
-      return cookies;
-    }, {} as { [key: string]: string });
+    this.tokenSubject = new BehaviorSubject<string | null>(token);
+    this.usernameSubject = new BehaviorSubject<string | null>(username);
+    this.token$ = this.tokenSubject.asObservable();
+    this.username$ = this.usernameSubject.asObservable();
   }
 
   setToken(token: string) {
-    this.cookieService.set('token', token);
+    if (this.isBrowser) {
+      this.cookieService.set('token', token);
+      this.tokenSubject.next(token);
+    }
   }
 
-  getToken(): string {
-    return this.token;
+  getToken(): Observable<string | null> {
+    return this.token$;
   }
-  
-  isAuthenticated(): boolean { // fixed typo
-    return !!this.getToken();
+
+  isAuthenticated(): Observable<boolean> {
+    // Directly return whether the token is available without any delays
+    return this.token$.pipe(map(token => !!token));
   }
 
   setUser(username: string) {
-    this.cookieService.set('username', username);
+    if (this.isBrowser) {
+      this.cookieService.set('username', username);
+      this.usernameSubject.next(username);
+    }
   }
 
-  getUsername(): string {
-    return this.cookieService.get('username');
+  getUsername(): Observable<string | null> {
+    return this.username$;
   }
 
   deleteToken() {
-    this.cookieService.delete('token');
+    if (this.isBrowser) {
+      this.cookieService.delete('token');
+      this.tokenSubject.next(null);
+    }
   }
 
   deleteUsername() {
-    this.cookieService.delete('username');
+    if (this.isBrowser) {
+      this.cookieService.delete('username');
+      this.usernameSubject.next(null);
+    }
   }
 }

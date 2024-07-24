@@ -33,7 +33,7 @@ export class NoiseOverlayComponent implements AfterViewInit {
 
       for (let i = 0; i < data.length; i += 4) {
         const isParticle = Math.random() < density;
-        const alpha = isParticle ? Math.floor(Math.random() * 26) : 0; // Random transparency up to 10%
+        const alpha = isParticle ? Math.floor(Math.random() * 20) : 0; // Random transparency up to 10%
         data[i] = 255; // Red
         data[i + 1] = 255; // Green
         data[i + 2] = 255; // Blue
