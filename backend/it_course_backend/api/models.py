@@ -24,17 +24,17 @@ class Enrollment(models.Model):
 
 
 class EmailChangeRequest(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    new_email = models.EmailField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE, unique=True)  
+    new_email = models.EmailField(unique=True)  
     token = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'Email change request for {self.user.username}'
-    
+
 
 class PasswordChangeRequest(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, unique=True)  
     new_password = models.CharField(max_length=128)
     token = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -51,24 +51,24 @@ class GroupChat(models.Model):
 
 
 class HelpRequest(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, unique=True)  
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     request = models.TextField()
     status = models.CharField(max_length=10, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Help request by {self.user.username} for course {self.course.title}"
-    
+        return f"Help request by {self.user.username} for course {self.course.name}"
+
 
 class ITCourse(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
-    instructor = models.ForeignKey(User, on_delete=models.CASCADE)
+    instructor = models.ForeignKey(User, on_delete=models.CASCADE, unique=True) 
 
     def __str__(self):
         return self.title
-    
+
 
 class LoginAttempt(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -76,7 +76,7 @@ class LoginAttempt(models.Model):
 
     def __str__(self):
         return f"Login attempt by {self.user.username} on {self.timestamp}"
-    
+
 
 class RegisterAttempt(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -84,19 +84,18 @@ class RegisterAttempt(models.Model):
 
     def __str__(self):
         return f"Sign-in attempt by {self.user.username} on {self.timestamp}"
-    
+
 
 class EmailResetRequest(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    new_email = models.EmailField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE, unique=True)  
+    new_email = models.EmailField(unique=True)  
     token = models.CharField(max_length=100)
 
     def __str__(self):
         return f'Email reset request for {self.user.username}'
-    
+
 
 class PasswordReset(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, unique=True)  
     token = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
-
