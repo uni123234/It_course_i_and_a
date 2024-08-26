@@ -24,23 +24,27 @@ class Enrollment(models.Model):
 
 
 class EmailChangeRequest(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, unique=True)  
-    new_email = models.EmailField(unique=True)  
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE
+    )  # Changed to OneToOneField
+    new_email = models.EmailField(unique=True)
     token = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'Email change request for {self.user.username}'
+        return f"Email change request for {self.user.username}"
 
 
 class PasswordChangeRequest(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, unique=True)  
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE
+    )  # Changed to OneToOneField
     new_password = models.CharField(max_length=128)
     token = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'Password change request for {self.user.username}'
+        return f"Password change request for {self.user.username}"
 
 
 class GroupChat(models.Model):
@@ -51,7 +55,9 @@ class GroupChat(models.Model):
 
 
 class HelpRequest(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, unique=True)  
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
+    )  # Changed to OneToOneField
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     request = models.TextField()
     status = models.CharField(max_length=10, default="pending")
@@ -64,7 +70,9 @@ class HelpRequest(models.Model):
 class ITCourse(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
-    instructor = models.ForeignKey(User, on_delete=models.CASCADE, unique=True) 
+    instructor = models.OneToOneField(
+        User, on_delete=models.CASCADE
+    )  # Changed to OneToOneField
 
     def __str__(self):
         return self.title
@@ -87,15 +95,19 @@ class RegisterAttempt(models.Model):
 
 
 class EmailResetRequest(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, unique=True)  
-    new_email = models.EmailField(unique=True)  
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE
+    )  # Changed to OneToOneField
+    new_email = models.EmailField(unique=True)
     token = models.CharField(max_length=100)
 
     def __str__(self):
-        return f'Email reset request for {self.user.username}'
+        return f"Email reset request for {self.user.username}"
 
 
 class PasswordReset(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, unique=True)  
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
+    )  # Changed to OneToOneField
     token = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
