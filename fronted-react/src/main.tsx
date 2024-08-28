@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
 import Login from './components/login/login.tsx'
+import './index.css'
 
 import {
   createBrowserRouter,
@@ -11,7 +11,9 @@ import {
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <div>Hello world!</div>,
+    element: <div>Hello world!
+      <button>a</button>
+    </div>,
   },
   {
     path: "/login",
