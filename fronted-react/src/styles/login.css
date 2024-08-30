@@ -98,7 +98,7 @@
         color: #0094FF;
         text-decoration: none;
     }
-    
+
     .background-container {
         position: fixed;
         top: 0;
@@ -107,7 +107,7 @@
         height: 100%;
         z-index: -1; /* Задній план */
     }
-    
+
     p {
         color: red;
         font-size: 14px;

@@ -1,12 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import Login from './components/login/login.tsx'
+import Login from './pages/login.tsx'
 import './index.css'
 
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider, } from "react-router-dom";
 
 const router = createBrowserRouter([
   {
