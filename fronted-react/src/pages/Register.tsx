@@ -71,6 +71,9 @@ const RegisterPage = () => {
 
                             <button className="box-content w-full h-[25px] p-[10px] mt-[19px] mb-[20px] bg-black text-white shadow-md border-none rounded-sm cursor-pointer text-base font-semibold" type="submit">Register</button>
                             {errors.form && <p className="error text-red-500 text-sm font-semibold mt-[-15px]">{errors.form}</p>}
+                            <div className="signup-link mt-[20px] text-[#b3b3b3] text-xs">
+                                Already have an account? <a className="text-[#0094FF] no-underline" href="/login">Login</a>
+                            </div>
                         </form>
                     </div>
                 </div>
