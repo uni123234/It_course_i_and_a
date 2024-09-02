@@ -1,11 +1,18 @@
+.register-page {
 
-
-.login-page {
-
+    margin: 0;
+    padding: 0;
+    font-family: 'Raleway', Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #2d2d2d;
+    
     .container {
         display: flex;
-        width: 900px;
-        height: 550px;
+        width: 950px;
+        height: 650px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         border-radius: 10px;
         overflow: hidden;

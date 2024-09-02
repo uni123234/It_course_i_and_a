@@ -27,11 +27,11 @@ export const routes: Routes = [
   { path: 'group_chat', component: GroupChatComponent },
   { path: 'help', component: HelpCHComponent },
   { path: 'lms_for_it', component: LmsForItComponent },
-  { path: 'login', component: LoginComponent, canActivate: [LoginGuard]},
+  { path: 'login', component: LoginComponent},
   { path: 'reset_email', component: ResetEmailComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
-  { path: 'register', component: RegisterComponent, canActivate: [LoginGuard] },
-  { path: '', component: HomeComponent, canActivate: [AuthGuard] },
+  { path: 'register', component: RegisterComponent},
+  { path: '', component: HomeComponent},
 ];
 
 
