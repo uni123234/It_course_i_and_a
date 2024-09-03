@@ -1,4 +1,5 @@
-import '../styles/Login.css'
+import '@styles/Login.css';
+
 
 function LoginPage() {
 

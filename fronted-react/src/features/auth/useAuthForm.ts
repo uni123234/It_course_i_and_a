@@ -64,6 +64,7 @@ const useAuthForm = ({ initialFields, onSubmit }: UseAuthFormProps) => {
     try {
       await onSubmit(fields);
       setErrors({}); // Очищення помилок при успішному запиті
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       setErrors({ form: 'An unexpected error occurred. Please try again.' });
     }
