@@ -6,16 +6,19 @@ type AuthFormFields = {
   password: string;
   username?: string;
   confirmPassword?: string;
+  firstname?: string;
+  lastname?: string;
 };
 
 type UseAuthFormProps = {
   initialFields: AuthFormFields;
   onSubmit: (fields: AuthFormFields) => Promise<void>;
+  validate?: boolean;
 };
 
-const useAuthForm = ({ initialFields, onSubmit }: UseAuthFormProps) => {
+const useAuthForm = ({ initialFields, onSubmit, validate = true }: UseAuthFormProps) => {
   const [fields, setFields] = useState<AuthFormFields>(initialFields);
-  const [errors, setErrors] = useState<Record<string, string>>({}); // Динамічні помилки для кожного поля
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateFields = () => {
     const newErrors: Record<string, string> = {};
@@ -26,7 +29,7 @@ const useAuthForm = ({ initialFields, onSubmit }: UseAuthFormProps) => {
       newErrors.email = 'Please enter a valid email address.';
     }
 
-    if (fields.username && fields.username.length < 6) {
+    if (validate && fields.username !== undefined && fields.username.length < 6) {
       newErrors.username = 'Username must be at least 6 characters long.';
     }
 
@@ -36,8 +39,16 @@ const useAuthForm = ({ initialFields, onSubmit }: UseAuthFormProps) => {
       newErrors.password = 'Password must be at least 6 characters long.';
     }
 
-    if (fields.confirmPassword && fields.password !== fields.confirmPassword) {
+    if (validate && fields.confirmPassword !== undefined && fields.password !== fields.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match.';
+    }
+
+    if (validate && fields.firstname !== undefined && fields.firstname.length < 2) {
+      newErrors.firstname = 'Fisrt name must be at least 2 characters long.';
+    }
+
+    if (validate && fields.lastname !== undefined && fields.lastname.length < 2) {
+      newErrors.lastname = 'Last name must be at least 2 characters long.';
     }
 
     setErrors(newErrors);
