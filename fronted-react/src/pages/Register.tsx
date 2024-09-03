@@ -1,5 +1,5 @@
 import { AuthInput } from "../components"
-import useAuthForm from '../features/auth/useAuthForm';
+import { useAuthForm } from '../features';
 
 const RegisterPage = () => {
     const { fields, errors, handleChange, handleSubmit } = useAuthForm({
@@ -54,6 +54,7 @@ const RegisterPage = () => {
                                 name="password"
                                 placeholder="Your password"
                                 value={fields.password}
+                                onChange={handleChange}
                             />
                             {errors.password && <p className="error text-red-500 text-sm font-semibold mt-[-15px]">{errors.password}</p>}
 
