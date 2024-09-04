@@ -7,9 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # URL for static files (CSS, JavaScript, Images)
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, config("DIST_PATH", default="staticfiles")),
-]
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/

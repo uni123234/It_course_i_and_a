@@ -13,7 +13,6 @@ from .views import (
     LoginView,
     LogoutView,
     RegisterView,
-    # PasswordResetRequestView,
     PasswordResetConfirmView,
     EmailChangeRequestView,
     EditPasswordView,
@@ -31,7 +30,6 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),
     path("register/", RegisterView.as_view(), name="register"),
     path("logout/", LogoutView.as_view(), name="logout"),
-    # path("reset_email/", PasswordResetRequestView.as_view(), name="reset_email"),
     path(
         "reset_password/<uidb64>/<token>/",
         PasswordResetConfirmView.as_view(),
