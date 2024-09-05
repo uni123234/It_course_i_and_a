@@ -4,7 +4,7 @@ import { API_URL } from '../config';
 
 const RegisterPage = () => {
     const { fields, errors, handleChange, handleSubmit } = useAuthForm({
-        initialFields: { email: '', password: '', username: '', firstname: '', lastname: ''},
+        initialFields: { email: '', password: '', username: '', firstname: '', lastname: '', confirmPassword: ''},
         onSubmit: async (fields) => {
             const { confirmPassword, firstname, lastname, ...restFields } = fields;
             const fieldsToSubmit = {

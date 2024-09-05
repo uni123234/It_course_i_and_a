@@ -1,6 +1,5 @@
 import { useState } from 'react';
 
-// Типи для полів, які можуть використовуватися в обох формах
 type AuthFormFields = {
   email: string;
   password: string;
@@ -39,7 +38,7 @@ const useAuthForm = ({ initialFields, onSubmit, validate = true }: UseAuthFormPr
       newErrors.password = 'Password must be at least 6 characters long.';
     }
 
-    if (validate && fields.confirmPassword !== undefined && fields.password !== fields.confirmPassword) {
+    if (validate && fields.password !== fields.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match.';
     }
 
@@ -52,7 +51,7 @@ const useAuthForm = ({ initialFields, onSubmit, validate = true }: UseAuthFormPr
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Повертає true, якщо немає помилок
+    return Object.keys(newErrors).length === 0; // returns true, if there is no errors
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,7 +60,6 @@ const useAuthForm = ({ initialFields, onSubmit, validate = true }: UseAuthFormPr
       [e.target.name]: e.target.value,
     });
 
-    // Очищення помилки для цього конкретного поля при зміні
     setErrors((prevErrors) => ({
       ...prevErrors,
       [e.target.name]: '',
@@ -74,7 +72,7 @@ const useAuthForm = ({ initialFields, onSubmit, validate = true }: UseAuthFormPr
 
     try {
       await onSubmit(fields);
-      setErrors({}); // Очищення помилок при успішному запиті
+      setErrors({}); // clear the errors if request is succesful
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       setErrors({ form: 'An unexpected error occurred. Please try again.' });
