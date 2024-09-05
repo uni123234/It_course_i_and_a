@@ -1,10 +1,6 @@
-"""
-This module contains views for the API, including user registration,
-login, and other functionality related to courses and user management.
-"""
-
 import secrets
 import logging
+import requests
 
 from django.http import JsonResponse, HttpResponse
 from django.views import View
@@ -16,30 +12,20 @@ from django.utils.encoding import force_str
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 
 from .models import (
     Course,
-    # Enrollment,
-    # PasswordChangeRequest,
     RegisterAttempt,
     EmailChangeRequest,
-    # GroupChat,
-    # HelpRequest,
     LoginAttempt,
 )
 from .serializers import (
-    # GroupChatSerializer,
     LoginSerializer,
     RegisterSerializer,
-    # UserSerializer,
     CourseSerializer,
-    # EnrollmentSerializer,
-    # PasswordChangeRequestSerializer,
-    # RegisterAttemptSerializer,
-    # EmailChangeRequestSerializer,
-    # HelpRequestSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -153,7 +139,8 @@ class LogoutView(generics.GenericAPIView):
             token.blacklist()
             logger.info("User logged out successfully: %s", request.user.username)
             return Response(
-                {"message": "Logout successful"}, status=status.HTTP_205_RESET_CONTENT
+                {"message": "Logout successful"},
+                status=status.HTTP_205_RESET_CONTENT,
             )
         except KeyError:
             logger.error("Logout error: Refresh token is required")
@@ -179,11 +166,11 @@ class CourseListView(generics.ListAPIView):
     serializer_class = CourseSerializer
     permission_classes = [AllowAny]
 
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         """
         Handle GET requests to list all courses.
         """
-        response = super().get(request)
+        response = super().get(request, *args, **kwargs)
         logger.info("Course list retrieved successfully.")
         return response
 
@@ -199,19 +186,20 @@ class EmailChangeRequestView(generics.GenericAPIView):
         """
         Handle POST requests to request an email change.
         """
-        data = request.data
-        new_email = data.get("new_email")
+        new_email = request.data.get("new_email")
 
         if not new_email:
             logger.error("Email change error: New email is required.")
             return Response(
-                {"error": "New email is required"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "New email is required"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         if User.objects.filter(email=new_email).exists():
             logger.error("Email change error: Email already in use.")
             return Response(
-                {"error": "Email already in use"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "Email already in use"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         token = secrets.token_urlsafe(50)
@@ -237,8 +225,7 @@ class EditPasswordView(generics.GenericAPIView):
         """
         Handle POST requests to change the user's password.
         """
-        data = request.data
-        new_password = data.get("new_password")
+        new_password = request.data.get("new_password")
 
         if not new_password:
             logger.error("Password change error: New password is required.")
@@ -251,7 +238,8 @@ class EditPasswordView(generics.GenericAPIView):
         request.user.save()
         logger.info("Password changed successfully for user %s", request.user.username)
         return Response(
-            {"message": "Password changed successfully."}, status=status.HTTP_200_OK
+            {"message": "Password changed successfully."},
+            status=status.HTTP_200_OK,
         )
 
 
@@ -266,10 +254,9 @@ class PasswordResetConfirmView(generics.GenericAPIView):
         """
         Handle POST requests to confirm the password reset.
         """
-        data = request.data
-        token = data.get("token")
-        new_password = data.get("new_password")
-        uidb64 = data.get("uidb64")
+        token = request.data.get("token")
+        new_password = request.data.get("new_password")
+        uidb64 = request.data.get("uidb64")
 
         if not token or not new_password or not uidb64:
             logger.error(
@@ -302,3 +289,77 @@ class PasswordResetConfirmView(generics.GenericAPIView):
             {"message": "Password has been reset successfully."},
             status=status.HTTP_200_OK,
         )
+
+
+class GoogleLoginView(APIView):
+    """
+    View for handling Google login/registration.
+    """
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        """
+        Handles the POST request with the Google token.
+        """
+
+        # Get the Google access token from the request
+        token = request.data.get("token")
+
+        if not token:
+            return Response(
+                {"error": "Token is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Verify token with Google
+            response = requests.get(
+                f"https://www.googleapis.com/oauth2/v3/tokeninfo?id_token={token}",
+                timeout=10,  # Example timeout value
+            )
+            user_info = response.json()
+
+            if "error_description" in user_info:
+                return Response(
+                    {"error": "Invalid Google token"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            email = user_info["email"]
+            first_name = user_info.get("given_name", "")
+            last_name = user_info.get("family_name", "")
+
+            # Check if user already exists
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                # If user doesn't exist, register them
+                user = User.objects.create_user(
+                    username=email,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    password=User.objects.make_random_password(),  # Assign a random password
+                )
+
+            # Generate JWT token
+            refresh = RefreshToken.for_user(user)
+            return Response(
+                {
+                    "message": "Login successful",
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                    "user": {
+                        "username": user.username,
+                        "email": user.email,
+                    },
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except requests.RequestException as e:
+            logger.error("Google authentication failed: %s", str(e))
+            return Response(
+                {"error": "Google authentication failed", "details": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
