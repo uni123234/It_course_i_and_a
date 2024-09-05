@@ -7,6 +7,7 @@ This module contains URL patterns for API endpoints.
 from django.urls import path
 from .views import (
     CourseListView,
+    GoogleLoginView,
     # GroupChatListCreateView,
     HomeView,
     LMSView,
@@ -35,6 +36,7 @@ urlpatterns = [
         PasswordResetConfirmView.as_view(),
         name="reset_password",
     ),
+    path("google-login/", GoogleLoginView.as_view(), name="google_login"),
     path("", HomeView.as_view(), name="home"),
     path("lms/", LMSView.as_view(), name="lms"),
 ]
