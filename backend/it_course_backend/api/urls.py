@@ -8,9 +8,13 @@ from django.urls import path
 from .views import (
     CourseListView,
     GoogleLoginView,
+    GroupListView,
     # GroupChatListCreateView,
     HomeView,
+    HomeworkListCreateView,
     LMSView,
+    LessonListCreateView,
+    LessonListView,
     LoginView,
     LogoutView,
     RegisterView,
@@ -39,4 +43,16 @@ urlpatterns = [
     path("google-login/", GoogleLoginView.as_view(), name="google_login"),
     path("", HomeView.as_view(), name="home"),
     path("lms/", LMSView.as_view(), name="lms"),
+    path('lessons/', LessonListView.as_view(), name='lesson_list'),
+    path('groups/', GroupListView.as_view(), name='group_list'),
+    path(
+        "course/<int:course_id>/lessons/",
+        LessonListCreateView.as_view(),
+        name="lesson_list_create",
+    ),
+    path(
+        "lesson/<int:lesson_id>/homeworks/",
+        HomeworkListCreateView.as_view(),
+        name="homework_list_create",
+    ),
 ]

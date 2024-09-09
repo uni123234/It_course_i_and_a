@@ -8,6 +8,9 @@ from django.contrib.auth import authenticate
 from .models import (
     Course,
     Enrollment,
+    Group,
+    Homework,
+    Lesson,
     PasswordChangeRequest,
     RegisterAttempt,
     EmailChangeRequest,
@@ -36,13 +39,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ["username", "password", "email", "first_name", "last_name"]
         extra_kwargs = {
             "password": {"write_only": True},
-            "last_name": {"required": False}
+            "last_name": {"required": False},
         }
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         return user
-
 
 
 class LoginSerializer(serializers.Serializer):
@@ -138,3 +140,31 @@ class HelpRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = HelpRequest
         fields = "__all__"
+
+
+class LessonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = ["id", "course", "title", "content", "video_url", "created_at"]
+
+
+class HomeworkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Homework
+        fields = [
+            "id",
+            "lesson",
+            "title",
+            "description",
+            "due_date",
+            "submitted_by",
+            "submission_date",
+            "submission_file",
+            "grade",
+        ]
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ["id", "name", "course", "teacher", "students"]

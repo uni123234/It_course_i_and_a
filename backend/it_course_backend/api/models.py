@@ -17,6 +17,37 @@ class Course(models.Model):
     )
 
 
+class Lesson(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="lessons")
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    video_url = models.URLField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} ({self.course.name})"
+
+
+class Homework(models.Model):
+    lesson = models.ForeignKey(
+        Lesson, on_delete=models.CASCADE, related_name="homeworks"
+    )
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    due_date = models.DateTimeField()
+    submitted_by = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="homeworks"
+    )
+    submission_date = models.DateTimeField(blank=True, null=True)
+    submission_file = models.FileField(
+        upload_to="homework_submissions/", blank=True, null=True
+    )
+    grade = models.IntegerField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Homework for {self.lesson.title}"
+
+
 class Enrollment(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -111,3 +142,20 @@ class PasswordReset(models.Model):
     )  # Changed to OneToOneField
     token = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class Group(models.Model):
+    name = models.CharField(max_length=255)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="groups")
+    teacher = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="teacher_groups",
+        limit_choices_to={"is_teacher": True},
+    )
+    students = models.ManyToManyField(
+        User, related_name="student_groups", limit_choices_to={"is_student": True}
+    )
+
+    def __str__(self):
+        return self.name

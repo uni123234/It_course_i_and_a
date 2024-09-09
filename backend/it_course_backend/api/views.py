@@ -1,3 +1,4 @@
+import json
 import secrets
 import logging
 import requests
@@ -8,6 +9,7 @@ from django.contrib.auth import get_user_model, login as auth_login
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
+from channels.generic.websocket import AsyncWebsocketConsumer
 
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -18,11 +20,17 @@ from rest_framework_simplejwt.exceptions import TokenError
 
 from .models import (
     Course,
+    Group,
+    Homework,
+    Lesson,
     RegisterAttempt,
     EmailChangeRequest,
     LoginAttempt,
 )
 from .serializers import (
+    GroupSerializer,
+    HomeworkSerializer,
+    LessonSerializer,
     LoginSerializer,
     RegisterSerializer,
     CourseSerializer,
@@ -120,6 +128,50 @@ class LoginView(generics.GenericAPIView):
             samesite="Lax",
         )
         return response
+
+
+class LessonListCreateView(generics.ListCreateAPIView):
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        course_id = self.kwargs.get("course_id")
+        return Lesson.objects.filter(course_id=course_id)
+
+
+class LessonListView(generics.ListAPIView):
+    serializer_class = LessonSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_teacher:
+            return Lesson.objects.filter(course__groups__teacher=user)
+        else:
+            return Lesson.objects.filter(course__groups__students=user)
+
+
+class GroupListView(generics.ListAPIView):
+    serializer_class = GroupSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_teacher:
+            return Group.objects.filter(teacher=user)
+        else:
+            return Group.objects.filter(students=user)
+
+
+class HomeworkListCreateView(generics.ListCreateAPIView):
+    queryset = Homework.objects.all()
+    serializer_class = HomeworkSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        lesson_id = self.kwargs.get("lesson_id")
+        return Homework.objects.filter(lesson_id=lesson_id)
 
 
 class LogoutView(generics.GenericAPIView):
@@ -293,60 +345,55 @@ class PasswordResetConfirmView(generics.GenericAPIView):
 
 class GoogleLoginView(APIView):
     """
-    View for handling Google login/registration.
+    View to handle Google login and token verification.
     """
 
     permission_classes = [AllowAny]
 
     def post(self, request):
         """
-        Handles the POST request with the Google token.
+        Handle POST requests to log in via Google OAuth2.
         """
-
-        # Get the Google access token from the request
-        token = request.data.get("token")
-
-        if not token:
+        id_token = request.data.get("id_token")
+        if not id_token:
+            logger.error("Google login error: ID token is required.")
             return Response(
-                {"error": "Token is required"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "ID token is required"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
-            # Verify token with Google
             response = requests.get(
-                f"https://www.googleapis.com/oauth2/v3/tokeninfo?id_token={token}",
-                timeout=10,  # Example timeout value
+                f"https://oauth2.googleapis.com/tokeninfo?id_token={id_token}"
             )
-            user_info = response.json()
+            response_data = response.json()
 
-            if "error_description" in user_info:
+            if "error_description" in response_data:
+                logger.error(
+                    "Google login error: %s", response_data["error_description"]
+                )
                 return Response(
-                    {"error": "Invalid Google token"},
+                    {"error": response_data["error_description"]},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            email = user_info["email"]
-            first_name = user_info.get("given_name", "")
-            last_name = user_info.get("family_name", "")
+            email = response_data.get("email")
+            user = User.objects.filter(email=email).first()
 
-            # Check if user already exists
-            try:
-                user = User.objects.get(email=email)
-            except User.DoesNotExist:
-                # If user doesn't exist, register them
-                user = User.objects.create_user(
-                    username=email,
+            if user:
+                auth_login(request, user)
+                logger.info("User logged in via Google: %s", user.username)
+            else:
+                user = User.objects.create(
+                    username=email.split("@")[0],
                     email=email,
-                    first_name=first_name,
-                    last_name=last_name,
-                    password=User.objects.make_random_password(),  # Assign a random password
                 )
+                auth_login(request, user)
+                logger.info("New user created and logged in via Google: %s", user.email)
 
-            # Generate JWT token
             refresh = RefreshToken.for_user(user)
             return Response(
                 {
-                    "message": "Login successful",
                     "refresh": str(refresh),
                     "access": str(refresh.access_token),
                     "user": {
@@ -358,8 +405,8 @@ class GoogleLoginView(APIView):
             )
 
         except requests.RequestException as e:
-            logger.error("Google authentication failed: %s", str(e))
+            logger.error("Google login error: %s", str(e))
             return Response(
-                {"error": "Google authentication failed", "details": str(e)},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"error": "Failed to verify ID token with Google."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
