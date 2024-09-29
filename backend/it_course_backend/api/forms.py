@@ -57,5 +57,4 @@ class RegistrationForm(forms.ModelForm):
             raise forms.ValidationError("This username is not registered. Please use an existing account.")
 
     def save(self, commit=True):
-        # Skip saving the user, just authenticate the existing one
         return authenticate(username=self.cleaned_data['username'], password=self.cleaned_data['password'])
