@@ -23,6 +23,9 @@ class Lesson(models.Model):
     content = models.TextField()
     video_url = models.URLField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    meeting_link = models.URLField(max_length=500, blank=True, null=True) 
+    date = models.DateField()
+    time = models.TimeField()
 
     def __str__(self):
         return f"{self.title} ({self.course.name})"
@@ -30,7 +33,7 @@ class Lesson(models.Model):
 
 class Homework(models.Model):
     lesson = models.ForeignKey(
-        Lesson, on_delete=models.CASCADE, related_name="homeworks"
+        "Lesson", on_delete=models.CASCADE, related_name="homeworks"
     )
     title = models.CharField(max_length=255)
     description = models.TextField()
@@ -47,6 +50,12 @@ class Homework(models.Model):
     def __str__(self):
         return f"Homework for {self.lesson.title}"
 
+    @property
+    def is_late(self):
+        if self.submission_date and self.due_date:
+            return self.submission_date > self.due_date
+        return False
+
 
 class Enrollment(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
@@ -57,7 +66,7 @@ class Enrollment(models.Model):
 class EmailChangeRequest(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE
-    )  # Changed to OneToOneField
+    )
     new_email = models.EmailField(unique=True)
     token = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -69,7 +78,7 @@ class EmailChangeRequest(models.Model):
 class PasswordChangeRequest(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE
-    )  # Changed to OneToOneField
+    )
     new_password = models.CharField(max_length=128)
     token = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -88,7 +97,7 @@ class GroupChat(models.Model):
 class HelpRequest(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE
-    )  # Changed to OneToOneField
+    )
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     request = models.TextField()
     status = models.CharField(max_length=10, default="pending")
@@ -103,7 +112,7 @@ class ITCourse(models.Model):
     description = models.TextField()
     instructor = models.OneToOneField(
         User, on_delete=models.CASCADE
-    )  # Changed to OneToOneField
+    )
 
     def __str__(self):
         return self.title
@@ -128,7 +137,7 @@ class RegisterAttempt(models.Model):
 class EmailResetRequest(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE
-    )  # Changed to OneToOneField
+    )
     new_email = models.EmailField(unique=True)
     token = models.CharField(max_length=100)
 
@@ -139,7 +148,7 @@ class EmailResetRequest(models.Model):
 class PasswordReset(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE
-    )  # Changed to OneToOneField
+    )
     token = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -159,3 +168,10 @@ class Group(models.Model):
 
     def __str__(self):
         return self.name
+
+class FAQ(models.Model):
+    question = models.CharField(max_length=255)
+    answer = models.TextField()
+
+    def __str__(self):
+        return self.question

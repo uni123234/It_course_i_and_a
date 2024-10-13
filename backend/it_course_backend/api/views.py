@@ -1,22 +1,21 @@
+from datetime import timezone
 import secrets
 import logging
 import requests
-
 from django.http import JsonResponse, HttpResponse
 from django.views import View
 from django.contrib.auth import get_user_model, login as auth_login
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
-
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
-
 from .models import (
+    FAQ,
     Course,
     Group,
     Homework,
@@ -26,8 +25,11 @@ from .models import (
     LoginAttempt,
 )
 from .serializers import (
+    FAQSerializer,
     GroupSerializer,
     HomeworkSerializer,
+    HomeworkSubmissionSerializer,
+    LessonCalendarSerializer,
     LessonSerializer,
     LoginSerializer,
     RegisterSerializer,
@@ -408,3 +410,107 @@ class GoogleLoginView(APIView):
                 {"error": "Failed to verify ID token with Google."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class LessonCalendarView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        if user.is_teacher:
+            lessons = Lesson.objects.filter(course__teacher=user)
+        else:
+            lessons = Lesson.objects.filter(course__students=user)
+
+        serializer = LessonCalendarSerializer(lessons, many=True)
+        return Response(serializer.data)
+
+
+class ReminderView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        now = timezone.now()
+
+        if user.is_teacher:
+            homeworks_to_review = Homework.objects.filter(
+                lesson__course__groups__teacher=user,
+                review_deadline__lte=now,
+                submitted_by__isnull=False,
+            )
+            serializer = HomeworkSerializer(homeworks_to_review, many=True)
+            return Response(
+                {
+                    "type": "teacher",
+                    "message": "You have homeworks to review",
+                    "data": serializer.data,
+                }
+            )
+        else:
+            homeworks_to_submit = Homework.objects.filter(
+                lesson__course__groups__students=user,
+                deadline__lte=now,
+            )
+            serializer = HomeworkSerializer(homeworks_to_submit, many=True)
+            return Response(
+                {
+                    "type": "student",
+                    "message": "You have homeworks to submit",
+                    "data": serializer.data,
+                }
+            )
+
+
+class HomeworkSubmissionView(APIView):
+    """
+    API View to handle homework submission.
+    """
+
+    def post(self, request, homework_id):
+        """
+        Handle POST request for homework submission.
+        """
+        try:
+            homework = Homework.objects.get(id=homework_id)
+            serializer = HomeworkSubmissionSerializer(data=request.data)
+
+            if serializer.is_valid():
+                homework.submission_date = timezone.now()
+                homework.submission_file = serializer.validated_data["submission_file"]
+                homework.save()
+
+                return Response(
+                    {"message": "Homework submitted successfully!"},
+                    status=status.HTTP_200_OK,
+                )
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Homework.DoesNotExist:
+            return Response(
+                {"error": "Homework not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+    def delete(self, request, homework_id):
+        """
+        Handle DELETE request to clear homework submission.
+        """
+        try:
+            homework = Homework.objects.get(id=homework_id)
+            homework.submission_file.delete()
+            homework.submission_file = None
+            homework.submission_date = None
+            homework.save()
+
+            return Response(
+                {"message": "Homework submission cleared."}, status=status.HTTP_200_OK
+            )
+        except Homework.DoesNotExist:
+            return Response(
+                {"error": "Homework not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class FAQListView(generics.ListAPIView):
+    queryset = FAQ.objects.all()
+    serializer_class = FAQSerializer

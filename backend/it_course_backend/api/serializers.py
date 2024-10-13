@@ -6,6 +6,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from .models import (
+    FAQ,
     Course,
     Enrollment,
     Group,
@@ -168,3 +169,26 @@ class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ["id", "name", "course", "teacher", "students"]
+
+
+class LessonCalendarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = ["id", "title", "description", "date", "meeting_link"]
+
+
+class FAQSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FAQ
+        fields = "__all__"
+
+
+class HomeworkSubmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Homework
+        fields = ['submission_file']
+
+    def validate_submission_file(self, value):
+        if not value:
+            raise serializers.ValidationError("Submission file is required.")
+        return value

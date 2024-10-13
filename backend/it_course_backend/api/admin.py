@@ -1,5 +1,17 @@
 from django.contrib import admin
-from .models import Course, EmailResetRequest, Enrollment, GroupChat, HelpRequest, ITCourse, LoginAttempt, PasswordChangeRequest, PasswordReset, RegisterAttempt
+from .models import (
+    FAQ,
+    Course,
+    EmailResetRequest,
+    Enrollment,
+    GroupChat,
+    HelpRequest,
+    ITCourse,
+    LoginAttempt,
+    PasswordChangeRequest,
+    PasswordReset,
+    RegisterAttempt,
+)
 from .models import EmailChangeRequest
 from django.contrib.auth.admin import UserAdmin
 
@@ -87,3 +99,4 @@ admin.site.register(LoginAttempt)
 admin.site.register(RegisterAttempt)
 admin.site.register(EmailResetRequest)
 admin.site.register(PasswordReset)
+admin.site.register(FAQ)
