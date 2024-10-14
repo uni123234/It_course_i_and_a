@@ -14,6 +14,7 @@ from .learns import (
     GroupListView,
     GroupEditView,
     LessonListView,
+    LessonCreateView,
     LessonDetailView,
     HomeworkListView,
     HomeworkDetailView,

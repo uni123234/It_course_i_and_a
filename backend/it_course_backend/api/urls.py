@@ -23,11 +23,14 @@ from .views import (
     HomeworkSubmissionView,
     LessonCalendarView,
     LessonListView,
+    LessonCreateView,
+    LessonDetailView,
     LoginView,
     LogoutView,
     RegisterView,
     PasswordResetConfirmView,
     ReminderView,
+    HomeworkDetailView,
 )
 
 APP_NAME = "api"
@@ -57,14 +60,13 @@ urlpatterns = [
     path("course/", CourseListView.as_view(), name="course_list"),
     path('courses/create/', CourseCreateView.as_view(), name='course-create'),
     path('courses/edit/<int:pk>/', CourseEditView.as_view(), name='course-edit'),
-    path("lessons/", LessonListView.as_view(), name="lesson_list"),
+    path('lessons/', LessonListView.as_view(), name='lesson-list'),
+    path('lessons/create/', LessonCreateView.as_view(), name='lesson-create'),
+    path('lessons/<int:pk>/', LessonDetailView.as_view(), name='lesson-detail'),
     path("calendar/", LessonCalendarView.as_view(), name="lesson_calendar"),
-    path("homeworks/", HomeworkListCreateView.as_view(), name="homework-list-create"),
-    path(
-        "homeworks/<int:homework_id>/submit/",
-        HomeworkSubmissionView.as_view(),
-        name="homework-submit",
-    ),
+    path('homework/', HomeworkListCreateView.as_view(), name='homework-list-create'),
+    path('homework/<int:pk>/', HomeworkDetailView.as_view(), name='homework-detail'),
+    path('homework/submit/', HomeworkSubmissionView.as_view(), name='homework-submit'),
     path("faq/", FAQListCreateView.as_view(), name="faq-list-create"),
     path("faq/<int:pk>/", FAQDetailView.as_view(), name="faq-detail"),
 ]

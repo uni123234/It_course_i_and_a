@@ -7,7 +7,6 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from django.core.validators import EmailValidator
-from django.contrib.auth import get_user_model
 
 
 class CustomUserManager(BaseUserManager):
@@ -107,6 +106,10 @@ class Lesson(models.Model):
     content = models.TextField(blank=True, null=True, verbose_name="Content")
     video_url = models.URLField(blank=True, null=True, verbose_name="Video URL")
     meeting_link = models.URLField(blank=True, null=True, verbose_name="Meeting Link")
+    notes_url = models.URLField(blank=True, null=True, verbose_name="Notes URL")
+    notes_content = models.TextField(
+        blank=True, null=True, verbose_name="Notes Content"
+    )
 
     def __str__(self):
         return f"{self.title} ({self.course.title})"

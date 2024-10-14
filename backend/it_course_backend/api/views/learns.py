@@ -14,6 +14,7 @@ from ..serializers import (
     HomeworkSerializer,
     HomeworkSubmissionSerializer,
     TeacherCourseSerializer,
+    HomeworkGradeSerializer,
 )
 
 logger = logging.getLogger("api")
@@ -266,10 +267,10 @@ class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
 
-class LessonListView(generics.ListCreateAPIView):
+class LessonListView(generics.ListAPIView):
     """
-    View for listing and creating lessons.
-    Allows users to view and submit lessons.
+    View for listing lessons.
+    Allows users to view lessons.
     """
 
     queryset = Lesson.objects.all()
@@ -278,9 +279,20 @@ class LessonListView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         """
-        Retrieve the list of lessons for the current user.
+        Retrieve the list of active lessons for the current user.
         """
         return self.queryset.filter(is_active=True)
+
+
+class LessonCreateView(generics.CreateAPIView):
+    """
+    View for creating lessons.
+    Allows users to submit lessons.
+    """
+
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         """
@@ -359,11 +371,29 @@ class HomeworkListView(generics.ListCreateAPIView):
 class HomeworkDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     View for retrieving, updating, or deleting a specific homework assignment.
+    Also allows teachers to grade homework submissions.
     """
 
     queryset = Homework.objects.all()
     serializer_class = HomeworkSerializer
     permission_classes = [IsAuthenticated]
+
+    def update(self, request, *args, **kwargs):
+        homework = self.get_object()
+
+        if request.user.user_type == "teacher":
+            grade_serializer = HomeworkGradeSerializer(homework, data=request.data)
+            if grade_serializer.is_valid():
+                grade_serializer.save()
+                logger.info(
+                    "Homework graded: %s with grade %d",
+                    homework.title,
+                    grade_serializer.validated_data["grade"],
+                )
+                return Response(grade_serializer.data, status=status.HTTP_200_OK)
+            return Response(grade_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return super().update(request, *args, **kwargs)
 
 
 class HomeworkSubmissionView(generics.CreateAPIView):
@@ -377,11 +407,11 @@ class HomeworkSubmissionView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        """
-        Save a new homework submission and log the action.
-        """
-        submission = serializer.save()
-        logger.info("Homework submitted: %s", submission.homework.title)
+        homework_id = self.request.data.get("homework_id")
+        if homework_id:
+            serializer.context["homework_id"] = homework_id
+            submission = serializer.save()
+            logger.info("Homework submitted: %s", submission.title)
 
 
 class LessonCalendarView(generics.ListAPIView):

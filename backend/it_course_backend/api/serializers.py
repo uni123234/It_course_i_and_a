@@ -4,8 +4,9 @@ Serializers for the API application.
 
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from django.contrib.auth.tokens import default_token_generator
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as i
 from rest_framework.exceptions import ValidationError
 
 from .models import FAQ, Course, Group, Homework, Lesson
@@ -27,7 +28,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ("email", "password", "first_name", "last_name", "user_type")
 
     def create(self, validated_data):
-        # Check if the user already exists
         if User.objects.filter(email=validated_data["email"]).exists():
             raise ValidationError("A user with this email already exists.")
 
@@ -90,7 +90,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
     def validate_email(self, value):
         if not User.objects.filter(email=value).exists():
-            raise serializers.ValidationError(_("No user with this email found."))
+            raise serializers.ValidationError(i("No user with this email found."))
         return value
 
 
@@ -128,7 +128,17 @@ class LessonSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Lesson
-        fields = ["id", "course", "title", "scheduled_time"]
+        fields = [
+            "id",
+            "course",
+            "title",
+            "scheduled_time",
+            "content",
+            "video_url",
+            "meeting_link",
+            "notes_url",
+            "notes_content",
+        ]
 
     def validate_title(self, value):
         """
@@ -145,6 +155,16 @@ class LessonSerializer(serializers.ModelSerializer):
         if value <= timezone.now():
             raise serializers.ValidationError("Scheduled time must be in the future.")
         return value
+
+    def validate_notes(self, attrs):
+        """
+        Ensure that either notes_url or notes_content is provided.
+        """
+        if not attrs.get("notes_url") and not attrs.get("notes_content"):
+            raise serializers.ValidationError(
+                "Either notes_url or notes_content must be provided."
+            )
+        return attrs
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -195,6 +215,13 @@ class HomeworkSubmissionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Submission file is required.")
         return value
 
+    def create(self, validated_data):
+        homework = Homework.objects.get(id=self.context["homework_id"])
+        homework.submission_date = timezone.now()
+        homework.submission_file = validated_data["submission_file"]
+        homework.save()
+        return homework
+
 
 class HomeworkSerializer(serializers.ModelSerializer):
     class Meta:
@@ -225,6 +252,17 @@ class HomeworkSerializer(serializers.ModelSerializer):
             lesson__course__groups__students=user,
             due_date__lte=now,
         )
+
+
+class HomeworkGradeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Homework
+        fields = ["id", "grade"]
+
+    def validate_grade(self, value):
+        if value < 0 or value > 100:
+            raise serializers.ValidationError("Grade must be between 0 and 100.")
+        return value
 
 
 class TeacherCourseSerializer(serializers.ModelSerializer):
