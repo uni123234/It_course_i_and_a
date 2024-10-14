@@ -1,109 +1,6 @@
-# """
-# Serializers for the API application.
-# """
-
-# from rest_framework import serializers
-# from django.contrib.auth.models import User
-# from django.contrib.auth import authenticate
-# from .models import (
-#     FAQ,
-#     Course,
-#     Enrollment,
-#     Group,
-#     Homework,
-#     Lesson,
-#     PasswordChangeRequest,
-#     RegisterAttempt,
-#     EmailChangeRequest,
-#     GroupChat,
-#     HelpRequest,
-# )
-
-
-# class CourseSerializer(serializers.ModelSerializer):
-#     """
-#     Serializer for the Course model.
-#     """
-
-#     class Meta:
-#         model = Course
-#         fields = "__all__"
-
-
-# class EnrollmentSerializer(serializers.ModelSerializer):
-#     """
-#     Serializer for the Enrollment model.
-#     """
-
-#     class Meta:
-#         model = Enrollment
-#         fields = "__all__"
-
-
-# class GroupChatSerializer(serializers.ModelSerializer):
-#     """
-#     Serializer for the GroupChat model.
-#     """
-
-#     user = UserSerializer(read_only=True)
-
-#     class Meta:
-#         model = GroupChat
-#         fields = "__all__"
-
-
-# class HelpRequestSerializer(serializers.ModelSerializer):
-#     """
-#     Serializer for the HelpRequest model.
-#     """
-
-#     class Meta:
-#         model = HelpRequest
-#         fields = "__all__"
-
-
-# class LessonSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Lesson
-#         fields = ["id", "course", "title", "content", "video_url", "created_at"]
-
-
-# class HomeworkSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Homework
-#         fields = [
-#             "id",
-#             "lesson",
-#             "title",
-#             "description",
-#             "due_date",
-#             "submitted_by",
-#             "submission_date",
-#             "submission_file",
-#             "grade",
-#         ]
-
-
-# class GroupSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Group
-#         fields = ["id", "name", "course", "teacher", "students"]
-
-
-# class LessonCalendarSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Lesson
-#         fields = ["id", "title", "description", "date", "meeting_link"]
-
-# class HomeworkSubmissionSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Homework
-#         fields = ['submission_file']
-
-#     def validate_submission_file(self, value):
-#         if not value:
-#             raise serializers.ValidationError("Submission file is required.")
-#         return value
+"""
+Serializers for the API application.
+"""
 
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
@@ -111,7 +8,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.translation import gettext as _
 from rest_framework.exceptions import ValidationError
 
-from .models import FAQ
+from .models import FAQ, Course, Group, Homework, Lesson
 
 User = get_user_model()
 
@@ -130,6 +27,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ("email", "password", "first_name", "last_name", "user_type")
 
     def create(self, validated_data):
+        # Check if the user already exists
+        if User.objects.filter(email=validated_data["email"]).exists():
+            raise ValidationError("A user with this email already exists.")
+
         user = User(
             email=validated_data["email"],
             first_name=validated_data["first_name"],
@@ -144,6 +45,13 @@ class RegisterSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        user = User.objects.filter(email=attrs["email"]).first()
+        if user is None or not user.check_password(attrs["password"]):
+            raise serializers.ValidationError("Invalid email or password.")
+        attrs["user"] = user
+        return attrs
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -211,3 +119,136 @@ class FAQSerializer(serializers.ModelSerializer):
     class Meta:
         model = FAQ
         fields = "__all__"
+
+
+class LessonSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Lesson model.
+    """
+
+    class Meta:
+        model = Lesson
+        fields = ["id", "course", "title", "scheduled_time"]
+
+    def validate_title(self, value):
+        """
+        Validate that the title is not empty.
+        """
+        if not value:
+            raise serializers.ValidationError("Title cannot be empty.")
+        return value
+
+    def validate_scheduled_time(self, value):
+        """
+        Validate that the scheduled time is in the future.
+        """
+        if value <= timezone.now():
+            raise serializers.ValidationError("Scheduled time must be in the future.")
+        return value
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Course model.
+    """
+
+    class Meta:
+        model = Course
+        fields = "__all__"
+
+    def validate_title(self, value):
+        """
+        Validate that the title is not empty.
+        """
+        if not value:
+            raise serializers.ValidationError("Title cannot be empty.")
+        return value
+
+    def validate_teacher(self, value):
+        """
+        Validate that the teacher is provided.
+        """
+        if value is None:
+            raise serializers.ValidationError(
+                "A teacher must be assigned to the course."
+            )
+        return value
+
+
+class LessonCalendarSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Lesson model to be used in the lesson calendar view.
+    """
+
+    class Meta:
+        model = Lesson
+        fields = ["id", "title", "content", "date", "time", "meeting_link"]
+
+
+class HomeworkSubmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Homework
+        fields = ["submission_file"]
+
+    def validate_submission_file(self, value):
+        if not value:
+            raise serializers.ValidationError("Submission file is required.")
+        return value
+
+
+class HomeworkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Homework
+        fields = [
+            "id",
+            "lesson",
+            "title",
+            "description",
+            "due_date",
+            "submitted_by",
+            "submission_date",
+            "submission_file",
+            "grade",
+        ]
+
+    @staticmethod
+    def get_homeworks_to_review(user, now):
+        return Homework.objects.filter(
+            lesson__course__groups__teacher=user,
+            review_deadline__lte=now,
+            submitted_by__isnull=False,
+        )
+
+    @staticmethod
+    def get_homeworks_to_submit(user, now):
+        return Homework.objects.filter(
+            lesson__course__groups__students=user,
+            due_date__lte=now,
+        )
+
+
+class TeacherCourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ["title", "description"]
+
+    def create(self, validated_data):
+        validated_data["teacher"] = self.context["request"].user
+        return super().create(validated_data)
+
+
+class GroupCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ["id", "name", "course", "teacher", "students"]
+
+    def create(self, validated_data):
+        validated_data["teacher"] = self.context["request"].user
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get("name", instance.name)
+        instance.course = validated_data.get("course", instance.course)
+        instance.save()
+        instance.students.set(validated_data.get("students", instance.students.all()))
+        return instance

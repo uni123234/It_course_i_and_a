@@ -1,96 +1,106 @@
 from django.contrib import admin
 from .models import (
     FAQ,
+    Course,
+    Group,
+    Homework,
+    Lesson,
+    User,
 )
-from .models import EmailChangeRequest
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.utils.translation import gettext_lazy as _
 
 
-# @admin.register(Course)
-# class CourseAdmin(admin.ModelAdmin):
-#     list_display = ("id", "name", "teacher")
-#     search_fields = ("name", "teacher__username")
-#     list_filter = ("teacher",)
-#     ordering = ("id",)
-#     fieldsets = ((None, {"fields": ("name", "description", "teacher")}),)
+class UserAdmin(BaseUserAdmin):
+    """Define admin model for custom User model."""
+
+    list_display = (
+        "email",
+        "first_name",
+        "last_name",
+        "is_active",
+        "user_type",
+        "date_joined",
+        "date_updated",
+    )
+    search_fields = ("email", "first_name", "last_name")
+    list_filter = ("is_active", "user_type", "date_joined")
+    ordering = ("email",)
+
+    fieldsets = (
+        (None, {"fields": ("email", "password")}),
+        (_("Personal info"), {"fields": ("first_name", "last_name", "user_type")}),
+        (
+            _("Permissions"),
+            {"fields": ("is_active", "is_staff", "is_superuser", "user_permissions")},
+        ),
+        (
+            _("Important dates"),
+            {"fields": ("last_login", "date_joined", "date_updated")},
+        ),
+    )
+
+    add_fieldsets = (
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": (
+                    "email",
+                    "password1",
+                    "password2",
+                    "is_active",
+                    "is_staff",
+                    "user_type",
+                ),
+            },
+        ),
+    )
+
+    def get_queryset(self, request):
+        """Override get_queryset to return the user list."""
+        return super().get_queryset(request).select_related("teacher")
+
+    def save_model(self, request, obj, form, change):
+        """Override save_model to handle password encryption."""
+        if not change:
+            obj.set_password(form.cleaned_data["password1"])
+        super().save_model(request, obj, form, change)
 
 
-# @admin.register(Enrollment)
-# class EnrollmentAdmin(admin.ModelAdmin):
-#     list_display = ("id", "course", "student", "enrolled_at")
-#     search_fields = ("course__name", "student__username")
-#     list_filter = ("course", "student")
-#     ordering = ("-enrolled_at",)
-#     fieldsets = ((None, {"fields": ("course", "student", "enrolled_at")}),)
-#     readonly_fields = ("enrolled_at",)
-
-
-# @admin.register(EmailChangeRequest)
-# class EmailChangeRequestAdmin(admin.ModelAdmin):
-#     list_display = ("user", "new_email", "token", "created_at")
-#     list_filter = ("created_at",)
-#     search_fields = ("user__username", "new_email")
-
-
-# class PasswordChangeRequestAdmin(admin.ModelAdmin):
-#     list_display = ("user", "new_password", "token", "created_at")
-#     search_fields = ("user__username", "token")
-#     list_filter = ("user", "created_at")
-#     ordering = ("-created_at",)
-#     readonly_fields = ("created_at",)
-
-#     fieldsets = (
-#         (None, {"fields": ("user", "new_password", "token")}),
-#         (
-#             "Timestamps",
-#             {
-#                 "fields": ("created_at",),
-#             },
-#         ),
-#     )
-
-#     def get_readonly_fields(self, request, obj=None):
-#         if obj:
-#             return self.readonly_fields + ("user", "new_password", "token")
-#         return self.readonly_fields
-
-
-# admin.site.register(PasswordChangeRequest, PasswordChangeRequestAdmin)
-
-
-# class GroupChatAdmin(admin.ModelAdmin):
-#     list_display = ("course", "user", "message", "sent_at")
-#     search_fields = ("course__name", "user__username", "message")
-#     list_filter = ("course", "user", "sent_at")
-#     ordering = ("-sent_at",)
-#     readonly_fields = ("sent_at",)
-
-#     fieldsets = (
-#         (None, {"fields": ("course", "user", "message")}),
-#         (
-#             "Timestamps",
-#             {
-#                 "fields": ("sent_at",),
-#             },
-#         ),
-#     )
-
-#     def get_readonly_fields(self, request, obj=None):
-#         if obj:
-#             return self.readonly_fields + ("course", "user", "message")
-#         return self.readonly_fields
-
-
-# admin.site.register(GroupChat, GroupChatAdmin)
-
-# admin.site.register(HelpRequest)
-# admin.site.register(ITCourse)
-# admin.site.register(LoginAttempt)
-# admin.site.register(RegisterAttempt)
-# admin.site.register(EmailResetRequest)
-# admin.site.register(PasswordReset)
-
-
-@admin.register(FAQ)
 class FAQAdmin(admin.ModelAdmin):
-    list_display = ("question",)
+    list_display = ("question", "answer")
+    search_fields = ("question",)
+
+
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ("title", "teacher")
+    search_fields = ("title", "teacher__email")
+    list_filter = ("teacher",)
+
+
+class LessonAdmin(admin.ModelAdmin):
+    list_display = ("title", "course", "scheduled_time")
+    search_fields = ("title", "course__title")
+    list_filter = ("course", "scheduled_time")
+
+
+class HomeworkAdmin(admin.ModelAdmin):
+    list_display = ("title", "lesson", "due_date", "submitted_by", "submission_date")
+    search_fields = ("title", "lesson__title", "submitted_by__email")
+    list_filter = ("lesson", "submitted_by")
+
+
+class GroupAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "course", "teacher")
+    search_fields = ("name", "course__title", "teacher__email")
+    list_filter = ("teacher", "course")
+
+
+# Register models with the admin site
+admin.site.register(Group, GroupAdmin)
+admin.site.register(Homework, HomeworkAdmin)
+admin.site.register(Course, CourseAdmin)
+admin.site.register(Lesson, LessonAdmin)
+admin.site.register(User, UserAdmin)
+admin.site.register(FAQ, FAQAdmin)
