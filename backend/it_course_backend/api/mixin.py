@@ -1,3 +1,10 @@
+"""
+This module provides mixins for common functionality used in 
+FAQ, Course, Group, Lesson, and Homework views.
+It includes permission checks, logging of actions,
+ and dynamic serializer selection based on user roles.
+"""
+
 import logging
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import PermissionDenied
@@ -15,8 +22,7 @@ logger = logging.getLogger("api")
 
 class FAQMixin:
     """
-    Mixin providing common functionality for FAQ views,
-    including listing, creating, and logging FAQ entries.
+    Mixin for FAQ views, providing common functionality for listing and creating FAQs.
     """
 
     queryset = FAQ.active.all()
@@ -26,7 +32,6 @@ class FAQMixin:
     def perform_create(self, serializer):
         """
         Save a new FAQ entry and log the action.
-        Logs the created FAQ's question.
         """
         faq = serializer.save()
         logger.info("FAQ created: %s", faq.question)
@@ -34,39 +39,38 @@ class FAQMixin:
 
 class CourseMixin:
     """
-    Mixin for shared course functionality such as logging and role-based checks.
+    Mixin for course views, providing common functionality for managing courses,
+    including selecting the serializer based on the user role.
     """
 
     queryset = Course.active.all()
-    serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        """
+        Select the appropriate serializer based on the user role.
+        """
+        if self.request.user.user_type == "teacher":
+            return TeacherCourseSerializer
+        return CourseSerializer
 
     def perform_create(self, serializer):
         """
         Save a new course and log the action.
-        Checks if the user is a teacher and logs accordingly.
         """
-        if self.request.user.user_type == "teacher":
-            teacher_serializer = TeacherCourseSerializer(
-                data=self.request.data, context={"request": self.request}
-            )
-            teacher_serializer.is_valid(raise_exception=True)
-            course = teacher_serializer.save()
-            logger.info("Course created by teacher: %s", course.title)
-        else:
-            course = serializer.save()
-            logger.info("Course created: %s", course.title)
+        course = serializer.save()
+        logger.info("Course created: %s", course.title)
 
 
 class CoursePermissionMixin:
     """
-    Mixin to check if the current user is allowed to modify the course.
-    Ensures only the teacher who created the course can edit or delete it.
+    Mixin to enforce permissions for course modifications.
+    Ensures only the teacher who created the course can modify it.
     """
 
     def get_object(self):
         """
-        Override to check if the user can modify the course.
+        Retrieve the course object and verify that the requesting user is the teacher.
         """
         course = super().get_object()
         if course.teacher != self.request.user:
@@ -76,7 +80,7 @@ class CoursePermissionMixin:
 
 class GroupMixin:
     """
-    Mixin for shared group functionality such as logging.
+    Mixin for group views, providing functionality for creating and managing groups.
     """
 
     queryset = Group.active.all()
@@ -93,13 +97,13 @@ class GroupMixin:
 
 class GroupPermissionMixin:
     """
-    Mixin to check if the current user is allowed to modify the group.
-    Ensures only the teacher who created the group can edit or delete it.
+    Mixin to enforce permissions for group modifications.
+    Ensures only the teacher who created the group can modify it.
     """
 
     def get_object(self):
         """
-        Override to check if the user can modify the group.
+        Retrieve the group object and verify that the requesting user is the teacher.
         """
         group = super().get_object()
         if group.teacher != self.request.user:
@@ -109,12 +113,13 @@ class GroupPermissionMixin:
 
 class LessonPermissionMixin:
     """
-    Mixin to handle permission checks for lesson operations.
+    Mixin to enforce permissions for lesson modifications.
+    Ensures only the teacher who created the lesson can modify it.
     """
 
     def get_object(self):
         """
-        Override to check if the user can edit or delete the lesson.
+        Retrieve the lesson object and verify that the requesting user is the teacher.
         """
         lesson = super().get_object()
         if lesson.course.teacher != self.request.user:
@@ -124,7 +129,7 @@ class LessonPermissionMixin:
 
 class LessonActionMixin:
     """
-    Mixin to handle logging actions for lesson creation, updating, and deletion.
+    Mixin for logging actions related to lesson creation, updating, and deletion.
     """
 
     def perform_create(self, serializer):
@@ -151,7 +156,7 @@ class LessonActionMixin:
 
 class HomeworkActionMixin:
     """
-    Mixin to handle logging actions for homework assignments.
+    Mixin for logging actions related to homework creation, updating, and deletion.
     """
 
     def perform_create(self, serializer):
