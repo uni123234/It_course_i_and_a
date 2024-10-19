@@ -4,17 +4,25 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.utils import timezone
 
-from ..models import FAQ, Course, Group, Homework, Lesson
+from ..models import FAQ, Course, Homework, Lesson
 from ..serializers import (
     CourseSerializer,
     FAQSerializer,
-    GroupCreateUpdateSerializer,
     LessonCalendarSerializer,
     LessonSerializer,
     HomeworkSerializer,
     HomeworkSubmissionSerializer,
-    TeacherCourseSerializer,
     HomeworkGradeSerializer,
+)
+from ..mixin import (
+    CourseMixin,
+    CoursePermissionMixin,
+    FAQMixin,
+    GroupMixin,
+    GroupPermissionMixin,
+    HomeworkActionMixin,
+    LessonActionMixin,
+    LessonPermissionMixin,
 )
 
 logger = logging.getLogger("api")
@@ -44,29 +52,21 @@ class FAQListView(generics.ListCreateAPIView):
         logger.info("FAQ created: %s", faq.question)
 
 
-class FAQListCreateView(generics.ListCreateAPIView):
+class FAQListCreateView(FAQMixin, generics.ListCreateAPIView):
     """
-    View for listing and creating FAQs.
-    Allows users to view and submit frequently asked questions.
+    API view to list and create FAQs.
+    - GET: Retrieve a list of active FAQs.
+    - POST: Create a new FAQ entry.
+
+    The list shows only active FAQs (`is_active=True`).
     """
 
-    queryset = FAQ.objects.all()
-    serializer_class = FAQSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
+    def __init__(self, *args, **kwargs):
         """
-        Retrieve the list of FAQs for the current user.
-        Only returns active FAQs.
+        Initialize the FAQ list and create view.
+        Calls the parent constructor.
         """
-        return self.queryset.filter(is_active=True)
-
-    def perform_create(self, serializer):
-        """
-        Save a new FAQ and log the action.
-        """
-        faq = serializer.save()
-        logger.info("FAQ created: %s", faq.question)
+        super().__init__(*args, **kwargs)
 
 
 class FAQDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -79,67 +79,44 @@ class FAQDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
 
-class CourseListView(generics.ListCreateAPIView):
+class CourseListCreateView(CourseMixin, generics.ListCreateAPIView):
     """
-    View for listing and creating courses.
-    Allows users to view and submit courses.
+    API view to list and create courses.
+    - GET: Retrieve a list of active courses.
+    - POST: Create a new course (teachers only).
+
+    Only active courses are listed.
     """
 
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
+    def __init__(self, *args, **kwargs):
         """
-        Retrieve the list of active courses for the current user.
+        Initialize the course list and create view.
+        Calls the parent constructor.
         """
-        return self.queryset.filter(is_active=True)
-
-    def perform_create(self, serializer):
-        """
-        Save a new course and log the action.
-        """
-        if self.request.user.user_type == "teacher":
-            teacher_serializer = TeacherCourseSerializer(
-                data=self.request.data, context={"request": self.request}
-            )
-            teacher_serializer.is_valid(raise_exception=True)
-            course = teacher_serializer.save()
-            logger.info("Course created by teacher: %s", course.name)
-        else:
-            course = serializer.save()
-            logger.info("Course created: %s", course.name)
+        super().__init__(*args, **kwargs)
 
 
-class CourseCreateView(generics.CreateAPIView):
+class CourseDetailView(CourseMixin, generics.RetrieveUpdateDestroyAPIView):
     """
-    View for creating a new course.
-    Allows teachers to create courses.
+    API view to retrieve, update, or delete a specific course.
+    - GET: Retrieve a specific course.
+    - PUT: Update the course (teachers only).
+    - DELETE: Delete the course (teachers only).
     """
 
     queryset = Course.objects.all()
-    serializer_class = CourseSerializer
-    permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
+    def perform_update(self, serializer):
         """
-        Save a new course and log the action.
+        Log the course update action.
         """
-        if self.request.user.user_type == "teacher":
-            teacher_serializer = TeacherCourseSerializer(
-                data=self.request.data, context={"request": self.request}
-            )
-            teacher_serializer.is_valid(raise_exception=True)
-            course = teacher_serializer.save()
-            logger.info("Course created by teacher: %s", course.name)
-        else:
-            course = serializer.save()
-            logger.info("Course created: %s", course.name)
+        course = serializer.save()
+        logger.info("Course updated: %s", course.title)
 
 
-class CourseEditView(generics.UpdateAPIView):
+class CourseEditView(CoursePermissionMixin, generics.UpdateAPIView):
     """
-    View for editing an existing course.
+    API view to edit an existing course.
     Allows teachers to edit courses they created.
     """
 
@@ -147,64 +124,30 @@ class CourseEditView(generics.UpdateAPIView):
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_object(self):
-        """
-        Override to check if the user is allowed to edit the course.
-        """
-        course = super().get_object()
-        if course.teacher != self.request.user:
-            raise PermissionDenied("You do not have permission to edit this course.")
-        return course
 
-
-class CourseDeleteView(generics.DestroyAPIView):
+class CourseDeleteView(CoursePermissionMixin, generics.DestroyAPIView):
     """
-    View for deleting a course.
+    API view to delete a course.
     Allows teachers to delete courses they created.
     """
 
     queryset = Course.objects.all()
     permission_classes = [IsAuthenticated]
 
-    def get_object(self):
-        """
-        Override to check if the user is allowed to delete the course.
-        """
-        course = super().get_object()
-        if course.teacher != self.request.user:
-            raise PermissionDenied("You do not have permission to delete this course.")
-        return course
-
-    def destroy(self, request, *args, **kwargs):
+    def perform_destroy(self, instance):
         """
         Handle the delete action and log the deletion.
         """
-        course = self.get_object()
-        course_name = course.name
-        self.perform_destroy(course)
+        course_name = instance.title
+        super().perform_destroy(instance)
         logger.info("Course deleted: %s", course_name)
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
+class GroupCreateView(GroupMixin, generics.CreateAPIView):
     """
-    View for retrieving, updating, or deleting a specific course.
+    API view to create a new group.
+    Only authenticated users can create groups.
     """
-
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializer
-    permission_classes = [IsAuthenticated]
-
-
-class GroupCreateView(generics.CreateAPIView):
-    """
-    View for creating groups.
-    Allows users to create new groups.
-    """
-
-    queryset = Group.objects.all()
-    serializer_class = GroupCreateUpdateSerializer
-    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         """
@@ -214,33 +157,25 @@ class GroupCreateView(generics.CreateAPIView):
         logger.info("Group created: %s", group.name)
 
 
-class GroupListView(generics.ListAPIView):
+class GroupListView(GroupMixin, generics.ListAPIView):
     """
-    View for listing all groups.
-    Allows users to view groups they are associated with.
+    API view to list all groups.
+    Only retrieves active groups associated with the current user.
     """
-
-    queryset = Group.objects.all()
-    serializer_class = GroupCreateUpdateSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         """
-        Retrieve the list of groups for the current user.
+        Retrieve the list of active groups for the current user.
         """
         user = self.request.user
         return self.queryset.filter(teacher=user)
 
 
-class GroupEditView(generics.RetrieveUpdateDestroyAPIView):
+class GroupEditView(GroupPermissionMixin, generics.RetrieveUpdateDestroyAPIView):
     """
-    View for retrieving, updating, or deleting a specific group.
+    API view to retrieve, update, or delete a specific group.
     Allows users to manage groups they created.
     """
-
-    queryset = Group.objects.all()
-    serializer_class = GroupCreateUpdateSerializer
-    permission_classes = [IsAuthenticated]
 
     def perform_update(self, serializer):
         """
@@ -254,17 +189,21 @@ class GroupEditView(generics.RetrieveUpdateDestroyAPIView):
         Delete the group and log the action.
         """
         logger.info("Group deleted: %s", instance.name)
-        instance.delete()
+        super().perform_destroy(instance)
 
 
-class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
+class GroupDetailView(GroupPermissionMixin, generics.RetrieveUpdateDestroyAPIView):
     """
-    View for retrieving, updating, or deleting a specific group.
+    API view for retrieving, updating, or deleting a specific group.
+    Only the teacher who created the group can modify it.
     """
 
-    queryset = Group.objects.all()
-    serializer_class = GroupCreateUpdateSerializer
-    permission_classes = [IsAuthenticated]
+    def perform_update(self, serializer):
+        """
+        Save the updated group and log the action.
+        """
+        group = serializer.save()
+        logger.info("Group updated: %s", group.name)
 
 
 class LessonListView(generics.ListAPIView):
@@ -273,7 +212,7 @@ class LessonListView(generics.ListAPIView):
     Allows users to view lessons.
     """
 
-    queryset = Lesson.objects.all()
+    queryset = Lesson.active.all()
     serializer_class = LessonSerializer
     permission_classes = [IsAuthenticated]
 
@@ -284,7 +223,7 @@ class LessonListView(generics.ListAPIView):
         return self.queryset.filter(is_active=True)
 
 
-class LessonCreateView(generics.CreateAPIView):
+class LessonCreateView(LessonActionMixin, generics.CreateAPIView):
     """
     View for creating lessons.
     Allows users to submit lessons.
@@ -294,17 +233,13 @@ class LessonCreateView(generics.CreateAPIView):
     serializer_class = LessonSerializer
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        """
-        Save a new lesson and log the action.
-        """
-        lesson = serializer.save()
-        logger.info("Lesson created: %s", lesson.title)
 
-
-class LessonDetailView(generics.RetrieveUpdateDestroyAPIView):
+class LessonEditView(
+    LessonPermissionMixin, LessonActionMixin, generics.RetrieveUpdateDestroyAPIView
+):
     """
     View for retrieving, updating, or deleting a specific lesson.
+    Allows teachers to manage lessons they created.
     """
 
     queryset = Lesson.objects.all()
@@ -312,13 +247,23 @@ class LessonDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
 
-class HomeworkListCreateView(generics.ListCreateAPIView):
+class LessonDetailView(LessonPermissionMixin, generics.RetrieveAPIView):
+    """
+    View for retrieving a specific lesson.
+    """
+
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class HomeworkListCreateView(HomeworkActionMixin, generics.ListCreateAPIView):
     """
     View for listing and creating homework assignments.
     Allows users to view and submit homework assignments.
     """
 
-    queryset = Homework.objects.all()
+    queryset = Homework.active.all()
     serializer_class = HomeworkSerializer
     permission_classes = [IsAuthenticated]
 
@@ -326,14 +271,7 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
         """
         Retrieve the list of homework assignments for the current user.
         """
-        return self.queryset.filter(is_active=True)
-
-    def perform_create(self, serializer):
-        """
-        Save a new homework assignment and log the action.
-        """
-        homework = serializer.save()
-        logger.info("Homework created: %s", homework.title)
+        return self.queryset.filter(submitted_by=self.request.user)
 
     def list(self, request, *args, **kwargs):
         """
@@ -344,31 +282,7 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
         return Response(serializer.data)
 
 
-class HomeworkListView(generics.ListCreateAPIView):
-    """
-    View for listing and creating homework assignments.
-    Allows users to view and submit homework assignments.
-    """
-
-    queryset = Homework.objects.all()
-    serializer_class = HomeworkSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        """
-        Retrieve the list of homework assignments for the current user.
-        """
-        return self.queryset.filter(is_active=True)
-
-    def perform_create(self, serializer):
-        """
-        Save a new homework assignment and log the action.
-        """
-        homework = serializer.save()
-        logger.info("Homework created: %s", homework.title)
-
-
-class HomeworkDetailView(generics.RetrieveUpdateDestroyAPIView):
+class HomeworkDetailView(HomeworkActionMixin, generics.RetrieveUpdateDestroyAPIView):
     """
     View for retrieving, updating, or deleting a specific homework assignment.
     Also allows teachers to grade homework submissions.
@@ -396,13 +310,13 @@ class HomeworkDetailView(generics.RetrieveUpdateDestroyAPIView):
         return super().update(request, *args, **kwargs)
 
 
-class HomeworkSubmissionView(generics.CreateAPIView):
+class HomeworkSubmissionView(HomeworkActionMixin, generics.CreateAPIView):
     """
     View for submitting homework.
     Allows users to submit their homework assignments.
     """
 
-    queryset = Homework.objects.all()
+    queryset = Homework.active.all()
     serializer_class = HomeworkSubmissionSerializer
     permission_classes = [IsAuthenticated]
 

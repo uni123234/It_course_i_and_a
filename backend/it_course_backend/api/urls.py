@@ -10,9 +10,7 @@ from .views import (
     ChangePasswordView,
     ChangeUsernameView,
     ConfirmEmailView,
-    CourseCreateView,
     CourseEditView,
-    CourseListView,
     FAQDetailView,
     FAQListCreateView,
     GroupCreateView,
@@ -31,6 +29,7 @@ from .views import (
     PasswordResetConfirmView,
     ReminderView,
     HomeworkDetailView,
+    CourseListCreateView,
 )
 
 APP_NAME = "api"
@@ -57,8 +56,8 @@ urlpatterns = [
     path('groups/', GroupListView.as_view(), name='group-list'),
     path('groups/create/', GroupCreateView.as_view(), name='group-create'),
     path('groups/<int:pk>/edit/', GroupEditView.as_view(), name='group-edit'),
-    path("course/", CourseListView.as_view(), name="course_list"),
-    path('courses/create/', CourseCreateView.as_view(), name='course-create'),
+    path("course/", CourseListCreateView.as_view(), name="course_list"),
+    path('courses/create/', CourseListCreateView.as_view(), name='course-create'),
     path('courses/edit/<int:pk>/', CourseEditView.as_view(), name='course-edit'),
     path('lessons/', LessonListView.as_view(), name='lesson-list'),
     path('lessons/create/', LessonCreateView.as_view(), name='lesson-create'),

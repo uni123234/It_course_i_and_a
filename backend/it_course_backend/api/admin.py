@@ -69,35 +69,53 @@ class UserAdmin(BaseUserAdmin):
 
 
 class FAQAdmin(admin.ModelAdmin):
-    list_display = ("question", "answer")
+    """Admin interface for the FAQ model."""
+
+    list_display = ("question", "answer", "is_active")
     search_fields = ("question",)
+    list_filter = ("is_active",)
 
 
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ("title", "teacher")
+    """Admin interface for the Course model."""
+
+    list_display = ("title", "teacher", "is_active")
     search_fields = ("title", "teacher__email")
-    list_filter = ("teacher",)
+    list_filter = ("teacher", "is_active")
 
 
 class LessonAdmin(admin.ModelAdmin):
-    list_display = ("title", "course", "scheduled_time")
+    """Admin interface for the Lesson model."""
+
+    list_display = ("title", "course", "scheduled_time", "is_active")
     search_fields = ("title", "course__title")
-    list_filter = ("course", "scheduled_time")
+    list_filter = ("course", "scheduled_time", "is_active")
 
 
 class HomeworkAdmin(admin.ModelAdmin):
-    list_display = ("title", "lesson", "due_date", "submitted_by", "submission_date")
+    """Admin interface for the Homework model."""
+
+    list_display = (
+        "title",
+        "lesson",
+        "due_date",
+        "submitted_by",
+        "submission_date",
+        "is_active",
+    )
     search_fields = ("title", "lesson__title", "submitted_by__email")
-    list_filter = ("lesson", "submitted_by")
+    list_filter = ("lesson", "submitted_by", "is_active")
 
 
 class GroupAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "course", "teacher")
-    search_fields = ("name", "course__title", "teacher__email")
-    list_filter = ("teacher", "course")
+    """Admin interface for the Group model."""
+
+    list_display = ("id", "name", "teacher", "is_active")
+    search_fields = ("name", "teacher__email")
+    list_filter = ("teacher", "is_active")
 
 
-# Register models with the admin site
+
 admin.site.register(Group, GroupAdmin)
 admin.site.register(Homework, HomeworkAdmin)
 admin.site.register(Course, CourseAdmin)

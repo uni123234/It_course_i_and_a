@@ -1,3 +1,8 @@
+"""
+This module contains the models for the IT course backend application.
+It includes models for Users, Courses, Lessons, Homework, and more.
+"""
+
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -10,7 +15,15 @@ from django.core.validators import EmailValidator
 
 
 class CustomUserManager(BaseUserManager):
+    """
+    Custom manager for User model with no username field.
+    Users are identified by their email addresses.
+    """
+
     def create_user(self, email, password=None, **extra_fields):
+        """
+        Create and save a regular user with the given email and password.
+        """
         if not email:
             raise ValueError("Email is required")
         email = self.normalize_email(email)
@@ -20,16 +33,22 @@ class CustomUserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, password=None, **extra_fields):
+        """
+        Create and save a superuser with the given email and password.
+        """
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
 
         if password is None:
             raise ValueError("Superusers must have a password.")
-
         return self.create_user(email, password, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    """
+    Custom user model where email is the unique identifier.
+    """
+
     USER_TYPE_CHOICES = (
         ("student", "Student"),
         ("teacher", "Teacher"),
@@ -54,19 +73,70 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def update_last_login(self):
+        """
+        Update the last login time for the user.
+        """
         self.last_login = timezone.now()
         self.save(update_fields=["last_login"])
 
     def deactivate(self):
+        """
+        Deactivate the user account.
+        """
         self.is_active = False
         self.save(update_fields=["is_active"])
 
     def activate(self):
+        """
+        Activate the user account.
+        """
         self.is_active = True
         self.save(update_fields=["is_active"])
 
 
-class FAQ(models.Model):
+class ActiveManager(models.Manager):
+    """
+    Manager to retrieve only active objects.
+    """
+
+    def get_queryset(self):
+        return super().get_queryset().filter(is_active=True)
+
+
+class ActiveModel(models.Model):
+    """
+    Abstract model that adds an is_active field and an active manager.
+    Provides common functionality for models with an active/inactive state.
+    """
+
+    is_active = models.BooleanField(default=True)
+
+    objects = models.Manager()
+    active = ActiveManager()
+
+    class Meta:
+        abstract = True
+
+    def deactivate(self):
+        """
+        Mark the object as inactive.
+        """
+        self.is_active = False
+        self.save(update_fields=["is_active"])
+
+    def activate(self):
+        """
+        Mark the object as active.
+        """
+        self.is_active = True
+        self.save(update_fields=["is_active"])
+
+
+class FAQ(ActiveModel):
+    """
+    Model representing a Frequently Asked Question (FAQ).
+    """
+
     question = models.CharField(max_length=255)
     answer = models.TextField()
 
@@ -74,7 +144,7 @@ class FAQ(models.Model):
         return self.question
 
 
-class Course(models.Model):
+class Course(ActiveModel):
     """
     Model representing a course, including details such as title,
     description, and associated teacher.
@@ -94,7 +164,7 @@ class Course(models.Model):
         return self.title
 
 
-class Lesson(models.Model):
+class Lesson(ActiveModel):
     """
     Model representing a lesson, including its title, content,
     scheduled time, and related course.
@@ -112,10 +182,14 @@ class Lesson(models.Model):
     )
 
     def __str__(self):
-        return f"{self.title} ({self.course.title})"
+        return f"{self.title} ({self.course.title if self.course else 'No Course'})"
 
 
-class Homework(models.Model):
+class Homework(ActiveModel):
+    """
+    Model representing a homework assignment.
+    """
+
     lesson = models.ForeignKey(
         "Lesson", on_delete=models.CASCADE, related_name="homeworks"
     )
@@ -132,10 +206,13 @@ class Homework(models.Model):
     grade = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
-        return f"Homework for {self.lesson.title}"
+        return f"Homework for {self.lesson.title if self.lesson else 'No Lesson'}"
 
     @property
     def is_late(self):
+        """
+        Check if the homework is submitted late.
+        """
         return (
             self.submission_date > self.due_date
             if self.submission_date and self.due_date
@@ -143,17 +220,26 @@ class Homework(models.Model):
         )
 
 
-class Group(models.Model):
+class Group(ActiveModel):
+    """
+    Model representing a student group.
+    """
+
     name = models.CharField(max_length=255)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="groups")
+
     teacher = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="teacher_groups",
-        limit_choices_to={"is_teacher": True},
+        limit_choices_to={"user_type": "teacher"},
+        verbose_name="Teacher",
     )
+
     students = models.ManyToManyField(
-        User, related_name="student_groups", limit_choices_to={"is_student": True}
+        User,
+        related_name="student_groups",
+        limit_choices_to={"user_type": "student"},
+        verbose_name="Students",
     )
 
     def __str__(self):

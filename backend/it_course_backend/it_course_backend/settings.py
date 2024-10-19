@@ -5,6 +5,10 @@ from decouple import config
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Create logs directory if it doesn't exist
+LOGS_DIR = BASE_DIR / "logs"
+LOGS_DIR.mkdir(exist_ok=True)
+
 # URL for static files (CSS, JavaScript, Images)
 STATIC_URL = "/static/"
 
@@ -61,7 +65,6 @@ AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 )
-
 
 ROOT_URLCONF = "it_course_backend.urls"
 
@@ -182,7 +185,7 @@ LOGGING = {
         "file": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
-            "filename": os.path.join(BASE_DIR, "django.log"),
+            "filename": LOGS_DIR / "django.log",
             "formatter": "verbose",
         },
     },

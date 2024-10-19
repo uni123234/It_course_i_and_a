@@ -25,6 +25,7 @@ from ..serializers import (
 logger = logging.getLogger("api")
 User = get_user_model()
 
+
 class HomePageView(APIView):
     """
     View for the homepage of the API.
