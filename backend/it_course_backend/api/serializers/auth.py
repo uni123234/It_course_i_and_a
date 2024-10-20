@@ -44,7 +44,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-class LoginSerializer(serializers.Serializer):
+class LoginSerializer(serializers.ModelSerializer):
     """
     Serializer for user login.
     """
@@ -60,7 +60,7 @@ class LoginSerializer(serializers.Serializer):
         return attrs
 
 
-class ChangePasswordSerializer(serializers.Serializer):
+class ChangePasswordSerializer(serializers.ModelSerializer):
     """
     Serializer for changing user password.
     """
@@ -80,7 +80,7 @@ class ChangePasswordSerializer(serializers.Serializer):
         return value
 
 
-class ChangeEmailSerializer(serializers.Serializer):
+class ChangeEmailSerializer(serializers.ModelSerializer):
     """
     Serializer for changing user email.
     """
@@ -94,7 +94,7 @@ class ChangeEmailSerializer(serializers.Serializer):
         return value
 
 
-class ChangeUsernameSerializer(serializers.Serializer):
+class ChangeUsernameSerializer(serializers.ModelSerializer):
     """
     Serializer for changing the user's username.
     """
@@ -108,10 +108,11 @@ class ChangeUsernameSerializer(serializers.Serializer):
         return value
 
 
-class PasswordResetRequestSerializer(serializers.Serializer):
+class PasswordResetRequestSerializer(serializers.ModelSerializer):
     """
     Serializer for handling password reset requests.
     """
+
     email = serializers.EmailField()
 
     def validate_email(self, value):
@@ -120,10 +121,11 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         return value
 
 
-class PasswordResetConfirmSerializer(serializers.Serializer):
+class PasswordResetConfirmSerializer(serializers.ModelSerializer):
     """
     Serializer for confirming the password reset.
     """
+
     new_password = serializers.CharField(min_length=8)
     token = serializers.CharField()
     uid = serializers.CharField()
@@ -136,7 +138,9 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         except (ValueError, UserModel.DoesNotExist):
             user = None
 
-        if user is None or not default_token_generator.check_token(user, attrs["token"]):
+        if user is None or not default_token_generator.check_token(
+            user, attrs["token"]
+        ):
             raise serializers.ValidationError(_("Invalid token or user ID."))
 
         return attrs
