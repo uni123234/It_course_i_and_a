@@ -59,12 +59,15 @@ class UserAdmin(BaseUserAdmin):
 
     def get_queryset(self, request):
         """Override get_queryset to return the user list."""
-        return super().get_queryset(request).select_related("teacher")
+        return super().get_queryset(request).select_related("groups")
 
     def save_model(self, request, obj, form, change):
         """Override save_model to handle password encryption."""
         if not change:
             obj.set_password(form.cleaned_data["password1"])
+        else:
+            if form.cleaned_data["password1"]:
+                obj.set_password(form.cleaned_data["password1"])
         super().save_model(request, obj, form, change)
 
 
@@ -113,7 +116,6 @@ class GroupAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "teacher", "is_active")
     search_fields = ("name", "teacher__email")
     list_filter = ("teacher", "is_active")
-
 
 
 admin.site.register(Group, GroupAdmin)

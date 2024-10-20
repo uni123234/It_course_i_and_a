@@ -1,20 +1,14 @@
 from .home import HomePageView
 
 from .learns import (
-    FAQListView,
     FAQListCreateView,
     FAQDetailView,
     CourseListCreateView,
     CourseDetailView,
     CourseEditView,
-    CourseDeleteView,
     GroupCreateView,
-    GroupDetailView,
-    GroupListView,
     GroupEditView,
-    LessonListView,
     LessonCreateView,
-    LessonDetailView,
     HomeworkDetailView,
     HomeworkSubmissionView,
     HomeworkListCreateView,

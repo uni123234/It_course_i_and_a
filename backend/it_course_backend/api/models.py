@@ -48,7 +48,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     """
     Custom user model where email is the unique identifier.
     """
-
     USER_TYPE_CHOICES = (
         ("student", "Student"),
         ("teacher", "Teacher"),
@@ -147,8 +146,14 @@ class FAQ(ActiveModel):
 class Course(ActiveModel):
     """
     Model representing a course, including details such as title,
-    description, and associated teacher.
+    description, associated teacher, and course state.
     """
+
+    COURSE_STATE_CHOICES = (
+        ("not_started", "Not Started"),
+        ("in_progress", "In Progress"),
+        ("completed", "Completed"),
+    )
 
     title = models.CharField(max_length=255, verbose_name="Title")
     description = models.TextField(blank=True, null=True, verbose_name="Description")
@@ -159,6 +164,7 @@ class Course(ActiveModel):
         related_name="courses_taught",
         verbose_name="Teacher",
     )
+    state = models.CharField(max_length=15, choices=COURSE_STATE_CHOICES, default="not_started")
 
     def __str__(self):
         return self.title
@@ -177,9 +183,7 @@ class Lesson(ActiveModel):
     video_url = models.URLField(blank=True, null=True, verbose_name="Video URL")
     meeting_link = models.URLField(blank=True, null=True, verbose_name="Meeting Link")
     notes_url = models.URLField(blank=True, null=True, verbose_name="Notes URL")
-    notes_content = models.TextField(
-        blank=True, null=True, verbose_name="Notes Content"
-    )
+    notes_content = models.TextField(blank=True, null=True, verbose_name="Notes Content")
 
     def __str__(self):
         return f"{self.title} ({self.course.title if self.course else 'No Course'})"
@@ -191,7 +195,7 @@ class Homework(ActiveModel):
     """
 
     lesson = models.ForeignKey(
-        "Lesson", on_delete=models.CASCADE, related_name="homeworks"
+        Lesson, on_delete=models.CASCADE, related_name="homeworks"
     )
     title = models.CharField(max_length=255)
     description = models.TextField()
@@ -244,3 +248,18 @@ class Group(ActiveModel):
 
     def __str__(self):
         return self.name
+
+    @property
+    def student_count(self):
+        """Return the number of students in the group."""
+        return self.students.count()
+
+    @property
+    def has_teacher(self):
+        """Check if the group has an assigned teacher."""
+        return self.teacher is not None
+
+    @property
+    def is_completed(self):
+        """Check if the group has completed its training."""
+        return not self.is_active
