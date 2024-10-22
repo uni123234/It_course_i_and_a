@@ -1,5 +1,5 @@
 import logging
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.core.mail import send_mail
@@ -9,7 +9,6 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.generics import UpdateAPIView
 from rest_framework.response import Response
-from django.contrib.auth import get_user_model
 
 from ..serializers import (
     ChangeEmailSerializer,
@@ -20,6 +19,7 @@ from ..serializers import (
     RegisterSerializer,
     LoginSerializer,
 )
+
 
 logger = logging.getLogger("api")
 User = get_user_model()
@@ -118,46 +118,55 @@ class LogoutView(generics.GenericAPIView):
             return {"detail": "Logout failed"}
 
 
-class ChangePasswordView(UpdateAPIView):
+class ChangeEmailView(UpdateAPIView):
     """
-    View for changing the user's password.
+    View for changing the user's email address.
     Requires the user to be authenticated.
     """
 
     permission_classes = [IsAuthenticated]
-    serializer_class = ChangePasswordSerializer
+    serializer_class = ChangeEmailSerializer
 
     def update(self, request, *args, **kwargs):
         """
-        Handle requests to change the user's password.
+        Handle requests to change the user's email address.
         """
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(
+            data=request.data, context={"request": request}
+        )
         if serializer.is_valid():
-            if not request.user.check_password(
-                serializer.validated_data["old_password"]
-            ):
-                logger.warning(
-                    "User %s provided incorrect old password", request.user.email
-                )
+            new_email = serializer.validated_data["email"]
+
+            if User.objects.filter(email=new_email).exists():
+                logger.warning("Email %s is already in use.", new_email)
                 return Response(
-                    {"errors": {"old_password": ["Old password is incorrect."]}},
+                    {"errors": {"email": ["This email is already in use."]}},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            request.user.set_password(serializer.validated_data["new_password"])
-            request.user.save()
+            user = request.user
+            send_email_confirmation(user, new_email)
+
+            logger.info("Email confirmation link sent to %s.", new_email)
+
+            user.email = new_email
+            user.is_active = False
+            user.save()
 
             logger.info(
-                "User %s successfully changed their password.", request.user.email
+                "User %s successfully changed their email to %s.",
+                user.username,
+                new_email,
             )
             return Response(
-                {"message": "Password has been successfully changed."},
-                status=status.HTTP_200_OK,
+                {
+                    "message": "Email has been successfully changed. Please confirm it via the link sent to the new address."
+                }
             )
 
         logger.warning(
-            "User %s failed to change password: %s",
-            request.user.email,
+            "User %s failed to change email: %s",
+            request.user.username,
             serializer.errors,
         )
         return Response(
@@ -186,42 +195,29 @@ class ChangeEmailView(UpdateAPIView):
 
             if User.objects.filter(email=new_email).exists():
                 logger.warning("Email %s is already in use.", new_email)
-                return {"errors": {"email": ["This email is already in use."]}}
+                return Response(
+                    {"errors": {"email": ["This email is already in use."]}},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             user = request.user
-            token = default_token_generator.make_token(user)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-
-            confirmation_url = f"http://localhost:8000/confirm-email/{uid}/{token}/"
-            send_mail(
-                "Confirm your email address",
-                f"Please confirm your email address by clicking the following link: {confirmation_url}",
-                "no-reply@example.com",
-                [new_email],
-                fail_silently=False,
-            )
+            serializer.save()
 
             logger.info("Email confirmation link sent to %s.", new_email)
-
-            user.email = new_email
-            user.is_active = False
-            user.save()
-
-            logger.info(
-                "User %s successfully changed their email to %s.",
-                user.username,
-                new_email,
+            return Response(
+                {
+                    "message": "Email has been successfully changed. Please confirm it via the link sent to the new address."
+                }
             )
-            return {
-                "message": "Email has been successfully changed. Please confirm it via the link sent to the new address."
-            }
 
         logger.warning(
             "User %s failed to change email: %s",
             request.user.username,
             serializer.errors,
         )
-        return {"errors": serializer.errors}
+        return Response(
+            {"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class ConfirmEmailView(generics.GenericAPIView):
@@ -316,29 +312,8 @@ class PasswordResetRequestView(generics.GenericAPIView):
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data["email"]
-        try:
-            user = User.objects.get(email=email)
-            token = default_token_generator.make_token(user)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-
-            reset_url = f"http://localhost:8000/reset-password/{uid}/{token}/"
-            send_mail(
-                "Password Reset Requested",
-                f"Please click the link to reset your password: {reset_url}",
-                "no-reply@example.com",
-                [email],
-                fail_silently=False,
-            )
-            logger.info("Password reset link sent to %s", email)
-            return Response({"message": "Password reset link has been sent."})
-        except User.DoesNotExist:
-            logger.warning("Password reset requested for non-existent email: %s", email)
-            return Response(
-                {
-                    "message": "If the email is registered, you will receive a reset link."
-                }
-            )
+        serializer.send_reset_email()
+        return Response({"message": "Password reset link has been sent."})
 
 
 class PasswordResetConfirmView(generics.GenericAPIView):

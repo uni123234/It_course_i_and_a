@@ -3,7 +3,9 @@ from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
 from django.utils.translation import gettext as _
 from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes
+from ..utils import send_password_reset_email, send_email_confirmation
 
 User = get_user_model()
 
@@ -88,10 +90,24 @@ class ChangeEmailSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
 
     def validate_email(self, value):
+        """
+        Validate that the new email is not already in use by another user.
+        """
         user = self.context["request"].user
         if User.objects.filter(email=value).exists() and user.email != value:
             raise ValidationError("This email is already in use.")
         return value
+
+    def save(self, **kwargs):
+        """
+        Update the user's email and send a confirmation email.
+        """
+        user = self.context["request"].user
+        new_email = self.validated_data["email"]
+        user.email = new_email
+        user.is_active = False
+        user.save()
+        send_email_confirmation(user, new_email)
 
 
 class ChangeUsernameSerializer(serializers.ModelSerializer):
@@ -108,7 +124,7 @@ class ChangeUsernameSerializer(serializers.ModelSerializer):
         return value
 
 
-class PasswordResetRequestSerializer(serializers.ModelSerializer):
+class PasswordResetRequestSerializer(serializers.Serializer):
     """
     Serializer for handling password reset requests.
     """
@@ -120,8 +136,19 @@ class PasswordResetRequestSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(_("No user with this email found."))
         return value
 
+    def send_reset_email(self):
+        """
+        Send the password reset email after validation.
+        """
+        email = self.validated_data["email"]
+        user = User.objects.get(email=email)
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-class PasswordResetConfirmSerializer(serializers.ModelSerializer):
+        send_password_reset_email(user, uid, token)
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
     """
     Serializer for confirming the password reset.
     """
