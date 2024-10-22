@@ -118,55 +118,46 @@ class LogoutView(generics.GenericAPIView):
             return {"detail": "Logout failed"}
 
 
-class ChangeEmailView(UpdateAPIView):
+class ChangePasswordView(UpdateAPIView):
     """
-    View for changing the user's email address.
+    View for changing the user's password.
     Requires the user to be authenticated.
     """
 
     permission_classes = [IsAuthenticated]
-    serializer_class = ChangeEmailSerializer
+    serializer_class = ChangePasswordSerializer
 
     def update(self, request, *args, **kwargs):
         """
-        Handle requests to change the user's email address.
+        Handle requests to change the user's password.
         """
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            new_email = serializer.validated_data["email"]
-
-            if User.objects.filter(email=new_email).exists():
-                logger.warning("Email %s is already in use.", new_email)
+            if not request.user.check_password(
+                serializer.validated_data["old_password"]
+            ):
+                logger.warning(
+                    "User %s provided incorrect old password", request.user.email
+                )
                 return Response(
-                    {"errors": {"email": ["This email is already in use."]}},
+                    {"errors": {"old_password": ["Old password is incorrect."]}},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            user = request.user
-            send_email_confirmation(user, new_email)
-
-            logger.info("Email confirmation link sent to %s.", new_email)
-
-            user.email = new_email
-            user.is_active = False
-            user.save()
+            request.user.set_password(serializer.validated_data["new_password"])
+            request.user.save()
 
             logger.info(
-                "User %s successfully changed their email to %s.",
-                user.username,
-                new_email,
+                "User %s successfully changed their password.", request.user.email
             )
             return Response(
-                {
-                    "message": "Email has been successfully changed. Please confirm it via the link sent to the new address."
-                }
+                {"message": "Password has been successfully changed."},
+                status=status.HTTP_200_OK,
             )
 
         logger.warning(
-            "User %s failed to change email: %s",
-            request.user.username,
+            "User %s failed to change password: %s",
+            request.user.email,
             serializer.errors,
         )
         return Response(
