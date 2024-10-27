@@ -1,66 +1,119 @@
-import { AuthInput } from "../components"
-import { useAuthForm } from '../features';
-import { API_URL } from '../config';
+import { AuthInput } from "../components";
+import { useAuthForm } from "../features";
+import { API_URL } from "../config";
+
+import { googleIcon, loginImage } from "../assets";
+import { useEffect, useState } from "react";
 
 const LoginPage = () => {
-    const { fields, errors, handleChange, handleSubmit } = useAuthForm({
-        initialFields: { email: '', password: ''},
-        onSubmit: async (fields) => {
+  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 640);
 
-            const response = await fetch(`${API_URL}login/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(fields),
-            });
+  useEffect(() => {
+    const handleResize = () => {
+      setIsSmallScreen(window.innerWidth < 768);
+    };
 
-            if (!response.ok) throw new Error('reg error');
-        },
-        validate: false,
-    });
+    window.addEventListener("resize", handleResize);
 
-    return (
-        <div className="register-page flex justify-center items-center h-screen bg-[#2d2d2d] m-0 p-0 font-[Raleway]">
-            <div className="container flex w-[900px] h-[550px] shadow-lg rounded-lg overflow-hidden relative top-[30px]">
-                <div className="image-section flex-1 bg-cover bg-center" style={{ backgroundImage: "url('https://static.overlay-tech.com/assets/77252b72-daed-406e-ab45-45eb73409a20.png')" }}></div>
-                <div className="form-section flex-1 bg-black/20 flex justify-center items-center">
-                    <div className="form-container w-[70%]">
-                        <h2 className="text-white text-[40px] mb-[20px] mt-[20px] font-bold">Welcome Back!</h2>
-                        <form onSubmit={handleSubmit}>
-                            <label className="text-[#b3b3b3] text-sm mt-[20px]" htmlFor="email">Email Address</label>
-                            <AuthInput
-                                type="email"
-                                id="email"
-                                name="email"
-                                placeholder="example@mail.com"
-                                value={fields.email}
-                                onChange={handleChange}
-                            />
-                            {errors.email && <p className="error text-red-500 text-sm font-semibold mt-[-15px]">{errors.email}</p>}
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
-                            <label className="text-[#b3b3b3] text-sm mt-[20px]" htmlFor="password">Password</label>
-                            <AuthInput
-                                type="password"
-                                id="password"
-                                name="password"
-                                placeholder="Your password"
-                                value={fields.password}
-                                onChange={handleChange}
-                            />
-                            {errors.password && <p className="error text-red-500 text-sm font-semibold mt-[-15px]">{errors.password}</p>}
+  // const { fields, errors, handleChange, handleSubmit } = useAuthForm({
+  //   initialFields: { email: "", password: "" },
+  //   onSubmit: async (fields) => {
+  //     const response = await fetch(`${API_URL}login/`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify(fields),
+  //     });
 
-                            <button className="box-content w-full h-[25px] p-[10px] mt-[19px] mb-[5px] bg-black text-white shadow-md border-none rounded-sm cursor-pointer text-base font-semibold" type="submit">Login</button>
-                            {errors.form && <p className="error text-red-500 text-sm font-semibold">{errors.form}</p>}
-                            <div className="signup-link mt-[5px] mb-[20px] text-[#b3b3b3] text-xs">
-                                Dont have an account? <a className="text-[#0094FF] no-underline" href="/register">Register</a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+  //     if (!response.ok) throw new Error("reg error");
+  //   },
+  //   validate: false,
+  // });
+
+  return (
+    <div
+      className="flex items-center justify-center min-h-screen bg-gray-200 sm:bg-cover sm:bg-center "
+      style={{
+        backgroundImage: isSmallScreen ? `url(${loginImage})` : "none",
+        backgroundSize: isSmallScreen ? "cover" : "auto",
+        backgroundPosition: isSmallScreen ? "center" : "initial",
+      }}
+    >
+      <div className="flex flex-col md:flex-row w-full max-w-md md:max-w-2xl h-auto md:h-[500px] shadow-lg rounded-lg overflow-hidden bg-white mx-4">
+        <div
+          className="hidden md:block md:w-1/2"
+          style={{
+            backgroundImage: `url(${loginImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        ></div>
+
+        <div className="flex w-full md:w-1/2 items-center justify-center p-8">
+          <div className="w-full space-y-6">
+            <div className="flex flex-col items-center space-y-2">
+              <h2 className="text-2xl font-bold text-gray-800">
+                Welcome back!
+              </h2>
             </div>
+
+            <form className="space-y-6">
+              <div>
+                <input
+                  type="email"
+                  placeholder="name@email.com"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-slate-600"
+                />
+              </div>
+              <div>
+                <input
+                  type="password"
+                  placeholder="Password"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-slate-600"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2 bg-slate-900 text-white rounded-md hover:bg-gray-800 active:bg-gray-700"
+              >
+                Sign in
+              </button>
+            </form>
+
+            <div className="text-center text-sm text-gray-500">
+              Don't have an account?
+              <a href="#" className="font-bold text-black ml-1">
+                Sign up
+              </a>
+            </div>
+
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">or</span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <button className="w-full flex items-center justify-center space-x-2 py-2 border border-gray-300 rounded-md hover:bg-gray-100 active:bg-gray-200">
+                <img src={googleIcon} className="w-5 h-5" />{" "}
+                <span>Continue with Google</span>
+              </button>
+            </div>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default LoginPage;

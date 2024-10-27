@@ -6,7 +6,6 @@ type AppProps = { router: ReturnType<typeof createBrowserRouter> };
 
 const App: FC<AppProps> = ({ router }) => {
   return <>
-  <NoiseOverlay/>
   <RouterProvider router={router} />
   </>;
 };
