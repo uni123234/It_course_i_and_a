@@ -1,5 +1,4 @@
-import React, { InputHTMLAttributes } from 'react';
- import "../../styles/customInputShadow.css" //custom shadow css class
+import React, { InputHTMLAttributes } from "react";
 
 interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   className?: string;
@@ -7,7 +6,7 @@ interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
 
 const AuthInput: React.FC<InputFieldProps> = ({ className, ...props }) => {
   const baseStyles =
-    "custom-shadow box-content w-full h-[25px] p-[10px] mb-[20px] bg-black/20 text-white text-sm border-none rounded-sm placeholder:text-[#b3b3b3] placeholder:leading-[25px]";
+    "w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-slate-600";
 
   return <input className={`${baseStyles} ${className}`} {...props} />;
 };

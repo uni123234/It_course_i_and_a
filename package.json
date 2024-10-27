@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "@types/react-facebook-login": "^4.1.11"
+  }
+}

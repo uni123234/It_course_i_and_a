@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 type AuthFormFields = {
   email: string;
@@ -15,39 +15,58 @@ type UseAuthFormProps = {
   validate?: boolean;
 };
 
-const useAuthForm = ({ initialFields, onSubmit, validate = true }: UseAuthFormProps) => {
+const API_URL = "http://localhost:8000/api/";
+
+const useAuthForm = ({
+  initialFields,
+  onSubmit,
+  validate = true,
+}: UseAuthFormProps) => {
   const [fields, setFields] = useState<AuthFormFields>(initialFields);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateFields = () => {
     const newErrors: Record<string, string> = {};
 
     if (!fields.email) {
-      newErrors.email = 'Email is required.';
+      newErrors.email = "Email is required.";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)) {
-      newErrors.email = 'Please enter a valid email address.';
+      newErrors.email = "Please enter a valid email address.";
     }
 
-    if (validate && fields.username !== undefined && fields.username.length < 6) {
-      newErrors.username = 'Username must be at least 6 characters long.';
+    if (
+      validate &&
+      fields.username !== undefined &&
+      fields.username.length < 6
+    ) {
+      newErrors.username = "Username must be at least 6 characters long.";
     }
 
     if (!fields.password) {
-      newErrors.password = 'Password is required.';
+      newErrors.password = "Password is required.";
     } else if (fields.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters long.';
+      newErrors.password = "Password must be at least 6 characters long.";
     }
 
     if (validate && fields.password !== fields.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match.';
+      newErrors.confirmPassword = "Passwords do not match.";
     }
 
-    if (validate && fields.firstname !== undefined && fields.firstname.length < 2) {
-      newErrors.firstname = 'Fisrt name must be at least 2 characters long.';
+    if (
+      validate &&
+      fields.firstname !== undefined &&
+      fields.firstname.length < 2
+    ) {
+      newErrors.firstname = "Fisrt name must be at least 2 characters long.";
     }
 
-    if (validate && fields.lastname !== undefined && fields.lastname.length < 2) {
-      newErrors.lastname = 'Last name must be at least 2 characters long.';
+    if (
+      validate &&
+      fields.lastname !== undefined &&
+      fields.lastname.length < 2
+    ) {
+      newErrors.lastname = "Last name must be at least 2 characters long.";
     }
 
     setErrors(newErrors);
@@ -62,7 +81,7 @@ const useAuthForm = ({ initialFields, onSubmit, validate = true }: UseAuthFormPr
 
     setErrors((prevErrors) => ({
       ...prevErrors,
-      [e.target.name]: '',
+      [e.target.name]: "",
     }));
   };
 
@@ -70,20 +89,24 @@ const useAuthForm = ({ initialFields, onSubmit, validate = true }: UseAuthFormPr
     e.preventDefault();
     if (!validateFields()) return;
 
+    setIsLoading(true);
     try {
       await onSubmit(fields);
-      setErrors({}); // clear the errors if request is succesful
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      setErrors({});
     } catch (err) {
-      setErrors({ form: 'An unexpected error occurred. Please try again.' });
+      setErrors({ form: "An unexpected error occurred. Please try again." });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return {
     fields,
     errors,
+    isLoading,
     handleChange,
     handleSubmit,
+    API_URL,
   };
 };
 
