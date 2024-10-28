@@ -86,6 +86,7 @@ const useAuthForm = ({
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("submit")
     e.preventDefault();
     if (!validateFields()) return;
 
