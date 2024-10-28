@@ -7,7 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN mkdir -p /app/media
+RUN mkdir -p /app/media /app/logs
 
 ENV DJANGO_SETTINGS_MODULE="it_course_backend.settings"
 ENV PYTHONUNBUFFERED=1
