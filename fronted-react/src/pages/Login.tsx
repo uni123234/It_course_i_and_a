@@ -1,4 +1,3 @@
-// Login.tsx
 import React from 'react';
 import AuthPage from '../components/auth/AuthPage';
 import useAuthForm from '../features/auth/useAuthForm';
@@ -30,8 +29,8 @@ const Login: React.FC = () => {
       title="Welcome back!"
       buttonText={isLoading ? 'Signing in...' : 'Sign in'}
       inputs={[
-        { type: 'email', name: 'email', placeholder: 'Email', value: fields.email, error: errors.email },
-        { type: 'password', name: 'password', placeholder: 'Password', value: fields.password, error: errors.password },
+        { name: 'email', placeholder: 'Email', value: fields.email, error: errors.email },
+        { name: 'password', placeholder: 'Password', value: fields.password, error: errors.password },
       ]}
       onSubmit={handleSubmit}
       onInputChange={handleChange}

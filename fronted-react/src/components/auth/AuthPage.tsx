@@ -7,7 +7,6 @@ interface AuthPageProps {
   title: string;
   buttonText: string;
   inputs: {
-    type: string;
     name: string;
     placeholder: string;
     value: string;
@@ -78,7 +77,6 @@ const AuthPage: React.FC<AuthPageProps> = ({
               {inputs.map((input, index) => (
                 <div key={index}>
                   <AuthInput
-                    type={input.type}
                     name={input.name}
                     placeholder={input.placeholder}
                     value={input.value}
