@@ -2,29 +2,25 @@ import os
 from pathlib import Path
 from decouple import config
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Base directory path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Create logs directory if it doesn't exist
 LOGS_DIR = BASE_DIR / "logs"
 LOGS_DIR.mkdir(exist_ok=True)
 
-# URL for static files (CSS, JavaScript, Images)
+# Static files URL
 STATIC_URL = "/static/"
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
+# Secret Key and Debug Mode
 SECRET_KEY = config("SECRET_KEY", default="your-secret-key")
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="").split(",")
+# Allowed Hosts Configuration
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="0.0.0.0").split(",")
 ALLOWED_HOSTS += ["localhost", "127.0.0.1"]
 
-# Application definition
+# Application Definition
 INSTALLED_APPS = [
     "django.contrib.sites",
     "allauth",
@@ -49,6 +45,7 @@ INSTALLED_APPS = [
 
 SITE_ID = 1
 
+# Middleware Configuration
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -61,13 +58,16 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
 ]
 
+# Authentication Backends
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 )
 
+# URL Configuration
 ROOT_URLCONF = "it_course_backend.urls"
 
+# Templates Configuration
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -84,6 +84,7 @@ TEMPLATES = [
     },
 ]
 
+# REST Framework Configuration
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly",
@@ -96,34 +97,22 @@ REST_FRAMEWORK = {
     },
 }
 
-# ASGI config (Channels)
-ASGI_APPLICATION = "it_course_backend.asgi.application"
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
-        },
-    },
-}
-
+# WSGI Application
 WSGI_APPLICATION = "it_course_backend.wsgi.application"
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+# Database Configuration
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("DB_NAME", default="your_db_name"),
-        "USER": config("DB_USER", default="your_db_user"),
-        "PASSWORD": config("DB_PASSWORD", default="your_db_password"),
-        "HOST": config("DB_HOST", default="localhost"),
-        "PORT": config("DB_PORT", default="5432")
+        "NAME": config("DATABASE_NAME", default="mydatabase"),
+        "USER": config("DATABASE_USER", default="myuser"),
+        "PASSWORD": config("DATABASE_PASSWORD", default="mypassword"),
+        "HOST": config("DATABASE_HOST", default="db"),
+        "PORT": config("DATABASE_PORT", default="5432"),
     }
 }
 
-# Password validation
-# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
+# Password Validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
@@ -134,27 +123,24 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.0/topics/i18n/
 LANGUAGE_CODE = "uk"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.0/howto/static-files/
+# Static Files
 STATIC_URL = "/static/"
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
+# Default Primary Key Field Type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "api.User"
 
-# CORS settings
+# CORS Settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
 
-# Session settings
+# Session Settings
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = False
@@ -162,12 +148,13 @@ SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_AGE = 3 * 24 * 60 * 60
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
+# Account Settings
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = "optional"
 ACCOUNT_AUTHENTICATION_METHOD = "username_email"
 ACCOUNT_USERNAME_REQUIRED = False
 
-# Logging configuration
+# Logging Configuration
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
