@@ -35,7 +35,7 @@ const SocialLoginButtons = () => {
   return (
     <div className="space-y-3">
       <SocialButton
-        label="Sign in with Google"
+        label="Continue with Google"
         icon={<img src={googleIcon} className="w-5 h-5" />}
         onClick={loginWithGoogle}
       />

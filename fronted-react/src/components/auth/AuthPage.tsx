@@ -3,6 +3,8 @@ import AuthInput from "./AuthInput";
 import SocialLoginButtons from "./SocialLoginButtons";
 import { loginImage } from "../../assets";
 
+import { useNavigate } from "react-router-dom";
+
 interface AuthPageProps {
   title: string;
   buttonText: string;
@@ -16,6 +18,7 @@ interface AuthPageProps {
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   linkText: string;
   linkHref: string;
+  formClassName?: string;
 }
 
 const AuthPage: React.FC<AuthPageProps> = ({
@@ -26,8 +29,21 @@ const AuthPage: React.FC<AuthPageProps> = ({
   onInputChange,
   linkText,
   linkHref,
+  formClassName,
 }) => {
   const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768);
+
+  const navigate = useNavigate();
+
+  const [navbarHeight, setNavbarHeight] = useState<number>(0);
+
+  useEffect(() => {
+    const navbar = document.querySelector("nav") as HTMLElement;
+    if (navbar) {
+      setNavbarHeight(navbar.offsetHeight);
+      console.log("a ", navbar.offsetHeight);
+    }
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -43,7 +59,7 @@ const AuthPage: React.FC<AuthPageProps> = ({
 
   return (
     <div
-      className="flex items-center justify-center min-h-screen bg-gray-200 sm:bg-cover sm:bg-center "
+      className="flex min-h-screen items-center justify-center bg-gray-200 sm:bg-cover sm:bg-center"
       style={{
         backgroundImage: isSmallScreen ? `url(${loginImage})` : "none",
         backgroundSize: isSmallScreen ? "cover" : "auto",
@@ -51,20 +67,21 @@ const AuthPage: React.FC<AuthPageProps> = ({
       }}
     >
       <div
-        className={`flex flex-col md:flex-row max-w-md md:max-w-2xl h-auto md:h-[600px] shadow-lg rounded-lg overflow-hidden bg-white mx-4
+        className={`flex flex-col md:flex-row max-w-md md:max-w-2xl h-auto md:h-[600px] shadow-lg rounded-lg overflow-hidden bg-white mx-4 ${formClassName}
         ${isSmallScreen ? "w-[350px]" : "w-full"}`}
+        style={{ marginTop: `${navbarHeight}px` }}
       >
         {!isSmallScreen && (
-          <div
+          <section
             className="hidden md:block md:w-1/2"
             style={{
               backgroundImage: `url(${loginImage})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
-          ></div>
+          ></section>
         )}
-        <div
+        <section
           className={`flex w-full items-center justify-center p-8 ${
             isSmallScreen ? "" : "md:w-1/2"
           }`}
@@ -98,9 +115,12 @@ const AuthPage: React.FC<AuthPageProps> = ({
             </form>
             <div className="text-center text-sm text-gray-500">
               {linkText}
-              <a href={linkHref} className="font-bold text-black ml-1">
+              <button
+                className="font-bold text-black ml-1"
+                onClick={() => navigate(linkHref)}
+              >
                 {linkHref === "/register" ? "Sign up" : "Sign in"}
-              </a>
+              </button>
             </div>
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
@@ -114,7 +134,7 @@ const AuthPage: React.FC<AuthPageProps> = ({
               <SocialLoginButtons />
             </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );

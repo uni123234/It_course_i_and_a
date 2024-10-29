@@ -6,7 +6,6 @@ import { googleСlientId } from "./config";
 type AppProps = { router: ReturnType<typeof createBrowserRouter> };
 
 const App: FC<AppProps> = ({ router }) => {
-  
   return (
     <GoogleOAuthProvider clientId={googleСlientId}>
       <RouterProvider router={router} />

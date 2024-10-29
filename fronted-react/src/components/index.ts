@@ -1,2 +1,2 @@
-export { default as NoiseOverlay } from './NoiseOverlay';
-export * from './auth';
+export { default as AuthPage } from './auth/AuthPage'
+export { default as NavBar } from './navbar/NavBar'
