@@ -22,18 +22,18 @@ services:
     depends_on:
       - db
     env_file:
-      - ./backend/it_course_backend/it_course_backend/.env
+      - .env
 
   db:
     image: postgres:13
     env_file:
-      - ./backend/it_course_backend/it_course_backend/.env
+      - ./.env
     ports:
       - '5433:5432'
     environment:
-      POSTGRES_DB: it_cours
-      POSTGRES_USER: unikuni122
-      POSTGRES_PASSWORD: melop5678
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
