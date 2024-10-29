@@ -1,14 +1,17 @@
-FROM node:16
+FROM node:16 AS build
 
 WORKDIR /app
 
 COPY package*.json .
-RUN npm install --force
-RUN npm i --save-dev @types/react-facebook-login --force
+
+RUN npm install --force && \
+    npm i --save-dev @types/react-facebook-login --force
 
 COPY . .
 
-RUN mkdir -p /app/node_modules && chown -R node:node /app
+RUN chown -R node:node /app/node_modules
+
+RUN mkdir -p /app/node_modules
 
 USER node
 

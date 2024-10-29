@@ -66,15 +66,12 @@ class LoginView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        try:
-            user = User.objects.get(email=serializer.validated_data["email"])
-            if not user.check_password(serializer.validated_data["password"]):
-                logger.warning("Invalid credentials for: %s", user.email)
-                return {"detail": "Invalid credentials"}
+        user = serializer.validated_data["user"]
+        refresh = RefreshToken.for_user(user)
 
-            refresh = RefreshToken.for_user(user)
-            logger.info("User logged in: %s", user.email)
-            return {
+        logger.info("User logged in: %s", user.email)
+        return Response(
+            {
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
                 "user": {
@@ -84,11 +81,9 @@ class LoginView(generics.GenericAPIView):
                     "last_name": user.last_name,
                     "user_type": user.user_type,
                 },
-            }
-
-        except User.DoesNotExist:
-            logger.warning("User not found: %s", serializer.validated_data["email"])
-            return {"detail": "Invalid credentials"}
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class LogoutView(generics.GenericAPIView):
