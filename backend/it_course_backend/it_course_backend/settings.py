@@ -17,7 +17,7 @@ SECRET_KEY = config("SECRET_KEY", default="your-secret-key")
 DEBUG = config("DEBUG", default=True, cast=bool)
 
 # Allowed Hosts Configuration
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="0.0.0.0").split(",")
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="127.0.0.1").split(",")
 ALLOWED_HOSTS += ["localhost", "127.0.0.1"]
 
 # Application Definition
