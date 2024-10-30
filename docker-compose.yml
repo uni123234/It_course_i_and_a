@@ -23,13 +23,15 @@ services:
       - db
     env_file:
       - .env
+    environment:
+      DOCKER: "true"
 
   db:
     image: postgres:13
-    env_file:
-      - ./.env
     ports:
       - '5433:5432'
+    env_file:
+      - ./.env
     environment:
       POSTGRES_DB: ${DATABASE_NAME}
       POSTGRES_USER: ${DATABASE_USER}

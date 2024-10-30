@@ -1,118 +1,172 @@
 from rest_framework import serializers
-from django.utils import timezone
-from ..models import FAQ, Course, Group, Lesson
+from django.contrib.auth import get_user_model
+from rest_framework.exceptions import ValidationError
+from django.utils.translation import gettext as _
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes
+from ..utils import send_password_reset_email, send_email_confirmation
+
+User = get_user_model()
 
 
-class FAQSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     """
-    Serializer for the FAQ model.
-    """
-
-    class Meta:
-        model = FAQ
-        fields = "__all__"
-
-
-class CourseSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Course model.
+    Serializer for the User model.
     """
 
     class Meta:
-        model = Course
-        fields = "__all__"
-
-    def validate_title(self, value):
-        if not value:
-            raise serializers.ValidationError("Title cannot be empty.")
-        return value
-
-    def validate_teachers(self, value):
-        if not value:
-            raise serializers.ValidationError("At least one teacher must be assigned to the course.")
-        return value
+        model = User
+        fields = ("id", "email", "first_name", "last_name", "user_type")
 
 
-class GroupCreateUpdateSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.ModelSerializer):
     """
-    Serializer for creating or updating a Group.
+    Serializer for registering a new user.
     """
+
+    password = serializers.CharField(write_only=True)
 
     class Meta:
-        model = Group
-        fields = ["id", "name", "teachers", "students"]
+        model = User
+        fields = ("email", "password", "first_name", "last_name", "user_type")
 
     def create(self, validated_data):
-        validated_data["teachers"] = [self.context["request"].user]  # Assign the requesting user as the teacher
-        return super().create(validated_data)
+        if User.objects.filter(email=validated_data["email"]).exists():
+            raise ValidationError("A user with this email already exists.")
 
-    def update(self, instance, validated_data):
-        instance.name = validated_data.get("name", instance.name)
-        instance.save()
-        instance.teachers.set(validated_data.get("teachers", instance.teachers.all()))
-        instance.students.set(validated_data.get("students", instance.students.all()))
-        return instance
-
-    def validate_students(self, value):
-        if len(value) == 0:
-            raise serializers.ValidationError("At least one student must be assigned to the group.")
-        return value
+        user = User(
+            email=validated_data["email"],
+            first_name=validated_data["first_name"],
+            last_name=validated_data["last_name"],
+            user_type=validated_data["user_type"],
+        )
+        user.set_password(validated_data["password"])
+        user.save()
+        return user
 
 
-class TeacherCourseSerializer(serializers.ModelSerializer):
+class LoginSerializer(serializers.Serializer):
     """
-    Serializer for creating a new course by a teacher.
+    Serializer for user login.
     """
 
-    class Meta:
-        model = Course
-        fields = ["title", "description"]
-
-    def create(self, validated_data):
-        validated_data["teachers"] = [self.context["request"].user]  # Assign the requesting user as the teacher
-        return super().create(validated_data)
-
-
-class LessonSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Lesson model.
-    """
-
-    class Meta:
-        model = Lesson
-        fields = [
-            "id",
-            "course",
-            "title",
-            "scheduled_time",
-            "content",
-            "video_url",
-            "meeting_link",
-            "notes_url",
-            "notes_content",
-        ]
-
-    def validate_title(self, value):
-        if not value:
-            raise serializers.ValidationError("Title cannot be empty.")
-        return value
-
-    def validate_scheduled_time(self, value):
-        if value <= timezone.now():
-            raise serializers.ValidationError("Scheduled time must be in the future.")
-        return value
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
-        if not attrs.get("notes_url") and not attrs.get("notes_content"):
-            raise serializers.ValidationError("Either notes_url or notes_content must be provided.")
+        user = User.objects.filter(email=attrs["email"]).first()
+        if user is None or not user.check_password(attrs["password"]):
+            raise serializers.ValidationError("Invalid email or password.")
+        attrs["user"] = user
         return attrs
 
 
-class LessonCalendarSerializer(serializers.ModelSerializer):
+class ChangePasswordSerializer(serializers.ModelSerializer):
     """
-    Serializer for the Lesson model used in the lesson calendar view.
+    Serializer for changing user password.
     """
 
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
     class Meta:
-        model = Lesson
-        fields = ["id", "title", "content", "scheduled_time", "meeting_link"]
+        model = User
+        fields = ["old_password", "new_password"]
+
+    def validate_old_password(self, value):
+        user = self.context["request"].user
+        if not user.check_password(value):
+            raise ValidationError("Old password is incorrect.")
+        return value
+
+    def validate_new_password(self, value):
+        if len(value) < 8:
+            raise ValidationError("New password must be at least 8 characters long.")
+        return value
+
+    def save(self, **kwargs):
+        user = self.context["request"].user
+        user.set_password(self.validated_data["new_password"])
+        user.save()
+        return user
+
+
+class ChangeEmailSerializer(serializers.ModelSerializer):
+    """
+    Serializer for changing user email.
+    """
+
+    email = serializers.EmailField(required=True)
+
+    class Meta:
+        model = User
+        fields = ["email"]
+
+    def validate_email(self, value):
+        """
+        Validate that the new email is not already in use by another user.
+        """
+        user = self.context["request"].user
+        if User.objects.filter(email=value).exists() and user.email != value:
+            raise ValidationError("This email is already in use.")
+        return value
+
+    def save(self, **kwargs):
+        """
+        Update the user's email and send a confirmation email.
+        """
+        user = self.context["request"].user
+        new_email = self.validated_data["email"]
+        user.email = new_email
+        user.is_active = False
+        user.save()
+        send_email_confirmation(user, new_email)
+        return user
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """
+    Serializer for handling password reset requests.
+    """
+
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(_("No user with this email found."))
+        return value
+
+    def send_reset_email(self):
+        """
+        Send the password reset email after validation.
+        """
+        email = self.validated_data["email"]
+        user = User.objects.get(email=email)
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+        send_password_reset_email(user, uid, token)
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """
+    Serializer for confirming the password reset.
+    """
+
+    new_password = serializers.CharField(min_length=8)
+    token = serializers.CharField()
+    uid = serializers.CharField()
+
+    def validate(self, attrs):
+        UserModel = get_user_model()
+        try:
+            uid = urlsafe_base64_decode(attrs["uid"]).decode()
+            user = UserModel.objects.get(pk=uid)
+        except (ValueError, TypeError, UserModel.DoesNotExist):
+            raise serializers.ValidationError(_("Invalid token or user ID."))
+
+        if not default_token_generator.check_token(user, attrs["token"]):
+            raise serializers.ValidationError(_("Invalid token or user ID."))
+
+        return attrs
