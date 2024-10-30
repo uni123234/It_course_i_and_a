@@ -1,4 +1,4 @@
-import { googleIcon, facebookIcon } from "../../assets";
+import { googleIcon } from "../../assets";
 import SocialButton from "./SocialButton";
 
 import { useGoogleLogin } from "@react-oauth/google";
@@ -12,14 +12,6 @@ const SocialLoginButtons = () => {
       console.log("Google Login failed");
     },
   });
-
-  const handleFacebookLoginSuccess = (response: any) => {
-    console.log("Успішний вхід через Facebook:", response);
-  };
-
-  const handleFacebookLoginFailure = (error: any) => {
-    console.error("Помилка при вході через Facebook:", error);
-  };
 
   return (
     <div className="space-y-3">

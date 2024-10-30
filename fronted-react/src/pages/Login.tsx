@@ -7,21 +7,27 @@ const Login: React.FC = () => {
     useAuthForm({
       initialFields: { email: "", password: "" },
       onSubmit: async (fields) => {
-        const response = await fetch(`${API_URL}/login/`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: fields.email,
-            password: fields.password,
-          }),
-        });
+        try {
+          const response = await fetch(`${API_URL}/login/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: fields.email,
+              password: fields.password,
+            }),
+          });
 
-        if (!response.ok) {
-          throw new Error("Failed to log in");
+          if (!response.ok) {
+            throw new Error("Failed to log in");
+          }
+
+          const data = await response.json();
+          console.log("Response from backend:", data); // Виведення відповіді в консоль
+        } catch (error) {
+          console.error("Error:", error);
         }
-        console.log(response);
       },
       validate: false,
     });

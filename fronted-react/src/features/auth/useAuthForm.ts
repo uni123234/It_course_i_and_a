@@ -86,7 +86,6 @@ const useAuthForm = ({
     if (isSubmitted) {
       validateFields(newFields);
     }
-    console.log(errors);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
