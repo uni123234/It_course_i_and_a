@@ -70,20 +70,32 @@ class LoginView(generics.GenericAPIView):
 
         logger.info("User logged in: %s", user.email)
 
-        return Response(
-            {
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
-                "user": {
-                    "id": user.id,
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "user_type": user.user_type,
-                },
+        response_data = {
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "user_type": user.user_type,
             },
-            status=status.HTTP_200_OK,
+        }
+
+        response = dict(response_data)
+        response = Response(response_data, status=status.HTTP_200_OK)
+        response.set_cookie(
+            "access_token",
+            str(refresh.access_token),
+            httponly=True,
+            secure=False,
+            samesite="None",
         )
+        response.set_cookie(
+            "refresh_token", str(refresh), httponly=True, secure=False, samesite="None"
+        )
+
+        return response
 
 
 class LogoutView(generics.GenericAPIView):
@@ -321,7 +333,7 @@ class GoogleLoginView(generics.GenericAPIView):
     """
 
     serializer_class = GoogleLoginSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         """
@@ -331,4 +343,36 @@ class GoogleLoginView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
 
-        return Response({"message": "Login successful", "user": user.id})
+        refresh = RefreshToken.for_user(user)
+
+        response_data = {
+            "message": "Login successful",
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "user_type": user.user_type,
+            },
+        }
+
+        response = dict(response_data)
+        response = Response(response_data, status=status.HTTP_200_OK)
+        response.set_cookie(
+            "access_token",
+            str(refresh.access_token),
+            httponly=True,
+            secure=False,
+            samesite="None",
+        )
+        response.set_cookie(
+            "refresh_token",
+            str(refresh),
+            httponly=True,
+            secure=False,
+            samesite="None",
+        )
+
+        return response
