@@ -21,6 +21,5 @@ from .auth import (
     ChangeEmailSerializer,
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
-    FacebookLoginSerializer,
     GoogleLoginSerializer,
 )
