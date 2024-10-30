@@ -7,7 +7,7 @@ const Login: React.FC = () => {
     useAuthForm({
       initialFields: { email: "", password: "" },
       onSubmit: async (fields) => {
-        const response = await fetch(`${API_URL}/login`, {
+        const response = await fetch(`${API_URL}/login/`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -17,7 +17,6 @@ const Login: React.FC = () => {
             password: fields.password,
           }),
         });
-        console.log('av ', response)
 
         if (!response.ok) {
           throw new Error("Failed to log in");

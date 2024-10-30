@@ -13,7 +13,7 @@ const Register: React.FC = () => {
         role: "",
       },
       onSubmit: async (fields) => {
-        const response = await fetch(`${API_URL}/register`, {
+        const response = await fetch(`${API_URL}/register/`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -21,9 +21,9 @@ const Register: React.FC = () => {
           body: JSON.stringify({
             email: fields.email,
             password: fields.password,
-            firstname: fields.firstName,
-            lastname: fields.lastName,
-            role: fields.role,
+            first_name: fields.firstName,
+            last_name: fields.lastName,
+            user_type: fields.role,
           }),
         });
 
