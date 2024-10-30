@@ -7,7 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env file
 ENV_PATH = "/home/uni/Project/It_course_i_and_a/.env"
-
+#ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
 
 # Check if the .env file exists and load it
 if os.path.exists(ENV_PATH):
@@ -194,6 +194,7 @@ LOGGING = {
             "class": "logging.FileHandler",
             "filename": LOGS_DIR / "django.log",
             "formatter": "verbose",
+            "encoding": "UTF-8",
         },
     },
     "loggers": {

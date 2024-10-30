@@ -23,7 +23,6 @@ from .user import (
     ChangePasswordView,
     ChangeEmailView,
     ConfirmEmailView,
-    ChangeUsernameView,
     PasswordResetRequestView,
     PasswordResetConfirmView,
 )
