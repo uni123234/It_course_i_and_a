@@ -19,7 +19,6 @@ from .auth import (
     LoginSerializer,
     ChangePasswordSerializer,
     ChangeEmailSerializer,
-    ChangeUsernameSerializer,
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
 )

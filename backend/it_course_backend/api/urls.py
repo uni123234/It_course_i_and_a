@@ -8,7 +8,6 @@ from django.urls import path
 from .views import (
     ChangeEmailView,
     ChangePasswordView,
-    ChangeUsernameView,
     ConfirmEmailView,
     CourseEditView,
     FAQDetailView,
@@ -38,7 +37,6 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
     path("change-password/", ChangePasswordView.as_view(), name="change-password"),
     path("change-email/", ChangeEmailView.as_view(), name="change-email"),
-    path("change-username/", ChangeUsernameView.as_view(), name="change-username"),
     path(
         "reset_password/<uidb64>/<token>/",
         PasswordResetConfirmView.as_view(),

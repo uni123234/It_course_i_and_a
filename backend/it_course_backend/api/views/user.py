@@ -11,7 +11,6 @@ from rest_framework.response import Response
 from ..serializers import (
     ChangeEmailSerializer,
     ChangePasswordSerializer,
-    ChangeUsernameSerializer,
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
     RegisterSerializer,
@@ -235,50 +234,6 @@ class ConfirmEmailView(generics.GenericAPIView):
         else:
             logger.warning("Invalid confirmation token for uid: %s", uidb64)
             return {"error": "The confirmation link is invalid or has expired."}
-
-
-class ChangeUsernameView(UpdateAPIView):
-    """
-    View for changing the user's username.
-    Requires the user to be authenticated.
-    """
-
-    permission_classes = [IsAuthenticated]
-    serializer_class = ChangeUsernameSerializer
-
-    def update(self, request, *args, **kwargs):
-        """
-        Handle requests to change the user's username.
-        """
-        serializer = self.get_serializer(
-            data=request.data, context={"request": request}
-        )
-        if serializer.is_valid():
-            new_username = serializer.validated_data["username"]
-
-            if User.objects.filter(username=new_username).exists():
-                logger.warning(
-                    "User %s tried to change username to %s, but it is already taken.",
-                    request.user.username,
-                    new_username,
-                )
-                return {"errors": {"username": ["This username is already taken."]}}
-
-            request.user.username = new_username
-            request.user.save()
-            logger.info(
-                "User %s successfully changed their username to %s.",
-                request.user.username,
-                new_username,
-            )
-            return {"message": "Username has been successfully changed."}
-
-        logger.warning(
-            "User %s failed to change username: %s",
-            request.user.username,
-            serializer.errors,
-        )
-        return {"errors": serializer.errors}
 
 
 class PasswordResetRequestView(generics.GenericAPIView):

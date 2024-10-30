@@ -7,14 +7,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env file
 ENV_PATH = "/home/uni/Project/It_course_i_and_a/.env"
-
+#ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
 
 # Check if the .env file exists and load it
 if os.path.exists(ENV_PATH):
-    with open(ENV_PATH, "UTF-8") as f:
+    with open(ENV_PATH, mode="r", encoding="UTF-8") as f:
         for line in f:
             if line.strip() and not line.startswith("#"):
                 key, value = line.strip().split("=", 1)
+                if value.startswith('"') and value.endswith('"'):
+                    value = value[1:-1]
+                elif value.startswith("'") and value.endswith("'"):
+                    value = value[1:-1]
                 os.environ[key] = value
 
 # Directory for logs
@@ -111,6 +115,10 @@ REST_FRAMEWORK = {
 
 WSGI_APPLICATION = "it_course_backend.wsgi.application"
 
+# Check if running in Docker
+IS_DOCKER = os.getenv("DOCKER") == "true"
+DATABASE_HOST = "db" if IS_DOCKER else "localhost"
+
 # Database configuration
 DATABASES = {
     "default": {
@@ -118,7 +126,7 @@ DATABASES = {
         "NAME": os.getenv("DATABASE_NAME", "mydatabase"),
         "USER": os.getenv("DATABASE_USER", "myuser"),
         "PASSWORD": os.getenv("DATABASE_PASSWORD", "mypassword"),
-        "HOST": os.getenv("DATABASE_HOST", "db"),
+        "HOST": DATABASE_HOST,
         "PORT": os.getenv("DATABASE_PORT", "5432"),
     }
 }
@@ -186,6 +194,7 @@ LOGGING = {
             "class": "logging.FileHandler",
             "filename": LOGS_DIR / "django.log",
             "formatter": "verbose",
+            "encoding": "UTF-8",
         },
     },
     "loggers": {
