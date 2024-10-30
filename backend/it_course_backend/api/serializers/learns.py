@@ -27,11 +27,9 @@ class CourseSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Title cannot be empty.")
         return value
 
-    def validate_teacher(self, value):
-        if value is None:
-            raise serializers.ValidationError(
-                "A teacher must be assigned to the course."
-            )
+    def validate_teachers(self, value):
+        if not value:
+            raise serializers.ValidationError("At least one teacher must be assigned to the course.")
         return value
 
 
@@ -42,24 +40,22 @@ class GroupCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Group
-        fields = ["id", "name", "course", "teacher", "students"]
+        fields = ["id", "name", "teachers", "students"]
 
     def create(self, validated_data):
-        validated_data["teacher"] = self.context["request"].user
+        validated_data["teachers"] = [self.context["request"].user]  # Assign the requesting user as the teacher
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         instance.name = validated_data.get("name", instance.name)
-        instance.course = validated_data.get("course", instance.course)
         instance.save()
+        instance.teachers.set(validated_data.get("teachers", instance.teachers.all()))
         instance.students.set(validated_data.get("students", instance.students.all()))
         return instance
 
     def validate_students(self, value):
         if len(value) == 0:
-            raise serializers.ValidationError(
-                "At least one student must be assigned to the group."
-            )
+            raise serializers.ValidationError("At least one student must be assigned to the group.")
         return value
 
 
@@ -73,7 +69,7 @@ class TeacherCourseSerializer(serializers.ModelSerializer):
         fields = ["title", "description"]
 
     def create(self, validated_data):
-        validated_data["teacher"] = self.context["request"].user
+        validated_data["teachers"] = [self.context["request"].user]  # Assign the requesting user as the teacher
         return super().create(validated_data)
 
 
@@ -108,9 +104,7 @@ class LessonSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if not attrs.get("notes_url") and not attrs.get("notes_content"):
-            raise serializers.ValidationError(
-                "Either notes_url or notes_content must be provided."
-            )
+            raise serializers.ValidationError("Either notes_url or notes_content must be provided.")
         return attrs
 
 

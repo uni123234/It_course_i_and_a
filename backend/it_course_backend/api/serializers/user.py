@@ -78,12 +78,3 @@ class HomeworkGradeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Grade must be between 0 and 100.")
         return value
 
-
-class LessonCalendarSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Lesson model to be used in the lesson calendar view.
-    """
-
-    class Meta:
-        model = Lesson
-        fields = ["id", "title", "content", "scheduled_time", "meeting_link"]

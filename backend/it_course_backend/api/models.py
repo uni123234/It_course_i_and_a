@@ -25,7 +25,7 @@ class CustomUserManager(BaseUserManager):
         Create and save a regular user with the given email and password.
         """
         if not email:
-            raise ValueError("Email is required")
+            raise ValueError("The Email field is required")
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
@@ -48,6 +48,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     """
     Custom user model where email is the unique identifier.
     """
+
     USER_TYPE_CHOICES = (
         ("student", "Student"),
         ("teacher", "Teacher"),
@@ -164,7 +165,9 @@ class Course(ActiveModel):
         related_name="courses_taught",
         verbose_name="Teacher",
     )
-    state = models.CharField(max_length=15, choices=COURSE_STATE_CHOICES, default="not_started")
+    state = models.CharField(
+        max_length=15, choices=COURSE_STATE_CHOICES, default="not_started"
+    )
 
     def __str__(self):
         return self.title
@@ -183,7 +186,9 @@ class Lesson(ActiveModel):
     video_url = models.URLField(blank=True, null=True, verbose_name="Video URL")
     meeting_link = models.URLField(blank=True, null=True, verbose_name="Meeting Link")
     notes_url = models.URLField(blank=True, null=True, verbose_name="Notes URL")
-    notes_content = models.TextField(blank=True, null=True, verbose_name="Notes Content")
+    notes_content = models.TextField(
+        blank=True, null=True, verbose_name="Notes Content"
+    )
 
     def __str__(self):
         return f"{self.title} ({self.course.title if self.course else 'No Course'})"
