@@ -7,7 +7,7 @@ const Login: React.FC = () => {
     useAuthForm({
       initialFields: { email: "", password: "" },
       onSubmit: async (fields) => {
-        const response = await fetch(`${API_URL}/login`, {
+        const response = await fetch(`${API_URL}/login/`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
