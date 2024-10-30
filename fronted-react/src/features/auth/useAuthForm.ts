@@ -5,8 +5,9 @@ type AuthFormFields = {
   password: string;
   username?: string;
   confirmPassword?: string;
-  firstname?: string;
-  lastname?: string;
+  firstName?: string;
+  lastName?: string;
+  role?: string;
 };
 
 type UseAuthFormProps = {
@@ -15,7 +16,7 @@ type UseAuthFormProps = {
   validate?: boolean;
 };
 
-const API_URL = "http://localhost:8000/api/";
+const API_URL = "http://localhost:8000/api";
 
 const useAuthForm = ({
   initialFields,
@@ -53,20 +54,22 @@ const useAuthForm = ({
       newErrors.confirmPassword = "Passwords do not match.";
     }
 
+
     if (
       validate &&
-      fields.firstname !== undefined &&
-      fields.firstname.length < 2
+      fields.lastName !== undefined &&
+      fields.lastName.length < 2 &&
+      fields.firstName !== undefined &&
+      fields.firstName.length < 2
     ) {
-      newErrors.firstname = "Fisrt name must be at least 2 characters long.";
+      newErrors.fullname = "First name or last name fields are invalid.";
     }
 
     if (
       validate &&
-      fields.lastname !== undefined &&
-      fields.lastname.length < 2
+      !fields.role
     ) {
-      newErrors.lastname = "Last name must be at least 2 characters long.";
+      newErrors.role = "Please, choose your role."
     }
 
     setErrors(newErrors);

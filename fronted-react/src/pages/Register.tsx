@@ -5,7 +5,13 @@ import useAuthForm from "../features/auth/useAuthForm";
 const Register: React.FC = () => {
   const { fields, errors, handleChange, handleSubmit, isLoading, API_URL } =
     useAuthForm({
-      initialFields: { email: "", password: "", username: "" },
+      initialFields: {
+        email: "",
+        password: "",
+        firstName: "",
+        lastName: "",
+        role: "",
+      },
       onSubmit: async (fields) => {
         const response = await fetch(`${API_URL}/register`, {
           method: "POST",
@@ -14,13 +20,15 @@ const Register: React.FC = () => {
           },
           body: JSON.stringify({
             email: fields.email,
-            username: fields.username,
             password: fields.password,
+            firstname: fields.firstName,
+            lastname: fields.lastName,
+            role: fields.role,
           }),
         });
 
         if (!response.ok) {
-          throw new Error("Failed to log in");
+          throw new Error("Failed to register");
         }
       },
       validate: true,
@@ -32,28 +40,42 @@ const Register: React.FC = () => {
       buttonText={isLoading ? "Signing up..." : "Sign up"}
       inputs={[
         {
+          type: "text",
           name: "email",
           placeholder: "Email",
           value: fields.email,
           error: errors.email,
         },
         {
-          name: "username",
-          placeholder: "Username",
-          value: fields.username || "",
-          error: errors.username,
+          type: "text-group",
+          names: ["firstName", "lastName"],
+          placeholders: ["First Name", "Last Name"],
+          values: [fields.firstName || "", fields.lastName || ""],
+          error: errors.fullname,
         },
         {
+          type: "password",
           name: "password",
           placeholder: "Password",
           value: fields.password,
           error: errors.password,
         },
         {
+          type: "password",
           name: "confirmPassword",
           placeholder: "Confirm password",
           value: fields.confirmPassword || "",
           error: errors.confirmPassword,
+        },
+        {
+          type: "radio-group",
+          name: "role",
+          options: [
+            { value: "teacher", label: "Teacher" },
+            { value: "student", label: "Student" },
+          ],
+          selected: fields.role,
+          error: errors.role,
         },
       ]}
       onSubmit={handleSubmit}

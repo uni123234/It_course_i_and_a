@@ -2,18 +2,27 @@ import React, { useEffect, useState } from "react";
 import AuthInput from "./AuthInput";
 import SocialLoginButtons from "./SocialLoginButtons";
 import { loginImage } from "../../assets";
-
+import { useNavbarHeight } from "../../hooks";
 import { useNavigate } from "react-router-dom";
 
 interface AuthPageProps {
   title: string;
   buttonText: string;
-  inputs: {
-    name: string;
-    placeholder: string;
-    value: string;
+  inputs: Array<{
+    type: string;
+    name?: string;
+    names?: string[];
+    placeholder?: string;
+    placeholders?: string[];
+    value?: string;
+    values?: string[];
     error?: string;
-  }[];
+    errors?: string[];
+    label?: string;
+    checked?: boolean;
+    options?: Array<{ value: string; label: string }>;
+    selected?: string;
+  }>;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   linkText: string;
@@ -31,19 +40,10 @@ const AuthPage: React.FC<AuthPageProps> = ({
   linkHref,
   formClassName,
 }) => {
+  console.log(inputs);
+  const navbarHeight = useNavbarHeight();
   const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768);
-
   const navigate = useNavigate();
-
-  const [navbarHeight, setNavbarHeight] = useState<number>(0);
-
-  useEffect(() => {
-    const navbar = document.querySelector("nav") as HTMLElement;
-    if (navbar) {
-      setNavbarHeight(navbar.offsetHeight);
-      console.log("a ", navbar.offsetHeight);
-    }
-  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -51,7 +51,6 @@ const AuthPage: React.FC<AuthPageProps> = ({
     };
 
     window.addEventListener("resize", handleResize);
-
     return () => {
       window.removeEventListener("resize", handleResize);
     };
@@ -93,12 +92,44 @@ const AuthPage: React.FC<AuthPageProps> = ({
             <form className="space-y-6" onSubmit={onSubmit}>
               {inputs.map((input, index) => (
                 <div key={index}>
-                  <AuthInput
-                    name={input.name}
-                    placeholder={input.placeholder}
-                    value={input.value}
-                    onChange={onInputChange}
-                  />
+                  {input.type === "text-group" ? (
+                    <div className="flex gap-4">
+                      {input.names?.map((name, i) => (
+                        <AuthInput
+                          key={name}
+                          type="text"
+                          name={name}
+                          placeholder={input.placeholders?.[i] || ""}
+                          value={input.values?.[i] || ""}
+                          onChange={onInputChange}
+                        />
+                      ))}
+                    </div>
+                  ) : input.type === "radio-group" ? (
+                    <div className="flex items-center space-x-4">
+                      {input.options?.map((option) => (
+                        <label key={option.value} className="flex items-center">
+                          <input
+                            type="radio"
+                            name={input.name}
+                            value={option.value}
+                            checked={input.selected === option.value}
+                            onChange={onInputChange}
+                            className="mr-2"
+                          />
+                          {option.label}
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <AuthInput
+                      type={input.type}
+                      name={input.name || ""}
+                      placeholder={input.placeholder || ""}
+                      value={input.value || ""}
+                      onChange={onInputChange}
+                    />
+                  )}
                   {input.error && (
                     <p className="text-red-500 text-sm font-semibold mt-1">
                       {input.error}

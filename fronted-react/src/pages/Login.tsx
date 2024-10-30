@@ -17,6 +17,7 @@ const Login: React.FC = () => {
             password: fields.password,
           }),
         });
+        console.log('av ', response)
 
         if (!response.ok) {
           throw new Error("Failed to log in");
@@ -31,12 +32,14 @@ const Login: React.FC = () => {
       buttonText={isLoading ? "Signing in..." : "Sign in"}
       inputs={[
         {
+          type: "text",
           name: "email",
           placeholder: "Email",
           value: fields.email,
           error: errors.email,
         },
         {
+          type: "password",
           name: "password",
           placeholder: "Password",
           value: fields.password,
