@@ -26,12 +26,14 @@ from .views import (
     ReminderView,
     HomeworkDetailView,
     CourseListCreateView,
+    SocialLoginView,
 )
 
 APP_NAME = "api"
 
 urlpatterns = [
     path('', HomePageView.as_view(), name='home'),
+    path('social-login/', SocialLoginView.as_view(), name='social-login'),
     path("login/", LoginView.as_view(), name="login"),
     path("register/", RegisterView.as_view(), name="register"),
     path("logout/", LogoutView.as_view(), name="logout"),

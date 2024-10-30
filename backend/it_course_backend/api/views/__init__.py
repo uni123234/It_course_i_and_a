@@ -25,4 +25,5 @@ from .user import (
     ConfirmEmailView,
     PasswordResetRequestView,
     PasswordResetConfirmView,
+    SocialLoginView,
 )

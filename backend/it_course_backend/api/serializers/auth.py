@@ -26,10 +26,21 @@ class RegisterSerializer(serializers.ModelSerializer):
     """
 
     password = serializers.CharField(write_only=True)
+    USER_TYPE_CHOICES = ["teacher", "student"]
 
     class Meta:
         model = User
         fields = ("email", "password", "first_name", "last_name", "user_type")
+
+    def validate_user_type(self, value):
+        """
+        Validate that the user_type is either 'teacher' or 'student'.
+        """
+        if value not in self.USER_TYPE_CHOICES:
+            raise serializers.ValidationError(
+                f"User type must be one of: {', '.join(self.USER_TYPE_CHOICES)}."
+            )
+        return value
 
     def create(self, validated_data):
         if User.objects.filter(email=validated_data["email"]).exists():
@@ -55,9 +66,14 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
-        user = User.objects.filter(email=attrs["email"]).first()
-        if user is None or not user.check_password(attrs["password"]):
+        email = attrs.get("email")
+        password = attrs.get("password")
+
+        user = User.objects.filter(email=email).first()
+
+        if user is None or not user.check_password(password):
             raise serializers.ValidationError("Invalid email or password.")
+
         attrs["user"] = user
         return attrs
 
