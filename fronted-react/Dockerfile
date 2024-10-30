@@ -4,8 +4,7 @@ WORKDIR /app
 
 COPY package*.json .
 
-RUN npm install --force && \
-    npm i --save-dev @types/react-facebook-login --force
+RUN npm install --force
 
 COPY . .
 
