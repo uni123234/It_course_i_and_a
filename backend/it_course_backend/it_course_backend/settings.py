@@ -12,7 +12,6 @@ ENV_PATH = "/home/uni/Project/It_course_i_and_a/.env"
 if os.path.exists(ENV_PATH):
     with open(ENV_PATH, "UTF-8") as f:
         for line in f:
-            # Ignore blank lines and comments
             if line.strip() and not line.startswith("#"):
                 key, value = line.strip().split("=", 1)
                 os.environ[key] = value
