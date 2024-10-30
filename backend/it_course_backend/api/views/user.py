@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.utils.http import urlsafe_base64_decode
 from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
+from django.conf import settings
 from rest_framework import generics, permissions, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -61,16 +62,14 @@ class LoginView(generics.GenericAPIView):
         """
         Handle user login.
         """
-        logger.info("Login request: %s", request.data)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user = serializer.validated_data["user"]
         refresh = RefreshToken.for_user(user)
 
-        logger.info("User logged in: %s", user.email)
-
         response_data = {
+            "message": "Login successful",
             "refresh": str(refresh),
             "access": str(refresh.access_token),
             "user": {
@@ -82,17 +81,20 @@ class LoginView(generics.GenericAPIView):
             },
         }
 
-        response = dict(response_data)
         response = Response(response_data, status=status.HTTP_200_OK)
         response.set_cookie(
-            "access_token",
+            "accessToken",
             str(refresh.access_token),
             httponly=True,
-            secure=False,
-            samesite="None",
+            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+            samesite="Lax",
         )
         response.set_cookie(
-            "refresh_token", str(refresh), httponly=True, secure=False, samesite="None"
+            "refreshToken",
+            str(refresh),
+            httponly=True,
+            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+            samesite="Lax",
         )
 
         return response
@@ -358,21 +360,20 @@ class GoogleLoginView(generics.GenericAPIView):
             },
         }
 
-        response = dict(response_data)
         response = Response(response_data, status=status.HTTP_200_OK)
         response.set_cookie(
-            "access_token",
+            "accessToken",
             str(refresh.access_token),
             httponly=True,
-            secure=False,
-            samesite="None",
+            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+            samesite="Lax",
         )
         response.set_cookie(
-            "refresh_token",
+            "refreshToken",
             str(refresh),
             httponly=True,
-            secure=False,
-            samesite="None",
+            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+            samesite="Lax",
         )
 
         return response

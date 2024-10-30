@@ -11,7 +11,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env file
-ENV_PATH = ".env"
+ENV_PATH = "./../../.env"
 
 # Check if the .env file exists and load it
 if os.path.exists(ENV_PATH):
@@ -113,6 +113,8 @@ REST_FRAMEWORK = {
         "REFRESH_TOKEN_LIFETIME": int(os.getenv("REFRESH_TOKEN_LIFETIME", "86400")),
         "ROTATE_REFRESH_TOKENS": True,
         "BLACKLIST_AFTER_ROTATION": True,
+        "AUTH_COOKIE_SECURE": os.getenv("AUTH_COOKIE_SECURE", "False")
+        == "True",  # Use for cookie security
     },
 }
 
@@ -167,13 +169,10 @@ CORS_ALLOW_CREDENTIALS = True
 # Session settings
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = os.getenv("AUTH_COOKIE_SECURE", "False") == "True"
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_AGE = 3 * 24 * 60 * 60
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_SECURE = False
-SESSION_COOKIE_SAMESITE = "None"
-SESSION_COOKIE_HTTPONLY = True
 
 # AllAuth settings
 ACCOUNT_EMAIL_REQUIRED = True
@@ -183,7 +182,6 @@ ACCOUNT_USERNAME_REQUIRED = False
 
 ACCOUNT_ADAPTER = "allauth.account.adapter.DefaultAccountAdapter"
 SOCIALACCOUNT_ADAPTER = "allauth.socialaccount.adapter.DefaultSocialAccountAdapter"
-
 
 FACEBOOK_APP_ID = "YOUR_FACEBOOK_APP_ID"
 FACEBOOK_APP_SECRET = "YOUR_FACEBOOK_APP_SECRET"
