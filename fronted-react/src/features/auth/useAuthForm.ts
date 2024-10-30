@@ -59,10 +59,10 @@ const useAuthForm = ({
     }
 
     if (
-      (validate &&
-        (!fieldsToValidate.lastName || fieldsToValidate.lastName.length < 2)) ||
+      validate && (
+        (!fieldsToValidate.lastName || fieldsToValidate.lastName.length < 2) ||
       !fieldsToValidate.firstName ||
-      fieldsToValidate.firstName.length < 2
+      fieldsToValidate.firstName.length < 2)
     ) {
       newErrors.fullname = "First name or last name fields are invalid.";
     }
@@ -86,6 +86,7 @@ const useAuthForm = ({
     if (isSubmitted) {
       validateFields(newFields);
     }
+    console.log(errors);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

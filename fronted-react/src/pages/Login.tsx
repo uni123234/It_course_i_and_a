@@ -21,6 +21,7 @@ const Login: React.FC = () => {
         if (!response.ok) {
           throw new Error("Failed to log in");
         }
+        console.log(response);
       },
       validate: false,
     });
