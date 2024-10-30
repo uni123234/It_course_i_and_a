@@ -110,20 +110,6 @@ class ChangeEmailSerializer(serializers.ModelSerializer):
         send_email_confirmation(user, new_email)
 
 
-class ChangeUsernameSerializer(serializers.ModelSerializer):
-    """
-    Serializer for changing the user's username.
-    """
-
-    username = serializers.CharField(required=True)
-
-    def validate_username(self, value):
-        user = self.context["request"].user
-        if User.objects.filter(username=value).exists() and user.username != value:
-            raise ValidationError("This username is already in use.")
-        return value
-
-
 class PasswordResetRequestSerializer(serializers.Serializer):
     """
     Serializer for handling password reset requests.

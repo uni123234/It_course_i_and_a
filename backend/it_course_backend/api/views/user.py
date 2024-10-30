@@ -11,7 +11,6 @@ from rest_framework.response import Response
 from ..serializers import (
     ChangeEmailSerializer,
     ChangePasswordSerializer,
-    ChangeUsernameSerializer,
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
     RegisterSerializer,
