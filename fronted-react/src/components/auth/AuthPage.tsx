@@ -57,17 +57,17 @@ const AuthPage: React.FC<AuthPageProps> = ({
 
   return (
     <div
-      className="flex min-h-screen items-center justify-center bg-gray-200 sm:bg-cover sm:bg-center"
+      className={`flex items-center justify-center sm:bg-cover sm:bg-center`}
       style={{
-        backgroundImage: isSmallScreen ? `url(${loginImage})` : "none",
+        backgroundImage: `${isSmallScreen ? `url(${loginImage}), ` : ""}linear-gradient(to bottom, rgb(239 246 255), rgb(219 234 254))`,
         backgroundSize: isSmallScreen ? "cover" : "auto",
         backgroundPosition: isSmallScreen ? "center" : "initial",
+        minHeight: `calc(100vh - ${navbarHeight}px)`
       }}
     >
       <div
         className={`flex flex-col md:flex-row max-w-md md:max-w-2xl h-auto md:h-[600px] shadow-lg rounded-lg overflow-hidden bg-white mx-4 ${formClassName}
         ${isSmallScreen ? "w-[350px]" : "w-full"}`}
-        style={{ marginTop: `${navbarHeight}px` }}
       >
         {!isSmallScreen && (
           <section

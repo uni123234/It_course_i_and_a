@@ -1,16 +1,13 @@
 import { useNavigate } from "react-router-dom";
-import { useNavbarHeight } from "../hooks";
 
 const Home = () => {
-  const navbarHeight = useNavbarHeight();
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 flex flex-col items-center py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 text-gray-800 flex flex-col items-center py-12 px-4">
       {/* Контейнер */}
       <div
         className="max-w-5xl w-full space-y-8"
-        style={{ marginTop: `${navbarHeight}px` }}
       >
         {/* Заголовок */}
         <section className="text-center bg-white rounded-lg shadow-md p-8">
