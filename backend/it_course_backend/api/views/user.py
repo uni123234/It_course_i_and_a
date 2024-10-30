@@ -14,7 +14,6 @@ from ..serializers import (
     PasswordResetConfirmSerializer,
     RegisterSerializer,
     LoginSerializer,
-    FacebookLoginSerializer,
     GoogleLoginSerializer,
 )
 
