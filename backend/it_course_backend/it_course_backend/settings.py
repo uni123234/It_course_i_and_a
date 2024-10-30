@@ -1,19 +1,20 @@
 import os
 from pathlib import Path
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env file
-ENV_PATH = BASE_DIR.parent / ".env"
+ENV_PATH = "/home/uni/Project/It_course_i_and_a/.env"
 
 # Check if the .env file exists and load it
 if os.path.exists(ENV_PATH):
-    with open(ENV_PATH) as f:
+    with open(ENV_PATH, "UTF-8") as f:
         for line in f:
             # Ignore blank lines and comments
-            if line.strip() and not line.startswith('#'):
-                key, value = line.strip().split('=', 1)
+            if line.strip() and not line.startswith("#"):
+                key, value = line.strip().split("=", 1)
                 os.environ[key] = value
 
 # Directory for logs
