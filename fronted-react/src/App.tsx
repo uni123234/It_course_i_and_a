@@ -1,4 +1,4 @@
-import { FC } from "react"; // Alias for FunctionComponent
+import { FC } from "react";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { googleСlientId } from "./config";

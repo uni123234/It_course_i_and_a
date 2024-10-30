@@ -40,7 +40,6 @@ const AuthPage: React.FC<AuthPageProps> = ({
   linkHref,
   formClassName,
 }) => {
-  console.log(inputs);
   const navbarHeight = useNavbarHeight();
   const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 768);
   const navigate = useNavigate();

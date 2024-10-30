@@ -17,7 +17,6 @@ const Login: React.FC = () => {
             password: fields.password,
           }),
         });
-        console.log('av ', response)
 
         if (!response.ok) {
           throw new Error("Failed to log in");

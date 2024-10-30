@@ -1,4 +1,4 @@
-import { LoginPage, RegisterPage, HomePage, Dashboard } from "./pages";
+import { LoginPage, RegisterPage, HomePage, DashboardPage } from "./pages";
 import { NavBar } from "./components";
 import { createBrowserRouter } from "react-router-dom";
 
@@ -21,7 +21,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/dashboard",
-        element: <Dashboard />,
+        element: <DashboardPage />,
       },
     ],
   },

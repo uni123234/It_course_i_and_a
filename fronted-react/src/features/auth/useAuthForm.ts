@@ -26,72 +26,74 @@ const useAuthForm = ({
   const [fields, setFields] = useState<AuthFormFields>(initialFields);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const validateFields = () => {
+  const validateFields = (fieldsToValidate: AuthFormFields) => {
     const newErrors: Record<string, string> = {};
 
-    if (!fields.email) {
+    if (!fieldsToValidate.email) {
       newErrors.email = "Email is required.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fieldsToValidate.email)) {
       newErrors.email = "Please enter a valid email address.";
     }
 
     if (
       validate &&
-      fields.username !== undefined &&
-      fields.username.length < 6
+      fieldsToValidate.username !== undefined &&
+      fieldsToValidate.username.length < 6
     ) {
       newErrors.username = "Username must be at least 6 characters long.";
     }
 
-    if (!fields.password) {
+    if (!fieldsToValidate.password) {
       newErrors.password = "Password is required.";
-    } else if (fields.password.length < 6) {
+    } else if (fieldsToValidate.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters long.";
     }
 
-    if (validate && fields.password !== fields.confirmPassword) {
+    if (
+      validate &&
+      fieldsToValidate.password !== fieldsToValidate.confirmPassword
+    ) {
       newErrors.confirmPassword = "Passwords do not match.";
     }
 
-
     if (
-      validate &&
-      fields.lastName !== undefined &&
-      fields.lastName.length < 2 &&
-      fields.firstName !== undefined &&
-      fields.firstName.length < 2
+      (validate &&
+        (!fieldsToValidate.lastName || fieldsToValidate.lastName.length < 2)) ||
+      !fieldsToValidate.firstName ||
+      fieldsToValidate.firstName.length < 2
     ) {
       newErrors.fullname = "First name or last name fields are invalid.";
     }
 
-    if (
-      validate &&
-      !fields.role
-    ) {
-      newErrors.role = "Please, choose your role."
+    if (validate && !fieldsToValidate.role) {
+      newErrors.role = "Please, choose your role.";
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // returns true, if there is no errors
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFields({
+    const newFields = {
       ...fields,
       [e.target.name]: e.target.value,
-    });
+    };
+    setFields(newFields);
 
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [e.target.name]: "",
-    }));
+    // Очищення помилок після відправки форми
+    if (isSubmitted) {
+      validateFields(newFields);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log("submit")
     e.preventDefault();
-    if (!validateFields()) return;
+    setIsSubmitted(true); // Встановлюємо в true після натискання submit
+    const isValid = validateFields(fields);
+
+    if (!isValid) return;
 
     setIsLoading(true);
     try {
@@ -106,7 +108,7 @@ const useAuthForm = ({
 
   return {
     fields,
-    errors,
+    errors: isSubmitted ? errors : {}, // Відображаємо помилки тільки після submit
     isLoading,
     handleChange,
     handleSubmit,
