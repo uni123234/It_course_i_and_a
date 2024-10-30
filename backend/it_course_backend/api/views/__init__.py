@@ -26,5 +26,4 @@ from .user import (
     PasswordResetRequestView,
     PasswordResetConfirmView,
     GoogleLoginView,
-    FacebookLoginView,
 )

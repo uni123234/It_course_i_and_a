@@ -5,7 +5,7 @@ Serializers for the Homework application, including submission and grading.
 from rest_framework import serializers
 from django.utils import timezone
 from django.contrib.auth import get_user_model
-from ..models import Homework  # Removed Lesson import if not used
+from ..models import Homework
 
 User = get_user_model()
 

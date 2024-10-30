@@ -1,3 +1,8 @@
+"""
+Django settings for the IT Course Backend project.
+This module contains the main configuration settings.
+"""
+
 import os
 from pathlib import Path
 
@@ -7,7 +12,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env file
 ENV_PATH = ".env"
-# ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
 
 # Check if the .env file exists and load it
 if os.path.exists(ENV_PATH):
@@ -105,8 +109,8 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "SIMPLE_JWT": {
-        "ACCESS_TOKEN_LIFETIME": int(os.getenv("ACCESS_TOKEN_LIFETIME", 3600)),
-        "REFRESH_TOKEN_LIFETIME": int(os.getenv("REFRESH_TOKEN_LIFETIME", 86400)),
+        "ACCESS_TOKEN_LIFETIME": int(os.getenv("ACCESS_TOKEN_LIFETIME", "3600")),
+        "REFRESH_TOKEN_LIFETIME": int(os.getenv("REFRESH_TOKEN_LIFETIME", "86400")),
         "ROTATE_REFRESH_TOKENS": True,
         "BLACKLIST_AFTER_ROTATION": True,
     },
@@ -158,6 +162,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+CORS_ALLOW_CREDENTIALS = True
 
 # Session settings
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
@@ -166,6 +171,9 @@ SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_AGE = 3 * 24 * 60 * 60
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_SECURE = False
+SESSION_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_HTTPONLY = True
 
 # AllAuth settings
 ACCOUNT_EMAIL_REQUIRED = True
