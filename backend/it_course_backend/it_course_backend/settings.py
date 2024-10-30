@@ -7,7 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables from .env file
 ENV_PATH = "/home/uni/Project/It_course_i_and_a/.env"
-#ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+# ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
 
 # Check if the .env file exists and load it
 if os.path.exists(ENV_PATH):
@@ -76,7 +76,7 @@ MIDDLEWARE = [
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
-    "api.backends.EmailBackend", 
+    "api.backends.EmailBackend",
 )
 
 ROOT_URLCONF = "it_course_backend.urls"
@@ -177,6 +177,13 @@ ACCOUNT_USERNAME_REQUIRED = False
 
 ACCOUNT_ADAPTER = "allauth.account.adapter.DefaultAccountAdapter"
 SOCIALACCOUNT_ADAPTER = "allauth.socialaccount.adapter.DefaultSocialAccountAdapter"
+
+
+FACEBOOK_APP_ID = "YOUR_FACEBOOK_APP_ID"
+FACEBOOK_APP_SECRET = "YOUR_FACEBOOK_APP_SECRET"
+
+GOOGLE_CLIENT_ID = "your_google_client_id"
+GOOGLE_CLIENT_SECRET = "your_google_client_secret"
 
 # Logging configuration
 LOGGING = {

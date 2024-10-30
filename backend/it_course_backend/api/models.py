@@ -43,17 +43,6 @@ class CustomUserManager(BaseUserManager):
             raise ValueError("Superusers must have a password.")
         return self.create_user(email, password, **extra_fields)
 
-    def create_social_user(self, email, user_type="student", **extra_fields):
-        """
-        Create and save a user with the given email, user_type, and additional fields.
-        """
-        if not email:
-            raise ValueError("The Email field is required")
-        email = self.normalize_email(email)
-        user = self.model(email=email, user_type=user_type, **extra_fields)
-        user.save(using=self._db)
-        return user
-
 
 class User(AbstractBaseUser, PermissionsMixin):
     """
@@ -111,6 +100,11 @@ class ActiveManager(models.Manager):
     """
 
     def get_queryset(self):
+        """get_queryset
+
+        Returns:
+            return super().get_queryset().filter(is_active=True)
+        """
         return super().get_queryset().filter(is_active=True)
 
 
@@ -126,6 +120,8 @@ class ActiveModel(models.Model):
     active = ActiveManager()
 
     class Meta:
+        """Meta
+        """
         abstract = True
 
     def deactivate(self):

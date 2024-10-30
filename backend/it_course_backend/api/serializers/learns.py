@@ -1,3 +1,8 @@
+"""
+Serializers for the learning management system, including
+FAQ, Course, Group, Lesson, and related data structures.
+"""
+
 from rest_framework import serializers
 from django.utils import timezone
 from ..models import FAQ, Course, Group, Lesson
@@ -23,13 +28,17 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def validate_title(self, value):
+        """Validate that the course title is not empty."""
         if not value:
             raise serializers.ValidationError("Title cannot be empty.")
         return value
 
     def validate_teachers(self, value):
+        """Validate that at least one teacher is assigned to the course."""
         if not value:
-            raise serializers.ValidationError("At least one teacher must be assigned to the course.")
+            raise serializers.ValidationError(
+                "At least one teacher must be assigned to the course."
+            )
         return value
 
 
@@ -43,10 +52,12 @@ class GroupCreateUpdateSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "teachers", "students"]
 
     def create(self, validated_data):
-        validated_data["teachers"] = [self.context["request"].user]  # Assign the requesting user as the teacher
+        """Assign the requesting user as the teacher during group creation."""
+        validated_data["teachers"] = [self.context["request"].user]
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
+        """Update group details including teachers and students."""
         instance.name = validated_data.get("name", instance.name)
         instance.save()
         instance.teachers.set(validated_data.get("teachers", instance.teachers.all()))
@@ -54,8 +65,11 @@ class GroupCreateUpdateSerializer(serializers.ModelSerializer):
         return instance
 
     def validate_students(self, value):
+        """Validate that at least one student is assigned to the group."""
         if len(value) == 0:
-            raise serializers.ValidationError("At least one student must be assigned to the group.")
+            raise serializers.ValidationError(
+                "At least one student must be assigned to the group."
+            )
         return value
 
 
@@ -69,7 +83,8 @@ class TeacherCourseSerializer(serializers.ModelSerializer):
         fields = ["title", "description"]
 
     def create(self, validated_data):
-        validated_data["teachers"] = [self.context["request"].user]  # Assign the requesting user as the teacher
+        """Assign the requesting user as the teacher during course creation."""
+        validated_data["teachers"] = [self.context["request"].user]
         return super().create(validated_data)
 
 
@@ -93,18 +108,23 @@ class LessonSerializer(serializers.ModelSerializer):
         ]
 
     def validate_title(self, value):
+        """Validate that the lesson title is not empty."""
         if not value:
             raise serializers.ValidationError("Title cannot be empty.")
         return value
 
     def validate_scheduled_time(self, value):
+        """Validate that the scheduled time is in the future."""
         if value <= timezone.now():
             raise serializers.ValidationError("Scheduled time must be in the future.")
         return value
 
     def validate(self, attrs):
+        """Validate that either notes_url or notes_content is provided."""
         if not attrs.get("notes_url") and not attrs.get("notes_content"):
-            raise serializers.ValidationError("Either notes_url or notes_content must be provided.")
+            raise serializers.ValidationError(
+                "Either notes_url or notes_content must be provided."
+            )
         return attrs
 
 

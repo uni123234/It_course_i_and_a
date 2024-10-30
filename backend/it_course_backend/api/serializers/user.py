@@ -1,14 +1,18 @@
+"""
+Serializers for the Homework application, including submission and grading.
+"""
+
 from rest_framework import serializers
 from django.utils import timezone
 from django.contrib.auth import get_user_model
-from ..models import Homework, Lesson
+from ..models import Homework  # Removed Lesson import if not used
 
 User = get_user_model()
 
 
 class HomeworkSubmissionSerializer(serializers.ModelSerializer):
     """
-    Serializer for homework submission.
+    Serializer for handling homework submissions.
     """
 
     class Meta:
@@ -16,11 +20,17 @@ class HomeworkSubmissionSerializer(serializers.ModelSerializer):
         fields = ["submission_file"]
 
     def validate_submission_file(self, value):
+        """
+        Validates that the submission file is provided.
+        """
         if not value:
             raise serializers.ValidationError("Submission file is required.")
         return value
 
     def create(self, validated_data):
+        """
+        Creates a homework submission and updates the submission date.
+        """
         homework = Homework.objects.get(id=self.context["homework_id"])
         homework.submission_date = timezone.now()
         homework.submission_file = validated_data["submission_file"]
@@ -49,6 +59,9 @@ class HomeworkSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_homeworks_to_review(user, now):
+        """
+        Retrieves homework that needs to be reviewed for the teacher.
+        """
         return Homework.objects.filter(
             lesson__course__groups__teacher=user,
             review_deadline__lte=now,
@@ -57,6 +70,9 @@ class HomeworkSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_homeworks_to_submit(user, now):
+        """
+        Retrieves homework that needs to be submitted for the student.
+        """
         return Homework.objects.filter(
             lesson__course__groups__students=user,
             due_date__gte=now,
@@ -74,7 +90,9 @@ class HomeworkGradeSerializer(serializers.ModelSerializer):
         fields = ["id", "grade"]
 
     def validate_grade(self, value):
+        """
+        Validates that the grade is between 0 and 100.
+        """
         if value < 0 or value > 100:
             raise serializers.ValidationError("Grade must be between 0 and 100.")
         return value
-
