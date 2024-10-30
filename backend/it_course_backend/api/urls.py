@@ -27,7 +27,6 @@ from .views import (
     HomeworkDetailView,
     CourseListCreateView,
     GoogleLoginView,
-    FacebookLoginView,
 )
 
 APP_NAME = "api"
