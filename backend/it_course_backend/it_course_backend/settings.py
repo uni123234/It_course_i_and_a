@@ -179,8 +179,6 @@ ACCOUNT_ADAPTER = "allauth.account.adapter.DefaultAccountAdapter"
 SOCIALACCOUNT_ADAPTER = "allauth.socialaccount.adapter.DefaultSocialAccountAdapter"
 
 # Social authentication settings (if applicable)
-FACEBOOK_APP_ID = os.getenv("FACEBOOK_APP_ID", "YOUR_FACEBOOK_APP_ID")
-FACEBOOK_APP_SECRET = os.getenv("FACEBOOK_APP_SECRET", "YOUR_FACEBOOK_APP_SECRET")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "your_google_client_id")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "your_google_client_secret")
 
