@@ -5,7 +5,7 @@ This module contains the main configuration settings.
 
 import os
 from pathlib import Path
-
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,13 +29,9 @@ if os.path.exists(ENV_PATH):
 LOGS_DIR = BASE_DIR / "logs"
 LOGS_DIR.mkdir(exist_ok=True)
 
-# SECURITY WARNING: keep the secret key used in production secret!
+# Security settings
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True") == "True"
-
-# Allowed hosts for the application
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1").split(",")
 
 # Application definition
@@ -61,7 +57,7 @@ INSTALLED_APPS = [
 
 SITE_ID = 1
 
-# Middleware used by Django
+# Middleware
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -83,7 +79,7 @@ AUTHENTICATION_BACKENDS = (
 
 ROOT_URLCONF = "it_course_backend.urls"
 
-# Templates configuration
+# Templates
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -108,14 +104,15 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
-    "SIMPLE_JWT": {
-        "ACCESS_TOKEN_LIFETIME": int(os.getenv("ACCESS_TOKEN_LIFETIME", "3600")),
-        "REFRESH_TOKEN_LIFETIME": int(os.getenv("REFRESH_TOKEN_LIFETIME", "86400")),
-        "ROTATE_REFRESH_TOKENS": True,
-        "BLACKLIST_AFTER_ROTATION": True,
-        "AUTH_COOKIE_SECURE": os.getenv("AUTH_COOKIE_SECURE", "False")
-        == "True",  # Use for cookie security
-    },
+}
+
+# Simple JWT settings
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.getenv("ACCESS_TOKEN_LIFETIME", "60"))),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("REFRESH_TOKEN_LIFETIME", "1"))),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_COOKIE_SECURE": os.getenv("AUTH_COOKIE_SECURE", "False") == "True",
 }
 
 WSGI_APPLICATION = "it_course_backend.wsgi.application"
@@ -138,9 +135,7 @@ DATABASES = {
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -183,11 +178,11 @@ ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_ADAPTER = "allauth.account.adapter.DefaultAccountAdapter"
 SOCIALACCOUNT_ADAPTER = "allauth.socialaccount.adapter.DefaultSocialAccountAdapter"
 
-FACEBOOK_APP_ID = "YOUR_FACEBOOK_APP_ID"
-FACEBOOK_APP_SECRET = "YOUR_FACEBOOK_APP_SECRET"
-
-GOOGLE_CLIENT_ID = "your_google_client_id"
-GOOGLE_CLIENT_SECRET = "your_google_client_secret"
+# Social authentication settings (if applicable)
+FACEBOOK_APP_ID = os.getenv("FACEBOOK_APP_ID", "YOUR_FACEBOOK_APP_ID")
+FACEBOOK_APP_SECRET = os.getenv("FACEBOOK_APP_SECRET", "YOUR_FACEBOOK_APP_SECRET")
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "your_google_client_id")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "your_google_client_secret")
 
 # Logging configuration
 LOGGING = {
