@@ -7,7 +7,7 @@ const NavBar: React.FC = () => {
     <>
       <nav className="bg-gray-100 shadow-md border-b-2 border-b-purple-950 p-4 flex justify-between items-center w-full">
         <h1 className="text-2xl font-semibold text-gray-900">Brand</h1>
-        <ul className="flex space-x-6">
+        <ul className="flex space-x-2">
           <li>
             <button
               className="text-gray-800 hover:text-gray-900 font-bold"
