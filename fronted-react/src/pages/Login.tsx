@@ -44,7 +44,7 @@ const Login: React.FC = () => {
       buttonText={isLoading ? "Signing in..." : "Sign in"}
       inputs={[
         {
-          type: "text",
+          type: "email",
           name: "email",
           placeholder: "Email",
           value: fields.email,

@@ -1,6 +1,6 @@
 import { googleIcon } from "../../assets";
 import SocialButton from "./SocialButton";
-import { GOOGLE_AUTH_URL } from "../../config";
+import { API_URL } from "../../config";
 
 import { useGoogleLogin } from "@react-oauth/google";
 
@@ -11,7 +11,7 @@ const SocialLoginButtons = () => {
       const accessToken = tokenResponse.access_token;
 
       try {
-        const response = await fetch(`${GOOGLE_AUTH_URL}`, {
+        const response = await fetch(`${API_URL}/auth/google/`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

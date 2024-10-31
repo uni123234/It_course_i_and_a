@@ -12,10 +12,10 @@ type AppProps = { router: ReturnType<typeof createBrowserRouter> };
 const App: FC<AppProps> = ({ router }) => {
   return (
     <AuthProvider>
-    <GoogleOAuthProvider clientId={googleСlientId}>
-      <RouterProvider router={router} />
-      <Footer />
-    </GoogleOAuthProvider>
+      <GoogleOAuthProvider clientId={googleСlientId}>
+        <RouterProvider router={router} />
+        <Footer />
+      </GoogleOAuthProvider>
     </AuthProvider>
   );
 };
