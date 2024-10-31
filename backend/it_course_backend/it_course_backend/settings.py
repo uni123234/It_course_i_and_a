@@ -112,7 +112,11 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("REFRESH_TOKEN_LIFETIME", "1"))),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
-    "AUTH_COOKIE_SECURE": os.getenv("AUTH_COOKIE_SECURE", "False") == "True",
+    "AUTH_COOKIE": "accessToken",
+    "AUTH_COOKIE_SECURE": os.getenv("AUTH_COOKIE_SECURE", "True") == "True",
+    "AUTH_COOKIE_HTTP_ONLY": True,
+    "AUTH_COOKIE_PATH": "/",
+    "AUTH_COOKIE_SAMESITE": "Lax",
 }
 
 WSGI_APPLICATION = "it_course_backend.wsgi.application"
@@ -164,7 +168,7 @@ CORS_ALLOW_CREDENTIALS = True
 # Session settings
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = os.getenv("AUTH_COOKIE_SECURE", "False") == "True"
+SESSION_COOKIE_SECURE = os.getenv("AUTH_COOKIE_SECURE", "True") == "True"
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_AGE = 3 * 24 * 60 * 60
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
