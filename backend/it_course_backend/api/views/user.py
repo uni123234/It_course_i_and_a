@@ -54,7 +54,6 @@ class LoginView(generics.GenericAPIView):
     """
     API View for user login.
     """
-
     serializer_class = LoginSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -83,15 +82,15 @@ class LoginView(generics.GenericAPIView):
 
         response = Response(response_data, status=status.HTTP_200_OK)
         response.set_cookie(
-            "accessToken",
-            str(refresh.access_token),
+            key="accessToken",
+            value=str(refresh.access_token),
             httponly=True,
             secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
             samesite="Lax",
         )
         response.set_cookie(
-            "refreshToken",
-            str(refresh),
+            key="refreshToken",
+            value=str(refresh),
             httponly=True,
             secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
             samesite="Lax",
@@ -333,7 +332,6 @@ class GoogleLoginView(generics.GenericAPIView):
     """
     API View for Google login.
     """
-
     serializer_class = GoogleLoginSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -362,15 +360,15 @@ class GoogleLoginView(generics.GenericAPIView):
 
         response = Response(response_data, status=status.HTTP_200_OK)
         response.set_cookie(
-            "accessToken",
-            str(refresh.access_token),
+            key="accessToken",
+            value=str(refresh.access_token),
             httponly=True,
             secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
             samesite="Lax",
         )
         response.set_cookie(
-            "refreshToken",
-            str(refresh),
+            key="refreshToken",
+            value=str(refresh),
             httponly=True,
             secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
             samesite="Lax",
