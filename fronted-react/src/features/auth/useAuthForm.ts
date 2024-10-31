@@ -1,4 +1,5 @@
 import { useState } from "react";
+import API_URL from './index'
 
 type AuthFormFields = {
   email: string;
@@ -15,8 +16,6 @@ type UseAuthFormProps = {
   onSubmit: (fields: AuthFormFields) => Promise<void>;
   validate?: boolean;
 };
-
-const API_URL = "http://127.0.0.1:8000/api";
 
 const useAuthForm = ({
   initialFields,

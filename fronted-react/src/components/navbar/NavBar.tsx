@@ -1,42 +1,45 @@
 import { Outlet, useNavigate } from "react-router-dom";
+import { siteLogo } from "../../assets";
+import { isAuthenticated } from "../../features";
+import NavButton from "./NavButton";
 
 const NavBar: React.FC = () => {
   const navigate = useNavigate();
 
+  const handleLogoClick = () => {
+    if (isAuthenticated()) {
+      navigate("/dashboard");
+    } else {
+      navigate("/");
+    }
+  };
+
   return (
     <>
-      <nav className="bg-gray-100 shadow-md border-b-2 border-b-purple-950 p-4 flex justify-between items-center w-full">
-        <h1 className="text-2xl font-semibold text-gray-900">Brand</h1>
-        <ul className="flex space-x-2">
-          <li>
-            <button
-              className="text-gray-800 hover:text-gray-900 font-bold"
-              onClick={() => navigate("/")}
-            >
-              Home
-            </button>
-          </li>
-          <li>
-            <button
-              className="text-gray-800 hover:text-gray-900 font-bold"
-              onClick={() => navigate("/login")}
-            >
-              Login
-            </button>
-          </li>
-          <li>
-            <button
-              className="text-gray-800 hover:text-gray-900 font-bold"
-              onClick={() => navigate("/register")}
-            >
-              Register
-            </button>
-          </li>
-          <li>
-            <button className="text-gray-800 hover:text-gray-900 font-bold" onClick={() => navigate("/dashboard")}>
-              Navbar
-            </button>
-          </li>
+      <nav className="bg-gray-100 shadow-md border-b-2 border-b-purple-950 flex justify-between items-center w-full">
+        <button className="ml-1 p-1 pt-2" onClick={handleLogoClick}>
+          <img src={siteLogo} className="h-12" />
+        </button>
+
+        <ul className="flex space-x-4 m-4">
+          {!isAuthenticated() ? (
+            <>
+              <li>
+                <NavButton label="Home" onClick={() => navigate("/")} />
+              </li>
+              <li>
+                <NavButton label="Login" onClick={() => navigate("/login")} />
+              </li>
+              <li>
+                <NavButton
+                  label="Register"
+                  onClick={() => navigate("/register")}
+                />
+              </li>
+            </>
+          ) : (
+            <></>
+          )}
         </ul>
       </nav>
       <Outlet />

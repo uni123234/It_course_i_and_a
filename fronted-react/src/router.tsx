@@ -2,6 +2,8 @@ import { LoginPage, RegisterPage, HomePage, DashboardPage } from "./pages";
 import { NavBar } from "./components";
 import { createBrowserRouter } from "react-router-dom";
 
+import { AuthGuard, LoginGuard } from "./features";
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -9,19 +11,35 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <HomePage />,
+        element: (
+          <LoginGuard>
+            <HomePage />
+          </LoginGuard>
+        ),
       },
       {
         path: "/login",
-        element: <LoginPage />,
+        element: (
+          <LoginGuard>
+            <LoginPage />
+          </LoginGuard>
+        ),
       },
       {
         path: "/register",
-        element: <RegisterPage />,
+        element: (
+          <LoginGuard>
+            <RegisterPage />
+          </LoginGuard>
+        ),
       },
       {
         path: "/dashboard",
-        element: <DashboardPage />,
+        element: (
+          <AuthGuard>
+            <DashboardPage />
+          </AuthGuard>
+        ),
       },
     ],
   },
