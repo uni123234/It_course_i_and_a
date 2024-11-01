@@ -23,9 +23,7 @@ class CourseSerializer(serializers.ModelSerializer):
     Serializer for the Course model.
     """
 
-    teacher = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.filter(user_type="teacher")
-    )
+    teachers = serializers.PrimaryKeyRelatedField(read_only=True, many=True)
 
     class Meta:
         model = Course
@@ -40,17 +38,18 @@ class CourseSerializer(serializers.ModelSerializer):
     def validate_teacher(self, value):
         """Validate that a teacher is assigned to the course."""
         if not value:
-            raise serializers.ValidationError("A teacher must be assigned to the course.")
+            raise serializers.ValidationError(
+                "A teacher must be assigned to the course."
+            )
         return value
 
     def create(self, validated_data):
         """
         Create a new Course instance.
         """
-        teacher = validated_data.pop('teacher', None)
+        teacher = validated_data.pop("teachers", None)
         course = Course.objects.create(teacher=teacher, **validated_data)
         return course
-
 
 
 class GroupCreateUpdateSerializer(serializers.ModelSerializer):
