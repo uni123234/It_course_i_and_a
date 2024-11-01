@@ -140,22 +140,20 @@ const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    console.log("useEffect is called"); // Додайте це
-  
     const fetchCourses = async () => {
-      console.log("Fetching courses..."); // Додайте це
-      setLoading(true);
+      console.log("Fetching courses..."); // Додайте лог тут
       try {
         const data = await getCourses();
-        console.log(data);
+        console.log("Data received:", data); // Лог даних
         setCourses(data);
       } catch (err) {
         setError('Failed to fetch courses.');
+        console.error(err); // Лог для помилок
       } finally {
         setLoading(false);
       }
     };
-  
+
     fetchCourses();
   }, []);
 
