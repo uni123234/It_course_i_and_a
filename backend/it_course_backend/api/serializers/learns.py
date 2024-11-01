@@ -23,38 +23,26 @@ class CourseSerializer(serializers.ModelSerializer):
     Serializer for the Course model.
     """
 
-    teachers = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=User.objects.all()
-    )
-
     class Meta:
         model = Course
         fields = "__all__"
 
     def validate_title(self, value):
-        """Validate that the course title is not empty."""
+        """Validate that the course title is not empty and meets length requirements."""
         if not value:
             raise serializers.ValidationError("Title cannot be empty.")
-        return value
-
-    def validate_teachers(self, value):
-        """Validate that at least one teacher is assigned to the course."""
-        if not value:
+        if len(value) < 5:
             raise serializers.ValidationError(
-                "At least one teacher must be assigned to the course."
+                "Title must be at least 5 characters long."
             )
         return value
 
     def create(self, validated_data):
         """
-        Create a new Course instance.
+        Create a new Course instance and assign the teacher.
         """
-        teachers_data = validated_data.pop("teachers", [])
+        validated_data["teacher"] = self.context["request"].user
         course = Course.objects.create(**validated_data)
-
-        if teachers_data:
-            course.teachers.set(teachers_data)
-
         return course
 
 
@@ -65,24 +53,31 @@ class GroupCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Group
-        fields = ["id", "name", "teachers", "students"]
+        fields = ["id", "name", "teacher", "students"]
 
     def create(self, validated_data):
         """Assign the requesting user as the teacher during group creation."""
-        validated_data["teachers"] = [self.context["request"].user]
+        validated_data["teacher"] = self.context["request"].user
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         """Update group details including teachers and students."""
         instance.name = validated_data.get("name", instance.name)
         instance.save()
-        instance.teachers.set(validated_data.get("teachers", instance.teachers.all()))
-        instance.students.set(validated_data.get("students", instance.students.all()))
+
+        teacher = validated_data.get("teacher")
+        if teacher and teacher in User.objects.all():
+            instance.teacher.set(teacher)
+
+        students = validated_data.get("students")
+        if students and all(student in User.objects.all() for student in students):
+            instance.students.set(students)
+
         return instance
 
     def validate_students(self, value):
         """Validate that at least one student is assigned to the group."""
-        if len(value) == 0:
+        if not value:
             raise serializers.ValidationError(
                 "At least one student must be assigned to the group."
             )
@@ -96,11 +91,14 @@ class TeacherCourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ["title", "description"]
+        fields = [
+            "title",
+            "description",
+        ]
 
     def create(self, validated_data):
         """Assign the requesting user as the teacher during course creation."""
-        validated_data["teachers"] = [self.context["request"].user]
+        validated_data["teacher"] = self.context["request"].user
         return super().create(validated_data)
 
 

@@ -44,6 +44,7 @@ class FAQDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FAQSerializer
 
+
 class CourseListCreateView(generics.ListCreateAPIView):
     """
     API view to list and create courses.
@@ -62,16 +63,13 @@ class CourseListCreateView(generics.ListCreateAPIView):
         )
 
     def perform_create(self, serializer):
-        course = serializer.save()
+        course = serializer.save(teacher=self.request.user)
         logger.info("Course created: %s", course.title)
-
+        
         group = Group.objects.create(
             name=f"{course.title} Group",
-            course=course,
+            teacher=self.request.user,
         )
-        group.teachers.add(self.request.user)
-        group.save()
-
         logger.info("Group created for course: %s", group.name)
 
 
@@ -123,7 +121,9 @@ class GroupCreateView(generics.CreateAPIView):
     serializer_class = GroupCreateUpdateSerializer
 
     def perform_create(self, serializer):
-        group = serializer.save()
+        group = serializer.save(
+            teacher=self.request.user
+        )  # Set the teacher to the request user
         logger.info("Group created: %s", group.name)
 
 

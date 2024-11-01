@@ -73,23 +73,17 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def update_last_login(self):
-        """
-        Update the last login time for the user.
-        """
+        """Update the last login time for the user."""
         self.last_login = timezone.now()
         self.save(update_fields=["last_login"])
 
     def deactivate(self):
-        """
-        Deactivate the user account.
-        """
+        """Deactivate the user account."""
         self.is_active = False
         self.save(update_fields=["is_active"])
 
     def activate(self):
-        """
-        Activate the user account.
-        """
+        """Activate the user account."""
         self.is_active = True
         self.save(update_fields=["is_active"])
 
@@ -100,11 +94,7 @@ class ActiveManager(models.Manager):
     """
 
     def get_queryset(self):
-        """get_queryset
-
-        Returns:
-            return super().get_queryset().filter(is_active=True)
-        """
+        """Returns only active objects."""
         return super().get_queryset().filter(is_active=True)
 
 
@@ -116,25 +106,19 @@ class ActiveModel(models.Model):
 
     is_active = models.BooleanField(default=True)
 
-    objects = models.Manager()
-    active = ActiveManager()
+    objects = models.Manager()  # Default manager
+    active = ActiveManager()  # Active manager
 
     class Meta:
-        """Meta
-        """
         abstract = True
 
     def deactivate(self):
-        """
-        Mark the object as inactive.
-        """
+        """Mark the object as inactive."""
         self.is_active = False
         self.save(update_fields=["is_active"])
 
     def activate(self):
-        """
-        Mark the object as active.
-        """
+        """Mark the object as active."""
         self.is_active = True
         self.save(update_fields=["is_active"])
 
@@ -151,7 +135,7 @@ class FAQ(ActiveModel):
         return self.question
 
 
-class Course(ActiveModel):
+class Course(models.Model):
     """
     Model representing a course, including details such as title,
     description, associated teacher, and course state.
@@ -163,6 +147,7 @@ class Course(ActiveModel):
         ("completed", "Completed"),
     )
 
+    start_date = models.DateField(default=timezone.now)
     title = models.CharField(max_length=255, verbose_name="Title")
     description = models.TextField(blank=True, null=True, verbose_name="Description")
     teacher = models.ForeignKey(
@@ -206,9 +191,6 @@ class Homework(ActiveModel):
     Model representing a homework assignment.
     """
 
-    lesson = models.ForeignKey(
-        Lesson, on_delete=models.CASCADE, related_name="homeworks"
-    )
     title = models.CharField(max_length=255)
     description = models.TextField()
     due_date = models.DateTimeField()
@@ -222,7 +204,7 @@ class Homework(ActiveModel):
     grade = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
-        return f"Homework for {self.lesson.title if self.lesson else 'No Lesson'}"
+        return f"Homework for {self.lesson.title if hasattr(self, 'lesson') else 'No Lesson'}"
 
     @property
     def is_late(self):
@@ -235,14 +217,17 @@ class Homework(ActiveModel):
             else False
         )
 
+    class Meta:
+        ordering = ["due_date"]
 
-class Group(ActiveModel):
+
+class Group(models.Model):
     """
     Model representing a student group.
     """
 
     name = models.CharField(max_length=255)
-
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True)
     teacher = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -250,7 +235,6 @@ class Group(ActiveModel):
         limit_choices_to={"user_type": "teacher"},
         verbose_name="Teacher",
     )
-
     students = models.ManyToManyField(
         User,
         related_name="student_groups",

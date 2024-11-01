@@ -79,14 +79,6 @@ class FAQAdmin(admin.ModelAdmin):
     list_filter = ("is_active",)
 
 
-class CourseAdmin(admin.ModelAdmin):
-    """Admin interface for the Course model."""
-
-    list_display = ("title", "teacher", "is_active")
-    search_fields = ("title", "teacher__email")
-    list_filter = ("teacher", "is_active")
-
-
 class LessonAdmin(admin.ModelAdmin):
     """Admin interface for the Lesson model."""
 
@@ -100,22 +92,37 @@ class HomeworkAdmin(admin.ModelAdmin):
 
     list_display = (
         "title",
-        "lesson",
         "due_date",
         "submitted_by",
         "submission_date",
         "is_active",
+        "is_late",
     )
-    search_fields = ("title", "lesson__title", "submitted_by__email")
-    list_filter = ("lesson", "submitted_by", "is_active")
+    search_fields = ("title", "submitted_by__email")
+    list_filter = (
+        "submitted_by",
+        "is_active",
+        "due_date",
+    )
+
+    def is_late(self, obj):
+        """Return whether the homework is submitted late."""
+        return obj.is_late
+
+    is_late.boolean = True
+    is_late.short_description = "Late Submission"
+
+
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ("title", "teacher")
+    search_fields = ("title", "teacher__email")
+    list_filter = ("teacher",)
 
 
 class GroupAdmin(admin.ModelAdmin):
-    """Admin interface for the Group model."""
-
-    list_display = ("id", "name", "teacher", "is_active")
+    list_display = ("id", "name", "teacher")
     search_fields = ("name", "teacher__email")
-    list_filter = ("teacher", "is_active")
+    list_filter = ("teacher",)
 
 
 admin.site.register(Group, GroupAdmin)
