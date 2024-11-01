@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import ModalBase from "./ModalBase";
+import { getLessons } from "../../api";
+import { useAuth } from "../../features";
 
 const daysOfWeek = [
   "Понеділок",
@@ -18,6 +20,31 @@ interface CalendarModalProps {
 }
 
 const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose }) => {
+  const [lessons, setLessons] = useState<any[]>([]); // Замість 'any' використовуйте ваш тип даних
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const { getAccessToken } = useAuth();
+  const token = getAccessToken();
+  
+  useEffect(() => {
+    const fetchLessons = async () => {
+
+      setLoading(true);
+      setError(null); // Скинути помилку
+
+      try {
+        const lessonsData = await getLessons(token);
+        setLessons(lessonsData); // Зберегти дані уроків
+      } catch (err) {
+        setError('Не вдалося отримати уроки. Спробуйте ще раз.'); // Обробка помилок
+      } finally {
+        setLoading(false); // Завершити завантаження
+      }
+    };
+
+    fetchLessons();
+  }, [token]); 
   const [currentMonth, setCurrentMonth] = useState(dayjs());
 
   const startDay = currentMonth.startOf("month").startOf("week");
