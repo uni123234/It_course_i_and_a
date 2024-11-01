@@ -10,6 +10,7 @@ export const getCourses = async () => {
   console.log("get")
 
   try {
+    console.log("get1221")
     const response = await axios.get(`${API_URL}/courses/`, {
       headers: {
         Authorization: `Bearer ${token}`, // Переконайтеся, що токен отримується правильно
