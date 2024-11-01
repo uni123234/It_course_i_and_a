@@ -14,6 +14,7 @@ from .learns import (
     HomeworkListCreateView,
     LessonCalendarView,
     ReminderView,
+    CourseDetailView,
 )
 
 from .user import (
