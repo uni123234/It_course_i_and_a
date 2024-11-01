@@ -6,7 +6,6 @@ from django.db.models import Q
 from ..models import FAQ, Course, Homework, Lesson, Group
 from ..serializers import (
     CourseSerializer,
-    FAQSerializer,
     GroupCreateUpdateSerializer,
     TeacherCourseSerializer,
     LessonSerializer,
@@ -18,45 +17,6 @@ from ..serializers import (
 from ..permissions import IsCourseTeacher
 
 logger = logging.getLogger("api")
-
-
-class FAQListCreateView(generics.ListCreateAPIView):
-    """
-    API view to list and create FAQs.
-
-    Methods:
-        GET: Retrieve a list of active FAQs.
-        POST: Create a new FAQ entry.
-    """
-
-    permission_classes = [IsAuthenticated]
-    serializer_class = FAQSerializer
-    queryset = FAQ.objects.all()
-
-    def perform_create(self, serializer):
-        """
-        Save a new FAQ entry and log the creation.
-
-        Args:
-            serializer: The serializer instance containing the FAQ data.
-        """
-        faq = serializer.save()
-        logger.info("FAQ created: %s", faq.question)
-
-
-class FAQDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    View for retrieving, updating, or deleting a specific FAQ.
-
-    Methods:
-        GET: Retrieve an FAQ entry by ID.
-        PUT: Update an existing FAQ entry.
-        DELETE: Delete a specific FAQ entry.
-    """
-
-    queryset = FAQ.objects.all()
-    permission_classes = [IsAuthenticated]
-    serializer_class = FAQSerializer
 
 
 class CourseListCreateView(generics.ListCreateAPIView):

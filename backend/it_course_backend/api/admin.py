@@ -1,6 +1,5 @@
 from django.contrib import admin
 from .models import (
-    FAQ,
     Course,
     Group,
     Homework,
@@ -71,14 +70,6 @@ class UserAdmin(BaseUserAdmin):
         super().save_model(request, obj, form, change)
 
 
-class FAQAdmin(admin.ModelAdmin):
-    """Admin interface for the FAQ model."""
-
-    list_display = ("question", "answer", "is_active")
-    search_fields = ("question",)
-    list_filter = ("is_active",)
-
-
 class LessonAdmin(admin.ModelAdmin):
     """Admin interface for the Lesson model."""
 
@@ -130,4 +121,3 @@ admin.site.register(Homework, HomeworkAdmin)
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Lesson, LessonAdmin)
 admin.site.register(User, UserAdmin)
-admin.site.register(FAQ, FAQAdmin)

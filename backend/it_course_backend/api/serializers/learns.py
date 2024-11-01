@@ -8,16 +8,6 @@ from django.utils import timezone
 from ..models import FAQ, Course, Group, Lesson, User
 
 
-class FAQSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the FAQ model.
-    """
-
-    class Meta:
-        model = FAQ
-        fields = "__all__"
-
-
 class CourseSerializer(serializers.ModelSerializer):
     """
     Serializer for the Course model, including homework progress and user role.

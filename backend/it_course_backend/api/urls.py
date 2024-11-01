@@ -10,8 +10,6 @@ from .views import (
     ChangePasswordView,
     ConfirmEmailView,
     CourseEditView,
-    FAQDetailView,
-    FAQListCreateView,
     GroupCreateView,
     GroupEditView,
     HomePageView,
@@ -67,6 +65,4 @@ urlpatterns = [
     path('homework/', HomeworkListCreateView.as_view(), name='homework-list-create'),
     path('homework/<int:pk>/', HomeworkDetailView.as_view(), name='homework-detail'),
     path('homework/submit/', HomeworkSubmissionView.as_view(), name='homework-submit'),
-    path("faq/", FAQListCreateView.as_view(), name="faq-list-create"),
-    path("faq/<int:pk>/", FAQDetailView.as_view(), name="faq-detail"),
 ]

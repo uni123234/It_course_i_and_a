@@ -1,5 +1,4 @@
 from .learns import (
-    FAQSerializer,
     CourseSerializer,
     GroupCreateUpdateSerializer,
     TeacherCourseSerializer,
