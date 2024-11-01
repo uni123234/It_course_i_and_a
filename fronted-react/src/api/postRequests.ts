@@ -23,7 +23,6 @@ export const useCreateCourse = () => {
             title,
             description,
             state: "not_started",
-            teacher: "5"
           },
           {
             headers: {
