@@ -21,6 +21,20 @@ export const getCourses = async (token: string | null) => {
   }
 };
 
+export const fetchCourse = async (token: string, courseId: number, ) => {
+  try {
+    const response = await axios.get(`${API_URL}/course/${courseId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data; // Повернення даних з response
+  } catch (error) {
+    console.error("Error fetching course data:", error);
+    throw error;
+  }
+};
+
 
 export const getLessons = async (token: string | null) => {
   console.log("get");
@@ -57,7 +71,7 @@ export const getCalendar = async (token: string | null) => {
 };
 
 
-export const getHomeworks = async (token: string | null, courseId: number) => {
+export const getHomeworks = async (token: string, courseId: number) => {
   console.log("get");
 
   try {

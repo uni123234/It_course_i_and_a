@@ -42,7 +42,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/course",
+        path: "/course/:courseId",
         element: (
           <AuthGuard>
             <CoursePage />
