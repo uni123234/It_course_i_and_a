@@ -23,7 +23,7 @@ export const getCourses = async (token: string | null) => {
 
 export const fetchCourse = async (token: string, courseId: number, ) => {
   try {
-    const response = await axios.get(`${API_URL}/course/${courseId}`, {
+    const response = await axios.get(`${API_URL}/course/${courseId}/`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -76,13 +76,13 @@ export const getHomeworks = async (token: string, courseId: number) => {
 
   try {
     console.log("get1221");
-    const response = await axios.post(`${API_URL}/homework/`, // Використовуємо POST запит
-      {
-        id: courseId, // Передача courseId у тілі запиту
-      },
+    const response = await axios.get(`${API_URL}/homework/`, // Використовуємо POST запит
       {
         headers: {
-          Authorization: `Bearer ${token}`, // Використовуйте переданий токен
+          Authorization: `Bearer ${token}`, 
+        },
+        params: {
+          id: courseId, // Передача courseId як параметр
         },
       }
     );
