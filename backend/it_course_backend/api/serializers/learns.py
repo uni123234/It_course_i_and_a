@@ -126,8 +126,13 @@ class LessonSerializer(serializers.ModelSerializer):
         ]
 
     def get_user_role(self, obj):
-        """
-        Визначаємо роль користувача для конкретного уроку.
+        """_summary_
+
+        Args:
+            obj (_type_): _description_
+
+        Returns:
+            _type_: _description_
         """
         return getattr(obj, "user_role", None)
 
