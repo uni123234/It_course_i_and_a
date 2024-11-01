@@ -20,9 +20,11 @@ class FAQSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
     """
-    Serializer for the Course model, including homework progress.
+    Serializer for the Course model, including homework progress and user role.
     """
+
     homework_progress = serializers.SerializerMethodField()
+    user_role = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -50,6 +52,9 @@ class CourseSerializer(serializers.ModelSerializer):
         """Return the homework progress for the course."""
         return obj.homework_progress()
 
+    def get_user_role(self, obj):
+        """Return the user's role for this course."""
+        return getattr(obj, "user_role", None)
 
 
 class GroupCreateUpdateSerializer(serializers.ModelSerializer):
@@ -110,8 +115,10 @@ class TeacherCourseSerializer(serializers.ModelSerializer):
 
 class LessonSerializer(serializers.ModelSerializer):
     """
-    Serializer for the Lesson model.
+    Serializer for the Lesson model with user role tag.
     """
+
+    user_role = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
@@ -125,27 +132,14 @@ class LessonSerializer(serializers.ModelSerializer):
             "meeting_link",
             "notes_url",
             "notes_content",
+            "user_role",
         ]
 
-    def validate_title(self, value):
-        """Validate that the lesson title is not empty."""
-        if not value:
-            raise serializers.ValidationError("Title cannot be empty.")
-        return value
-
-    def validate_scheduled_time(self, value):
-        """Validate that the scheduled time is in the future."""
-        if value <= timezone.now():
-            raise serializers.ValidationError("Scheduled time must be in the future.")
-        return value
-
-    def validate(self, attrs):
-        """Validate that either notes_url or notes_content is provided."""
-        if not attrs.get("notes_url") and not attrs.get("notes_content"):
-            raise serializers.ValidationError(
-                "Either notes_url or notes_content must be provided."
-            )
-        return attrs
+    def get_user_role(self, obj):
+        """
+        Визначаємо роль користувача для конкретного уроку.
+        """
+        return getattr(obj, "user_role", None)
 
 
 class LessonCalendarSerializer(serializers.ModelSerializer):

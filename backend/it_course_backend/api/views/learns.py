@@ -2,6 +2,7 @@ import logging
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
+from django.db.models import Q
 from ..models import FAQ, Course, Homework, Lesson, Group
 from ..serializers import (
     CourseSerializer,
@@ -60,35 +61,25 @@ class FAQDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class CourseListCreateView(generics.ListCreateAPIView):
     """
-    API view to list and create courses based on user type.
-
-    Methods:
-        GET: Retrieve a list of courses for the authenticated user.
-        POST: Create a new course entry and automatically create a group.
+    API view to list and create courses with a role tag indicating if
+    the user is a teacher or student in each course.
     """
 
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         """
-        Return courses based on the user's role (teacher or student).
-
-        Returns:
-            QuerySet: A filtered queryset of courses for the authenticated user.
+        Return courses where the user is a teacher or student.
         """
         user = self.request.user
-        if user.user_type == "teacher":
-            return Course.objects.filter(teacher=user)
-        elif user.user_type == "student":
-            return Course.objects.filter(students=user)
-        return Course.objects.none()
+
+        return Course.objects.filter(
+            Q(teacher=user) | Q(group__students=user)
+        ).distinct()
 
     def get_serializer_class(self):
         """
         Return the appropriate serializer class based on user type.
-
-        Returns:
-            Type: The serializer class for the current user.
         """
         return (
             TeacherCourseSerializer
@@ -99,9 +90,6 @@ class CourseListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         """
         Save a new course entry, log its creation, and create a corresponding group.
-
-        Args:
-            serializer: The serializer instance containing the course data.
         """
         course = serializer.save(teacher=self.request.user)
         logger.info("Course created: %s", course.title)
@@ -115,12 +103,7 @@ class CourseListCreateView(generics.ListCreateAPIView):
 
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
-    API view for retrieving, updating, or deleting a specific course.
-
-    Methods:
-        GET: Retrieve a course entry by ID.
-        PUT: Update an existing course entry.
-        DELETE: Delete a specific course entry.
+    API view for retrieving, updating, or deleting a specific course with user role tag.
     """
 
     permission_classes = [IsAuthenticated, IsCourseTeacher]
@@ -128,40 +111,13 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         """
         Return a specific course based on the user's role.
-
-        Returns:
-            QuerySet: A filtered queryset of the course for the authenticated user.
         """
         user = self.request.user
         course_id = self.kwargs.get("pk")
-        if user.user_type == "teacher":
-            return Course.objects.filter(id=course_id, teacher=user)
-        elif user.user_type == "student":
-            return Course.objects.filter(id=course_id, students=user)
-        return Course.objects.none()
 
-    def get_serializer_class(self):
-        """
-        Return the appropriate serializer class based on user type.
-
-        Returns:
-            Type: The serializer class for the current user.
-        """
-        return (
-            TeacherCourseSerializer
-            if self.request.user.user_type == "teacher"
-            else CourseSerializer
-        )
-
-    def perform_update(self, serializer):
-        """
-        Save the updated course entry and log the update.
-
-        Args:
-            serializer: The serializer instance containing the updated course data.
-        """
-        course = serializer.save()
-        logger.info("Course updated: %s", course.title)
+        return Course.objects.filter(
+            Q(id=course_id, teacher=user) | Q(id=course_id, group__students=user)
+        ).distinct()
 
 
 class CourseEditView(generics.UpdateAPIView):
@@ -277,7 +233,10 @@ class LessonListView(generics.ListAPIView):
             QuerySet: A filtered queryset of lessons for the authenticated user.
         """
         user = self.request.user
-        user_courses = Course.objects.filter(students=user).values_list("id", flat=True)
+
+        user_courses = Group.objects.filter(students=user).values_list(
+            "course_id", flat=True
+        )
 
         user_teaching_courses = Course.objects.filter(teacher=user).values_list(
             "id", flat=True
@@ -285,7 +244,6 @@ class LessonListView(generics.ListAPIView):
 
         if user.user_type == "teacher":
             return Lesson.objects.filter(course__id__in=user_teaching_courses)
-
         elif user.user_type == "student":
             return Lesson.objects.filter(course__id__in=user_courses)
 
