@@ -1,7 +1,7 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import { siteLogo } from "../../assets";
 import { isAuthenticated, useAuth } from "../../features";
-import CalendarModal from "../CalendarModal"
+import CalendarModal from "../modals/CalendarModal"
 import NavButton from "./NavButton";
 import { useState } from "react";
 

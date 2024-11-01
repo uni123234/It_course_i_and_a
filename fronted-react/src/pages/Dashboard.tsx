@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavbarHeight } from "../hooks";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { useMediaQuery } from "react-responsive";
+import { CreateCourseModal } from "../components"
+import { getCourses } from "../api"
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -132,8 +134,38 @@ const options = {
 };
 
 const Dashboard: React.FC = () => {
+
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    console.log("useEffect is called"); // Додайте це
+  
+    const fetchCourses = async () => {
+      console.log("Fetching courses..."); // Додайте це
+      setLoading(true);
+      try {
+        const data = await getCourses();
+        console.log(data);
+        setCourses(data);
+      } catch (err) {
+        setError('Failed to fetch courses.');
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchCourses();
+  }, []);
+
   const navbarHeight = useNavbarHeight();
-  const isLargeScreen = useMediaQuery({ minWidth: 1024 }); // Мінімальна ширина для великих екранів (наприклад, 1024px)
+  const isLargeScreen = useMediaQuery({ minWidth: 1024 });
+
+  const [isCreateModalOpen, setisCreateModalOpen] = useState(false);
+
+  const openCreateModal = () => setisCreateModalOpen(true);
+  const closeCreateModal = () => setisCreateModalOpen(false);
 
   const handleMouseEnter = () => {
     if (isLargeScreen) {
@@ -156,50 +188,65 @@ const Dashboard: React.FC = () => {
       event.preventDefault();
     }
   };
-  // Дані для pie графіка
+  
+  const createCourse = () => {
+
+  }
 
   return (
+    <>
     <div
       className="bg-gradient-to-b from-blue-50 to-blue-100 text-gray-900 flex flex-col items-center"
       style={{ minHeight: `calc(100vh - ${navbarHeight}px)` }}
     >
       <h1 className="mt-6 text-center text-6xl font-semibold">Your Courses:</h1>
 
-      {/* Courses slider */}
       <section
-        className="flex w-[90vw] md:w-[60vw] z-0 h-full mt-8 p-6 overflow-x-auto md:overflow-x-hidden overflow-y-hidden bg-white rounded-2xl shadow-2xl transform transition-transform hover:scale-105"
-        onMouseEnter={isLargeScreen ? handleMouseEnter : undefined}
-        onMouseLeave={isLargeScreen ? handleMouseLeave : undefined}
-        onWheel={handleWheel}
+  className="flex w-[90vw] md:w-[60vw] z-0 h-full mt-8 p-6 overflow-x-auto md:overflow-x-hidden overflow-y-hidden bg-white rounded-2xl shadow-2xl transform transition-transform hover:scale-105"
+  onMouseEnter={isLargeScreen ? handleMouseEnter : undefined}
+  onMouseLeave={isLargeScreen ? handleMouseLeave : undefined}
+  onWheel={handleWheel}
+>
+  <div className="flex space-x-6 items-center justify-start">
+    {userCourses.map((course, index) => (
+      <div
+        key={course.id}
+        className="flex-shrink-0 w-44 md:w-64 p-6 rounded-xl shadow-lg transform transition-transform hover:scale-105"
+        style={{
+          background: `linear-gradient(135deg, hsl(${
+            index * 45
+          }, 100%, 85%), hsl(${index * 45}, 100%, 90%))`,
+        }}
       >
-        <div className="flex space-x-6 items-center justify-start">
-          {userCourses.map((course, index) => (
-            <div
-              key={course.id}
-              className="flex-shrink-0 w-44 md:w-64 p-6 rounded-xl shadow-lg transform transition-transform hover:scale-105"
-              style={{
-                background: `linear-gradient(135deg, hsl(${
-                  index * 45
-                }, 100%, 85%), hsl(${index * 45}, 100%, 90%))`,
-              }}
-            >
-              <h2 className="text-2xl font-semibold text-gray-900">
-                {course.title}
-              </h2>
-              <p className="text-gray-700 mt-2">{course.description}</p>
-              <div className="mt-4 bg-gray-300 rounded-full h-2.5 overflow-hidden">
-                <div
-                  className="bg-green-500 h-2.5 rounded-full"
-                  style={{ width: `${course.progress}%` }}
-                ></div>
-              </div>
-              <p className="text-sm text-gray-600 mt-2">
-                Progress: {course.progress}%
-              </p>
-            </div>
-          ))}
+        <h2 className="text-2xl font-semibold text-gray-900">
+          {course.title}
+        </h2>
+        <p className="text-gray-700 mt-2">{course.description}</p>
+        <div className="mt-4 bg-gray-300 rounded-full h-2.5 overflow-hidden">
+          <div
+            className="bg-green-500 h-2.5 rounded-full"
+            style={{ width: `${course.progress}%` }}
+          ></div>
         </div>
-      </section>
+        <p className="text-sm text-gray-600 mt-2">
+          Progress: {course.progress}%
+        </p>
+      </div>
+    ))}
+
+    {/* Add "Create your own course" button */}
+    <div
+    onClick={openCreateModal}
+      className="flex-shrink-0 w-44 md:w-64 p-6 rounded-xl shadow-lg transform transition-transform hover:scale-105 flex items-center justify-center cursor-pointer"
+      style={{
+        background: `linear-gradient(135deg, hsl(0, 100%, 85%), hsl(0, 100%, 90%))`,
+      }}
+    >
+      <span className="text-4xl font-semibold text-gray-900">+</span>
+      <p className="text-lg text-gray-700 ml-2">Create your own course</p>
+    </div>
+  </div>
+</section>
 
       {/* Graph and Popular Cousres block */}
       <section className="flex flex-col md:flex-row w-[90vw] md:w-[60vw] mt-8 mb-10 space-y-6 md:space-y-0 md:space-x-6">
@@ -243,6 +290,8 @@ const Dashboard: React.FC = () => {
         </div>
       </section>
     </div>
+    <CreateCourseModal isOpen={isCreateModalOpen} onClose={closeCreateModal} />
+    </>
   );
 };
 
