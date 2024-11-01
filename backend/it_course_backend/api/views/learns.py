@@ -66,7 +66,7 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
     API view for retrieving, updating, or deleting a specific course with user role tag.
     """
 
-    permission_classes = [IsAuthenticated, IsCourseTeacher]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         """
