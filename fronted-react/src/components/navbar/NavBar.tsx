@@ -1,6 +1,6 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import { siteLogo } from "../../assets";
-import { isAuthenticated, useAuth } from "../../features";
+import { useAuth } from "../../features";
 import CalendarModal from "../modals/CalendarModal"
 import NavButton from "./NavButton";
 import { useState } from "react";
@@ -12,9 +12,11 @@ const NavBar: React.FC = () => {
   const closeCalendar = () => setIsCalendarOpen(false);
   const navigate = useNavigate();
 
+  const { isAuthenticated } = useAuth();
+
   const handleLogoClick = () => {
     console.log(444)
-    if (isAuthenticated()) {
+    if (isAuthenticated) {
       navigate("/dashboard");
     } else {
       navigate("/");
@@ -36,7 +38,7 @@ const NavBar: React.FC = () => {
         </button>
 
         <ul className="flex space-x-4 m-4">
-          {!isAuthenticated() ? (
+          {!isAuthenticated ? (
             <>
               <li>
                 <NavButton label="Home" onClick={() => navigate("/")} />

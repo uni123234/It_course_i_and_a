@@ -13,66 +13,9 @@ type Course = {
   id: number;
   title: string;
   description: string;
-  progress: number; // Progress percentage
+  progress: number;
 };
 
-const userCourses: Course[] = [
-  {
-    id: 1,
-    title: "React Basics",
-    description: "Learn the basics of React.",
-    progress: 70,
-  },
-  {
-    id: 2,
-    title: "Advanced TypeScript",
-    description: "Deep dive into TypeScript.",
-    progress: 45,
-  },
-  {
-    id: 3,
-    title: "Tailwind CSS",
-    description: "Design fast with Tailwind.",
-    progress: 100,
-  },
-  {
-    id: 4,
-    title: "React Basics",
-    description: "Learn the basics of React.",
-    progress: 70,
-  },
-  {
-    id: 5,
-    title: "Advanced TypeScript",
-    description: "Deep dive into TypeScript.",
-    progress: 45,
-  },
-  {
-    id: 6,
-    title: "Tailwind CSS",
-    description: "Design fast with Tailwind.",
-    progress: 100,
-  },
-  {
-    id: 7,
-    title: "React Basics",
-    description: "Learn the basics of React.",
-    progress: 70,
-  },
-  {
-    id: 8,
-    title: "Advanced TypeScript",
-    description: "Deep dive into TypeScript.",
-    progress: 45,
-  },
-  {
-    id: 9,
-    title: "Tailwind CSSaa",
-    description: "Design fast with Tailwind.",
-    progress: 100,
-  },
-  // Add more courses here
-];
 
 const popularCourses = [
   {
@@ -137,9 +80,11 @@ const options = {
 const Dashboard: React.FC = () => {
   const { getAccessToken } = useAuth();
 
-  const [courses, setCourses] = useState([]);
+  const [userCourses, setUserCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null)
+
+  const [lessons, setLessons] = useState([])
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -150,7 +95,7 @@ const Dashboard: React.FC = () => {
       try {
         const data = await getCourses(token); // Передайте токен
         console.log("Data received:", data); // Лог даних
-        setCourses(data);
+        setUserCourses(data);
       } catch (err) {
         setError('Failed to fetch courses.');
         console.error(err); // Лог для помилок
@@ -169,12 +114,10 @@ const Dashboard: React.FC = () => {
       try {
         const data = await getLessons(token); // Передайте токен
         console.log("Data received calendar:", data); // Лог даних
-        setCourses(data);
+        setLessons(data);
       } catch (err) {
-        setError('Failed to fetch courses.');
-        console.error(err); // Лог для помилок
+        console.error(err);
       } finally {
-        setLoading(false);
       }
     };
 
@@ -211,9 +154,6 @@ const Dashboard: React.FC = () => {
     }
   };
   
-  const createCourse = () => {
-
-  }
 
   return (
     <>
@@ -247,11 +187,11 @@ const Dashboard: React.FC = () => {
         <div className="mt-4 bg-gray-300 rounded-full h-2.5 overflow-hidden">
           <div
             className="bg-green-500 h-2.5 rounded-full"
-            style={{ width: `${course.progress}%` }}
+            style={{ width: `${course.progress || 0}%` }}
           ></div>
         </div>
         <p className="text-sm text-gray-600 mt-2">
-          Progress: {course.progress}%
+          Progress: {course.progress || 0}%
         </p>
       </div>
     ))}
