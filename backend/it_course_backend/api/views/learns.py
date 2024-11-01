@@ -80,7 +80,6 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     permission_classes = [IsAuthenticated, IsCourseTeacher]
     queryset = Course.objects.all()
-    lookup_field = "id"
 
     def get_serializer_class(self):
         return (
