@@ -24,7 +24,7 @@ class CourseSerializer(serializers.ModelSerializer):
     """
 
     teachers = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Teacher.objects.all()
+        many=True, queryset=User.objects.all()
     )
 
     class Meta:
