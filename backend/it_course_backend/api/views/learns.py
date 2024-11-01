@@ -65,13 +65,12 @@ class CourseListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         course = serializer.save(teacher=self.request.user)
         logger.info("Course created: %s", course.title)
-        
+
         group = Group.objects.create(
             name=f"{course.title} Group",
             teacher=self.request.user,
         )
         logger.info("Group created for course: %s", group.name)
-
 
 
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -81,6 +80,7 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     permission_classes = [IsAuthenticated, IsCourseTeacher]
     queryset = Course.objects.all()
+    lookup_field = "id"
 
     def get_serializer_class(self):
         return (
