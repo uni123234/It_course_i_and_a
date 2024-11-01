@@ -114,7 +114,6 @@ class LessonSerializer(serializers.ModelSerializer):
         model = Lesson
         fields = [
             "id",
-            "course",
             "title",
             "scheduled_time",
             "content",
@@ -126,14 +125,7 @@ class LessonSerializer(serializers.ModelSerializer):
         ]
 
     def get_user_role(self, obj):
-        """_summary_
-
-        Args:
-            obj (_type_): _description_
-
-        Returns:
-            _type_: _description_
-        """
+        """Retrieve the role of the user."""
         return getattr(obj, "user_role", None)
 
 

@@ -1,17 +1,12 @@
-"""
-This module contains the models for the IT course backend application.
-It includes models for Users, Courses, Lessons, Homework, and more.
-"""
-
+from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
     PermissionsMixin,
 )
-from django.db import models
-from django.conf import settings
 from django.utils import timezone
 from django.core.validators import EmailValidator
+from django.conf import settings
 
 
 class CustomUserManager(BaseUserManager):
@@ -21,9 +16,6 @@ class CustomUserManager(BaseUserManager):
     """
 
     def create_user(self, email, password=None, **extra_fields):
-        """
-        Create and save a regular user with the given email and password.
-        """
         if not email:
             raise ValueError("The Email field is required")
         email = self.normalize_email(email)
@@ -33,9 +25,6 @@ class CustomUserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, password=None, **extra_fields):
-        """
-        Create and save a superuser with the given email and password.
-        """
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
 
@@ -160,9 +149,7 @@ class Course(models.Model):
         submitted_homework = 0
 
         for lesson in self.lessons.all():
-            total_homework += (
-                lesson.homework_set.count()
-            )
+            total_homework += lesson.homework_set.count()
             submitted_homework += lesson.homework_set.filter(
                 submitted_by__isnull=False
             ).count()
