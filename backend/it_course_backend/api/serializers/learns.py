@@ -23,7 +23,9 @@ class CourseSerializer(serializers.ModelSerializer):
     Serializer for the Course model.
     """
 
-    teachers = serializers.PrimaryKeyRelatedField(read_only=True, many=True)
+    teachers = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Teacher.objects.all()
+    )
 
     class Meta:
         model = Course
@@ -35,11 +37,11 @@ class CourseSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Title cannot be empty.")
         return value
 
-    def validate_teacher(self, value):
-        """Validate that a teacher is assigned to the course."""
+    def validate_teachers(self, value):
+        """Validate that at least one teacher is assigned to the course."""
         if not value:
             raise serializers.ValidationError(
-                "A teacher must be assigned to the course."
+                "At least one teacher must be assigned to the course."
             )
         return value
 
@@ -47,8 +49,12 @@ class CourseSerializer(serializers.ModelSerializer):
         """
         Create a new Course instance.
         """
-        teacher = validated_data.pop("teachers", None)
-        course = Course.objects.create(teacher=teacher, **validated_data)
+        teachers_data = validated_data.pop("teachers", [])
+        course = Course.objects.create(**validated_data)
+
+        if teachers_data:
+            course.teachers.set(teachers_data)
+
         return course
 
 
