@@ -5,7 +5,7 @@ FAQ, Course, Group, Lesson, and related data structures.
 
 from rest_framework import serializers
 from django.utils import timezone
-from ..models import FAQ, Course, Group, Lesson, User
+from ..models import Course, Group, Lesson, User
 
 
 class CourseSerializer(serializers.ModelSerializer):
