@@ -5,7 +5,7 @@ FAQ, Course, Group, Lesson, and related data structures.
 
 from rest_framework import serializers
 from django.utils import timezone
-from ..models import FAQ, Course, Group, Lesson
+from ..models import FAQ, Course, Group, Lesson, User
 
 
 class FAQSerializer(serializers.ModelSerializer):
@@ -23,6 +23,10 @@ class CourseSerializer(serializers.ModelSerializer):
     Serializer for the Course model.
     """
 
+    teacher = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(user_type="teacher")
+    )
+
     class Meta:
         model = Course
         fields = "__all__"
@@ -33,13 +37,20 @@ class CourseSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Title cannot be empty.")
         return value
 
-    def validate_teachers(self, value):
-        """Validate that at least one teacher is assigned to the course."""
+    def validate_teacher(self, value):
+        """Validate that a teacher is assigned to the course."""
         if not value:
-            raise serializers.ValidationError(
-                "At least one teacher must be assigned to the course."
-            )
+            raise serializers.ValidationError("A teacher must be assigned to the course.")
         return value
+
+    def create(self, validated_data):
+        """
+        Create a new Course instance.
+        """
+        teacher = validated_data.pop('teacher', None)
+        course = Course.objects.create(teacher=teacher, **validated_data)
+        return course
+
 
 
 class GroupCreateUpdateSerializer(serializers.ModelSerializer):
