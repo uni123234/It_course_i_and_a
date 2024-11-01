@@ -46,9 +46,9 @@ const CoursePage: React.FC = () => {
           ]);
 
           setCourse(courseData);
-          console.log('course ', courseData)
+          console.log('course ', course)
           setHomeworks(homeworksData);
-          console.log('homeworks', homeworksData)
+          console.log('homeworks', homeworkss)
         }
       } catch (err) {
         setError("Не вдалося отримати дані. Спробуйте ще раз.");
