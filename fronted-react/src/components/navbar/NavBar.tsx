@@ -13,6 +13,7 @@ const NavBar: React.FC = () => {
   const navigate = useNavigate();
 
   const handleLogoClick = () => {
+    console.log(444)
     if (isAuthenticated()) {
       navigate("/dashboard");
     } else {
