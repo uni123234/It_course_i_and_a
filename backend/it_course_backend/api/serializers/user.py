@@ -55,7 +55,6 @@ class HomeworkSerializer(serializers.ModelSerializer):
         model = Homework
         fields = [
             "id",
-            "lesson",
             "title",
             "description",
             "due_date",
