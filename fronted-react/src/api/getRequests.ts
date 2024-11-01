@@ -4,16 +4,14 @@ import API_URL from "./index";
 
 import { useAuth } from "../features";
 
-export const getCourses = async () => {
-  const { getAccessToken } = useAuth();
-  const token = getAccessToken();
-  console.log("get")
+export const getCourses = async (token: string | null) => {
+  console.log("get");
 
   try {
-    console.log("get1221")
+    console.log("get1221");
     const response = await axios.get(`${API_URL}/courses/`, {
       headers: {
-        Authorization: `Bearer ${token}`, // Переконайтеся, що токен отримується правильно
+        Authorization: `Bearer ${token}`, // Використовуйте переданий токен
       },
     });
     return response.data; // Переконайтеся, що тут повертаються правильні дані
@@ -22,6 +20,7 @@ export const getCourses = async () => {
     throw error; // Переконайтеся, що ви обробляєте помилки
   }
 };
+
 
 export const getReminders = async (refreshToken: string) => {
   try {

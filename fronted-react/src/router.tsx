@@ -1,4 +1,4 @@
-import { LoginPage, RegisterPage, HomePage, DashboardPage } from "./pages";
+import { LoginPage, RegisterPage, HomePage, DashboardPage, CoursePage } from "./pages";
 import { NavBar } from "./components";
 import { createBrowserRouter } from "react-router-dom";
 
@@ -38,6 +38,14 @@ export const router = createBrowserRouter([
         element: (
           <AuthGuard>
             <DashboardPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: "/course",
+        element: (
+          <AuthGuard>
+            <CoursePage />
           </AuthGuard>
         ),
       },
