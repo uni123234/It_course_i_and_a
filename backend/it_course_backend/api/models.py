@@ -123,18 +123,6 @@ class ActiveModel(models.Model):
         self.save(update_fields=["is_active"])
 
 
-class FAQ(ActiveModel):
-    """
-    Model representing a Frequently Asked Question (FAQ).
-    """
-
-    question = models.CharField(max_length=255)
-    answer = models.TextField()
-
-    def __str__(self):
-        return self.question
-
-
 class Course(models.Model):
     """
     Model representing a course, including details such as title,

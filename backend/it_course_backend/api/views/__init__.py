@@ -1,8 +1,6 @@
 from .home import HomePageView
 
 from .learns import (
-    FAQListCreateView,
-    FAQDetailView,
     CourseListCreateView,
     CourseDetailView,
     CourseEditView,
@@ -14,7 +12,8 @@ from .learns import (
     HomeworkListCreateView,
     LessonCalendarView,
     ReminderView,
-    CourseDetailView,
+    LessonListView,
+    LessonEditView,
 )
 
 from .user import (
