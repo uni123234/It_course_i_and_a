@@ -168,7 +168,7 @@ const Dashboard: React.FC = () => {
       
       try {
         const data = await getLessons(token); // Передайте токен
-        console.log("Data received:", data); // Лог даних
+        console.log("Data received calendar:", data); // Лог даних
         setCourses(data);
       } catch (err) {
         setError('Failed to fetch courses.');
