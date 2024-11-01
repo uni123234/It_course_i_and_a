@@ -4,7 +4,7 @@ import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { useMediaQuery } from "react-responsive";
 import { CreateCourseModal } from "../components"
-import { getCourses } from "../api"
+import { getCourses, getLessons } from "../api"
 import { useAuth } from "../features";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -160,6 +160,25 @@ const Dashboard: React.FC = () => {
     };
 
     fetchCourses();
+
+    const fetchLessons = async () => {
+      console.log("Fetching courses..."); // Додайте лог тут
+
+      const token = getAccessToken();
+      
+      try {
+        const data = await getLessons(token); // Передайте токен
+        console.log("Data received:", data); // Лог даних
+        setCourses(data);
+      } catch (err) {
+        setError('Failed to fetch courses.');
+        console.error(err); // Лог для помилок
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLessons();
   }, [getAccessToken]);
 
   const navbarHeight = useNavbarHeight();
