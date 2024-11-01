@@ -51,7 +51,7 @@ urlpatterns = [
         name="confirm-email",
     ),
     path("reminders/", ReminderView.as_view(), name="reminders"),
-    path('groups/', GroupCreateView.as_view(), name='group-list'),
+    path('groups/<int:pk>', GroupCreateView.as_view(), name='group-list'),
     path('groups/create/', GroupCreateView.as_view(), name='group-create'),
     path('groups/<int:pk>/edit/', GroupEditView.as_view(), name='group-edit'),
     path("course/", CourseDetailView.as_view(), name="course_list"),
