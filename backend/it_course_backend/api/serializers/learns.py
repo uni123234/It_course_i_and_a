@@ -18,10 +18,15 @@ class FAQSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+from rest_framework import serializers
+from .models import Course
+
+
 class CourseSerializer(serializers.ModelSerializer):
     """
-    Serializer for the Course model.
+    Serializer for the Course model, including homework progress.
     """
+    homework_progress = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -44,6 +49,11 @@ class CourseSerializer(serializers.ModelSerializer):
         validated_data["teacher"] = self.context["request"].user
         course = Course.objects.create(**validated_data)
         return course
+
+    def get_homework_progress(self, obj):
+        """Return the homework progress for the course."""
+        return obj.homework_progress()
+
 
 
 class GroupCreateUpdateSerializer(serializers.ModelSerializer):

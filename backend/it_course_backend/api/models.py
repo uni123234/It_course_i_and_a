@@ -164,6 +164,31 @@ class Course(models.Model):
     def __str__(self):
         return self.title
 
+    def homework_progress(self):
+        """
+        Calculate the homework progress for this course.
+        """
+        total_homework = 0
+        submitted_homework = 0
+
+        for lesson in self.lessons.all():
+            total_homework += (
+                lesson.homework_set.count()
+            )
+            submitted_homework += lesson.homework_set.filter(
+                submitted_by__isnull=False
+            ).count()
+
+        progress_percentage = (
+            (submitted_homework / total_homework * 100) if total_homework > 0 else 0
+        )
+
+        return {
+            "total_homework": total_homework,
+            "submitted_homework": submitted_homework,
+            "progress_percentage": progress_percentage,
+        }
+
 
 class Lesson(ActiveModel):
     """

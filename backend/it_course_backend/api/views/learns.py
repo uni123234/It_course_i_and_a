@@ -122,7 +122,7 @@ class GroupCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         group = serializer.save(
             teacher=self.request.user
-        )  # Set the teacher to the request user
+        )
         logger.info("Group created: %s", group.name)
 
 
