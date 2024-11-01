@@ -1,21 +1,25 @@
 import axios from 'axios';
-
-
 import API_URL from "./index";
 
-export const getGroups = async () => {
-  const response = await fetch(`${API_URL}/groups/`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch groups");
+import { useAuth } from "../features";
+
+export const getCourses = async () => {
+  const { getAccessToken } = useAuth();
+  const token = getAccessToken();
+  console.log("get")
+
+  try {
+    const response = await axios.get(`${API_URL}/courses/`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Переконайтеся, що токен отримується правильно
+      },
+    });
+    return response.data; // Переконайтеся, що тут повертаються правильні дані
+  } catch (error) {
+    console.error("Error fetching courses:", error);
+    throw error; // Переконайтеся, що ви обробляєте помилки
   }
-
-  return await response.json();
 };
 
 export const getReminders = async (refreshToken: string) => {

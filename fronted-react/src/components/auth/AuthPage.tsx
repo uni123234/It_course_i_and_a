@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import AuthInput from "./AuthInput";
+import AuthInput from "../BaseInput";
 import SocialLoginButtons from "./SocialLoginButtons";
 import { loginImage } from "../../assets";
 import { useNavbarHeight } from "../../hooks";

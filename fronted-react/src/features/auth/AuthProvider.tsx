@@ -17,6 +17,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (accessToken: string, refreshToken: string, user: User) => void;
   logout: () => void;
+  getAccessToken: () => string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,8 +53,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     Cookies.remove("fullname");
   };
 
+  const getAccessToken = () => {
+    return accessToken; // Returns the current access token
+  };
+
   return (
-    <AuthContext.Provider value={{ accessToken, refreshToken, fullname, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ accessToken, refreshToken, fullname, isAuthenticated, getAccessToken, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
