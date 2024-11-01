@@ -39,6 +39,23 @@ export const getLessons = async (token: string | null) => {
   }
 };
 
+export const getCalendar = async (token: string | null) => {
+  console.log("get");
+
+  try {
+    console.log("get1221");
+    const response = await axios.get(`${API_URL}/calendar/`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Використовуйте переданий токен
+      },
+    });
+    return response.data; // Переконайтеся, що тут повертаються правильні дані
+  } catch (error) {
+    console.error("Error fetching courses:", error);
+    throw error; // Переконайтеся, що ви обробляєте помилки
+  }
+};
+
 
 export const getHomeworks = async (token: string | null, courseId: number) => {
   console.log("get");
@@ -47,7 +64,7 @@ export const getHomeworks = async (token: string | null, courseId: number) => {
     console.log("get1221");
     const response = await axios.post(`${API_URL}/homework/`, // Використовуємо POST запит
       {
-        courseId: courseId, // Передача courseId у тілі запиту
+        id: courseId, // Передача courseId у тілі запиту
       },
       {
         headers: {
