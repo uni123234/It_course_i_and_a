@@ -194,18 +194,12 @@ class LessonListView(generics.ListAPIView):
         """
         user = self.request.user
 
-        user_courses = Group.objects.filter(students=user).values_list(
-            "course_id", flat=True
-        )
-
-        user_teaching_courses = Course.objects.filter(teacher=user).values_list(
-            "id", flat=True
-        )
+        user_groups = Group.objects.filter(students=user).values_list("id", flat=True)
 
         if user.user_type == "teacher":
-            return Lesson.objects.filter(course__id__in=user_teaching_courses)
+            return Lesson.objects.filter(course__teacher=user)
         elif user.user_type == "student":
-            return Lesson.objects.filter(course__id__in=user_courses)
+            return Lesson.objects.filter(course__group__id__in=user_groups)
 
         return Lesson.objects.none()
 
