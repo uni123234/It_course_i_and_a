@@ -31,7 +31,15 @@ class HomeworkSubmissionSerializer(serializers.ModelSerializer):
         """
         Creates a homework submission and updates the submission date.
         """
-        homework = Homework.objects.get(id=self.context["homework_id"])
+        homework_id = self.context.get("homework_id")
+        if homework_id is None:
+            raise serializers.ValidationError("Homework ID must be provided.")
+
+        try:
+            homework = Homework.objects.get(id=homework_id)
+        except Homework.DoesNotExist as exc:
+            raise serializers.ValidationError("Homework not found.") from exc
+
         homework.submission_date = timezone.now()
         homework.submission_file = validated_data["submission_file"]
         homework.save()
