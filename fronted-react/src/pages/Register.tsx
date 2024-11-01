@@ -1,38 +1,37 @@
 import React from "react";
 import AuthPage from "../components/auth/AuthPage";
 import useAuthForm from "../features/auth/useAuthForm";
+import { useNavigate } from "react-router-dom";
+import { registerUser } from "../api";
 
 const Register: React.FC = () => {
-  const { fields, errors, handleChange, handleSubmit, isLoading, API_URL } =
-    useAuthForm({
-      initialFields: {
-        email: "",
-        password: "",
-        firstName: "",
-        lastName: "",
-        role: "",
-      },
-      onSubmit: async (fields) => {
-        const response = await fetch(`${API_URL}/register/`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: fields.email,
-            password: fields.password,
-            first_name: fields.firstName,
-            last_name: fields.lastName,
-            user_type: fields.role,
-          }),
+  const navigate = useNavigate(); // Ініціалізація навігатора
+
+  const { fields, errors, handleChange, handleSubmit, isLoading } = useAuthForm({
+    initialFields: {
+      email: "",
+      password: "",
+      firstName: "",
+      lastName: "",
+      role: "",
+    },
+    onSubmit: async (fields) => {
+      try {
+        await registerUser({
+          email: fields.email,
+          password: fields.password,
+          firstName: fields.firstName,
+          lastName: fields.lastName,
+          role: fields.role,
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to register");
-        }
-      },
-      validate: true,
-    });
+        navigate("/login");
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    },
+    validate: true,
+  });
 
   return (
     <AuthPage

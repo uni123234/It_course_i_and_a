@@ -167,7 +167,7 @@ const Dashboard: React.FC = () => {
 
       {/* Courses slider */}
       <section
-        className="flex w-[90vw] md:w-[60vw] h-full mt-8 p-6 overflow-x-auto md:overflow-x-hidden overflow-y-hidden bg-white rounded-2xl shadow-2xl transform transition-transform hover:scale-105"
+        className="flex w-[90vw] md:w-[60vw] z-0 h-full mt-8 p-6 overflow-x-auto md:overflow-x-hidden overflow-y-hidden bg-white rounded-2xl shadow-2xl transform transition-transform hover:scale-105"
         onMouseEnter={isLargeScreen ? handleMouseEnter : undefined}
         onMouseLeave={isLargeScreen ? handleMouseLeave : undefined}
         onWheel={handleWheel}
