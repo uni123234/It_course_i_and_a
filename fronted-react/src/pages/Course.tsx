@@ -1,5 +1,7 @@
 // CoursePage.tsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useAuth } from "../features";
+import { getHomeworks } from "../api"
 
 const CoursePage: React.FC = () => {
   const homeworks = [
@@ -7,6 +9,33 @@ const CoursePage: React.FC = () => {
     { title: 'Homework 2: Hydrocarbons', dueDate: 'Due Oct 28' },
     { title: 'Homework 3: Functional Groups', dueDate: 'Due Nov 1' },
   ];
+
+  const { getAccessToken } = useAuth();
+  const token = getAccessToken();
+
+    const courseId = 1
+
+  const [homeworkss, setHomeworks] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchHomeworks = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const homeworksData = await getHomeworks(token, courseId);
+        setHomeworks(homeworksData);
+      } catch (err) {
+        setError('Не вдалося отримати домашні завдання. Спробуйте ще раз.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHomeworks();
+  }, [token, courseId]);
 
   return (
     <div className="bg-gradient-to-br from-gray-100 to-indigo-100 min-h-screen">
