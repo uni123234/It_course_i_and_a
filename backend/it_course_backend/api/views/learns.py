@@ -44,12 +44,11 @@ class FAQDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FAQSerializer
 
-
 class CourseListCreateView(generics.ListCreateAPIView):
     """
     API view to list and create courses.
     - GET: Retrieve a list of active courses.
-    - POST: Create a new course.
+    - POST: Create a new course and an associated group.
     """
 
     permission_classes = [IsAuthenticated]
@@ -65,6 +64,16 @@ class CourseListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         course = serializer.save()
         logger.info("Course created: %s", course.title)
+
+        group = Group.objects.create(
+            name=f"{course.title} Group",
+            course=course,
+        )
+        group.teachers.add(self.request.user)
+        group.save()
+
+        logger.info("Group created for course: %s", group.name)
+
 
 
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
