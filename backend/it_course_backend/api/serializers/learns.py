@@ -18,10 +18,6 @@ class FAQSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-from rest_framework import serializers
-from .models import Course
-
-
 class CourseSerializer(serializers.ModelSerializer):
     """
     Serializer for the Course model, including homework progress.
