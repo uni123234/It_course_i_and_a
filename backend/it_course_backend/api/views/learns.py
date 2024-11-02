@@ -3,7 +3,7 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import PermissionDenied
 from django.db.models import Q
 from ..models import Course, Homework, Lesson, Group
 from ..serializers import (
@@ -33,62 +33,72 @@ class CourseListCreateView(generics.ListCreateAPIView):
         ).distinct()
 
     def get_serializer_class(self):
-        """Return appropriate serializer class based on user type."""
-        if self.request.user.user_type == "teacher":
-            return TeacherCourseSerializer
-        return CourseSerializer
+        """Return the appropriate serializer based on user type."""
+        return (
+            TeacherCourseSerializer
+            if self.request.user.user_type == "teacher"
+            else CourseSerializer
+        )
 
     def perform_create(self, serializer):
-        """Save a new course with the creator as the teacher if not specified."""
-        serializer.save(teacher=self.request.user)
-        logger.info(
-            "Course created by %s: %s",
-            self.request.user.email,
-            serializer.instance.title,
-        )
+        """Save a new course with the creator as 'teacher' and enroll them as a student if applicable."""
+        user = self.request.user
+        course = serializer.save(teacher=user)
+
+        # Create or get the group associated with the course
+        group, group_created = Group.objects.get_or_create(course=course, teacher=user)
+
+        # Enroll the user in the group as a student
+        group.students.add(user)
+
+        logger.info("Course created by %s: %s", user.email, course.title)
 
 
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    API view for retrieving, updating, or deleting a specific course
-    in which the user is involved as a teacher or a student.
-    """
-
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Return all courses if the user is a teacher or a student; otherwise return an empty queryset."""
+        """Return all courses the user can access based on their role."""
         user = self.request.user
 
-        all_courses = Course.objects.all()
+        if user.user_type == "teacher":
+            return Course.objects.filter(teacher=user)
+        elif user.user_type == "student":
+            return Course.objects.filter(groups__students=user).distinct()
+        return Course.objects.none()
 
-        is_teacher = any(course.teacher == user for course in all_courses)
-        is_student = any(
-            user.id in course.groups.values_list("students", flat=True)
-            for course in all_courses
-        )
+    def get_object(self):
+        """Retrieve the course if accessible by the user; otherwise, raise an access error."""
+        course = super().get_object()
+        user = self.request.user
 
-        return all_courses if is_teacher or is_student else Course.objects.none()
+        if user != course.teacher and not course.groups.filter(students=user).exists():
+            raise PermissionDenied("You are not enrolled in this course.")
+
+        return course
 
 
 class CourseEditView(generics.UpdateAPIView):
-    """
-    API view for updating a specific course.
-    """
-
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Return a specific course for editing based on the user's role."""
+        """Return a specific course for editing, with the first course at the start if applicable."""
         user = self.request.user
         course_id = self.kwargs.get("pk")
-        return (
+
+        queryset = (
             Course.objects.filter(id=course_id, teacher=user)
             if user.user_type == "teacher"
             else Course.objects.none()
         )
+
+        first_course = Course.objects.first()
+        if first_course and first_course not in queryset:
+            queryset = Course.objects.filter(pk=first_course.pk) | queryset
+
+        return queryset
 
 
 class GroupCreateView(generics.CreateAPIView):
@@ -160,22 +170,25 @@ class LessonListView(generics.ListAPIView):
     serializer_class = LessonSerializer
 
     def get_queryset(self):
-        """
-        Return lessons based on the user's role (teacher or student).
-
-        Returns:
-            QuerySet: A filtered queryset of lessons for the authenticated user.
-        """
         user = self.request.user
-
         user_groups = Group.objects.filter(students=user).values_list("id", flat=True)
 
-        if user.user_type == "teacher":
-            return Lesson.objects.filter(course__teacher=user)
-        elif user.user_type == "student":
-            return Lesson.objects.filter(course__group__id__in=user_groups)
+        student_lessons = Lesson.objects.filter(course__groups__id__in=user_groups)
+        teacher_lessons = Lesson.objects.filter(course__teacher=user)
 
-        return Lesson.objects.none()
+        return student_lessons | teacher_lessons
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+
+        for lesson in queryset:
+            if lesson.course.teacher == request.user:
+                lesson.user_role = "teacher"
+            else:
+                lesson.user_role = "student"
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class LessonCreateView(generics.CreateAPIView):

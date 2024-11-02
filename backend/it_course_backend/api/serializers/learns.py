@@ -6,14 +6,33 @@ FAQ, Course, Group, Lesson, and related data structures.
 from rest_framework import serializers
 from django.utils import timezone
 from ..models import Course, Group, Lesson, User
+from datetime import datetime
+
+
+class DateFromDatetimeField(serializers.DateField):
+    """Custom field to accept datetime input but store as date."""
+
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            # Attempt to parse the string input first
+            try:
+                return super().to_internal_value(data)
+            except serializers.ValidationError:
+                pass  # If parsing fails, we'll check for datetime next
+
+        if isinstance(data, datetime):
+            return data.date()
+
+        raise serializers.ValidationError("Invalid date format.")
 
 
 class CourseSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Course model, including homework progress.
-    """
+    """Serializer for the Course model, including homework progress."""
 
     homework_progress = serializers.SerializerMethodField()
+    groups = serializers.PrimaryKeyRelatedField(
+        queryset=Group.objects.all(), many=True, required=False
+    )
 
     class Meta:
         model = Course
@@ -31,6 +50,8 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Create a new Course instance and assign the teacher."""
+        validated_data.setdefault("start_date", timezone.now().date())
+
         validated_data["teacher"] = self.context["request"].user
         return super().create(validated_data)
 
