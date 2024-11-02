@@ -21,18 +21,9 @@ from ..permissions import IsCourseTeacher
 logger = logging.getLogger("api")
 
 
-class BaseListCreateView(generics.ListCreateAPIView):
-    """Base view for listing and creating instances with user role checks."""
-
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        """Override this method to define the queryset for the view."""
-        raise NotImplementedError("You must implement the get_queryset method.")
-
-
-class CourseListCreateView(BaseListCreateView):
+class CourseListCreateView(generics.ListCreateAPIView):
     serializer_class = CourseSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         """Return courses where the user is involved as a teacher or student."""
@@ -50,37 +41,40 @@ class CourseListCreateView(BaseListCreateView):
         )
 
     def perform_create(self, serializer):
-        """Save a new course and enroll the user as a student."""
+        """Save a new course with the creator as 'teacher' and enroll them as a student if applicable."""
         user = self.request.user
         course = serializer.save(teacher=user)
-        group, _ = Group.objects.get_or_create(course=course, teacher=user)
+
+        group, group_created = Group.objects.get_or_create(course=course, teacher=user)
+
         group.students.add(user)
+
         logger.info("Course created by %s: %s", user.email, course.title)
 
 
-class BaseRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    """Base view for retrieving, updating, or deleting instances with access checks."""
-
+class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_object(self):
-        """Retrieve the object if accessible by the user; otherwise, raise an access error."""
-        obj = super().get_object()
-        self.check_object_permissions(self.request, obj)
-        return obj
-
-
-class CourseDetailView(BaseRetrieveUpdateDestroyView):
-    serializer_class = CourseSerializer
-
     def get_queryset(self):
-        """Return courses the user can access based on their role."""
+        """Return all courses the user can access based on their role."""
         user = self.request.user
+
         if user.user_type == "teacher":
             return Course.objects.filter(teacher=user)
         elif user.user_type == "student":
             return Course.objects.filter(groups__students=user).distinct()
         return Course.objects.none()
+
+    def get_object(self):
+        """Retrieve the course if accessible by the user; otherwise, raise an access error."""
+        course = super().get_object()
+        user = self.request.user
+
+        if user != course.teacher and not course.groups.filter(students=user).exists():
+            raise PermissionDenied("You are not enrolled in this course.")
+
+        return course
 
 
 class CourseEditView(generics.UpdateAPIView):
@@ -88,98 +82,175 @@ class CourseEditView(generics.UpdateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Return a specific course for editing if the user is the teacher."""
+        """Return a specific course for editing, with the first course at the start if applicable."""
         user = self.request.user
         course_id = self.kwargs.get("pk")
-        return Course.objects.filter(id=course_id, teacher=user)
+
+        queryset = (
+            Course.objects.filter(id=course_id, teacher=user)
+            if user.user_type == "teacher"
+            else Course.objects.none()
+        )
+
+        first_course = Course.objects.first()
+        if first_course and first_course not in queryset:
+            queryset = Course.objects.filter(pk=first_course.pk) | queryset
+
+        return queryset
 
 
 class GroupCreateView(generics.CreateAPIView):
-    """API view to create a new group."""
+    """
+    API view to create a new group.
+
+    Methods:
+        POST: Create a new group entry.
+    """
 
     permission_classes = [IsAuthenticated]
     serializer_class = GroupCreateUpdateSerializer
 
     def perform_create(self, serializer):
-        """Save a new group entry and log the creation."""
+        """
+        Save a new group entry and log the creation.
+
+        Args:
+            serializer: The serializer instance containing the group data.
+        """
         group = serializer.save(teacher=self.request.user)
         logger.info("Group created: %s", group.name)
 
 
-class GroupEditView(BaseRetrieveUpdateDestroyView):
-    """API view for retrieving, updating, or deleting a specific group."""
+class GroupEditView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    API view for retrieving, updating, or deleting a specific group.
+
+    Methods:
+        GET: Retrieve a group entry by ID.
+        PUT: Update an existing group entry.
+        DELETE: Delete a specific group entry.
+    """
 
     permission_classes = [IsAuthenticated, IsCourseTeacher]
     serializer_class = GroupCreateUpdateSerializer
     queryset = Group.objects.all()
 
     def perform_update(self, serializer):
-        """Log the updated group entry."""
+        """
+        Save the updated group entry and log the update.
+
+        Args:
+            serializer: The serializer instance containing the updated group data.
+        """
         group = serializer.save()
         logger.info("Group updated: %s", group.name)
 
     def perform_destroy(self, instance):
-        """Log the deletion of a group before destroying it."""
+        """
+        Log the deletion of a group before destroying it.
+
+        Args:
+            instance: The group instance to be deleted.
+        """
         logger.info("Group deleted: %s", instance.name)
         super().perform_destroy(instance)
 
 
-class LessonListView(BaseListCreateView):
-    """View for listing lessons based on user role."""
+class LessonListView(generics.ListAPIView):
+    """
+    View for listing lessons based on user role.
 
+    Methods:
+        GET: Retrieve a list of lessons for the authenticated user.
+    """
+
+    permission_classes = [IsAuthenticated]
     serializer_class = LessonSerializer
 
     def get_queryset(self):
         user = self.request.user
         user_groups = Group.objects.filter(students=user).values_list("id", flat=True)
-        return Lesson.objects.filter(
-            Q(course__groups__id__in=user_groups) | Q(course__teacher=user)
-        ).distinct()
+
+        student_lessons = Lesson.objects.filter(course__groups__id__in=user_groups)
+        teacher_lessons = Lesson.objects.filter(course__teacher=user)
+
+        return student_lessons | teacher_lessons
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
 
         for lesson in queryset:
-            lesson.user_role = (
-                "teacher" if lesson.course.teacher == request.user else "student"
-            )
+            if lesson.course.teacher == request.user:
+                lesson.user_role = "teacher"
+            else:
+                lesson.user_role = "student"
 
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
 
 class LessonCreateView(generics.CreateAPIView):
-    """View for creating lessons."""
+    """
+    View for creating lessons.
+
+    Methods:
+        POST: Create a new lesson entry.
+    """
 
     permission_classes = [IsAuthenticated]
     serializer_class = LessonSerializer
+    queryset = Lesson.objects.all()
 
     def perform_create(self, serializer):
-        """Save a new lesson and log the creation."""
+        """
+        Save a new lesson entry and log the creation.
+
+        Args:
+            serializer: The serializer instance containing the lesson data.
+        """
         lesson = serializer.save()
         logger.info("Lesson created: %s", lesson.title)
 
 
-class LessonEditView(BaseRetrieveUpdateDestroyView):
-    """View for retrieving, updating, or deleting a specific lesson."""
+class LessonEditView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    View for retrieving, updating, or deleting a specific lesson.
+
+    Methods:
+        GET: Retrieve a lesson entry by ID.
+        PUT: Update an existing lesson entry.
+        DELETE: Delete a specific lesson entry.
+    """
 
     permission_classes = [IsAuthenticated]
     serializer_class = LessonSerializer
     queryset = Lesson.objects.all()
 
     def perform_update(self, serializer):
-        """Log the updated lesson entry."""
+        """
+        Save the updated lesson entry and log the update.
+
+        Args:
+            serializer: The serializer instance containing the updated lesson data.
+        """
         lesson = serializer.save()
         logger.info("Lesson updated: %s", lesson.title)
 
     def perform_destroy(self, instance):
-        """Log the deletion of a lesson before destroying it."""
+        """
+        Log the deletion of a lesson before destroying it.
+
+        Args:
+            instance: The lesson instance to be deleted.
+        """
         logger.info("Lesson deleted: %s", instance.title)
         super().perform_destroy(instance)
 
 
 class StudentHomeworkListView(generics.ListAPIView):
-    """View for listing all homework assignments submitted by a specific student."""
+    """
+    View for listing all homework assignments submitted by a specific student.
+    """
 
     permission_classes = [IsAuthenticated]
     serializer_class = HomeworkSerializer
@@ -187,16 +258,19 @@ class StudentHomeworkListView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         student_id = self.kwargs.get("student_id")
-        return (
-            Homework.objects.filter(submitted_by__id=student_id)
-            if user.user_type == "teacher"
-            else Homework.objects.none()
-        )
+
+        if user.user_type != "teacher":
+            return Homework.objects.none()
+
+        return Homework.objects.filter(submitted_by__id=student_id).distinct()
 
 
-class HomeworkListCreateView(BaseListCreateView):
-    """View for listing and creating homework assignments for a specific course."""
+class HomeworkListCreateView(generics.ListCreateAPIView):
+    """
+    View for listing and creating homework assignments for a specific course.
+    """
 
+    permission_classes = [IsAuthenticated]
     serializer_class = HomeworkSerializer
 
     def get_queryset(self):
@@ -210,110 +284,201 @@ class HomeworkListCreateView(BaseListCreateView):
                 submission_date__isnull=False,
                 due_date__lte=now,
             ).distinct()
+
         elif user.user_type == "student":
             return Homework.objects.filter(
-                lesson__course__id=course_id, due_date__gte=now, submitted_by=user
+                lesson__course__id=course_id,
+                due_date__gte=now,
+                submitted_by=user,
             ).distinct()
-        return Homework.objects.none()
+
+        else:
+            return Homework.objects.none()
 
     def perform_create(self, serializer):
-        """Save a new homework assignment and log the creation."""
+        """
+        Save a new homework assignment and log the creation.
+        """
         homework = serializer.save(submitted_by=self.request.user)
         logger.info("Homework created: %s", homework.title)
 
 
-class HomeworkDetailView(BaseRetrieveUpdateDestroyView):
-    """View for retrieving, updating, or deleting a specific homework assignment."""
+class HomeworkDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    View for retrieving, updating, or deleting a specific homework assignment.
 
-    serializer_class = HomeworkSerializer
+    Methods:
+        GET: Retrieve a homework assignment by ID.
+        PUT: Update an existing homework assignment.
+        DELETE: Delete a specific homework assignment.
+    """
+
+    permission_classes = [IsAuthenticated]
     queryset = Homework.objects.all()
+    serializer_class = HomeworkSerializer
 
 
-class HomeworkEditView(generics.UpdateAPIView):
-    """View for editing homework assignments."""
+class HomeworkEditView(generics.RetrieveUpdateAPIView):
+    """
+    View for editing homework assignments.
+
+    Methods:
+        GET: Retrieve a homework assignment by ID.
+        PUT: Update an existing homework assignment.
+    """
 
     permission_classes = [IsAuthenticated]
     queryset = Homework.objects.all()
     serializer_class = HomeworkSerializer
 
     def perform_update(self, serializer):
-        """Log the updated homework entry."""
+        """
+        Update a homework assignment and log the update.
+
+        Args:
+            serializer: The serializer instance containing the updated data.
+        """
         homework = serializer.save()
         logger.info("Homework updated: %s", homework.title)
 
 
 class HomeworkSubmissionView(generics.CreateAPIView):
-    """View for submitting homework assignments."""
+    """
+    View for submitting homework assignments.
+
+    Methods:
+        POST: Create a new homework submission.
+    """
 
     permission_classes = [IsAuthenticated]
     serializer_class = HomeworkSubmissionSerializer
 
     def perform_create(self, serializer):
-        """Save a new homework submission and log the submission."""
+        """
+        Save a new homework submission and log the submission.
+
+        Args:
+            serializer: The serializer instance containing the submission data.
+        """
         homework_submission = serializer.save(student=self.request.user)
         logger.info("Homework submitted by: %s", homework_submission.student.username)
 
 
 class HomeworkGradeView(generics.UpdateAPIView):
-    """View for grading homework submissions."""
+    """
+    View for grading homework submissions.
+
+    Methods:
+        PUT: Update the grade for a specific homework submission.
+    """
 
     permission_classes = [IsAuthenticated]
     serializer_class = HomeworkGradeSerializer
     queryset = Homework.objects.all()
 
     def perform_update(self, serializer):
-        """Log the grading of homework."""
+        """
+        Save the updated homework grade and log the grading.
+
+        Args:
+            serializer: The serializer instance containing the updated grade data.
+        """
         homework = serializer.save()
         logger.info("Homework graded: %s", homework.title)
 
 
 class LessonCalendarView(generics.ListAPIView):
-    """View for displaying lessons in a calendar format."""
+    """
+    View for displaying lessons in a calendar format.
+
+    Methods:
+        GET: Retrieve a list of lessons in a calendar format.
+    """
 
     permission_classes = [IsAuthenticated]
     serializer_class = LessonCalendarSerializer
 
     def get_queryset(self):
-        """Return lessons for the current week based on user role."""
+        """
+        Return lessons for the current week based on user role.
+
+        Returns:
+            QuerySet: A filtered queryset of lessons for the authenticated user.
+        """
         user = self.request.user
         start_date = timezone.now().date() - timezone.timedelta(
             days=timezone.now().date().weekday()
         )
         end_date = start_date + timezone.timedelta(days=7)
 
+        user_courses = Course.objects.filter(students=user).values_list("id", flat=True)
+
+        user_teaching_courses = Course.objects.filter(teacher=user).values_list(
+            "id", flat=True
+        )
+
         if user.user_type == "teacher":
             return Lesson.objects.filter(
-                course__teacher=user, date__range=(start_date, end_date)
+                course__id__in=user_teaching_courses, date__range=(start_date, end_date)
             )
+
         elif user.user_type == "student":
-            user_courses = Course.objects.filter(students=user).values_list(
-                "id", flat=True
-            )
             return Lesson.objects.filter(
                 course__id__in=user_courses, date__range=(start_date, end_date)
             )
+
         return Lesson.objects.none()
 
 
 class ReminderView(generics.ListAPIView):
-    """View for listing homework reminders based on user type."""
+    """
+    View for listing homework reminders based on user type.
+
+    Methods:
+        GET: Retrieve a list of homework reminders for the authenticated user.
+    """
 
     permission_classes = [IsAuthenticated]
     serializer_class = HomeworkSerializer
 
     def get_queryset(self):
-        """Return homework reminders based on the user's role."""
+        """
+        Return homework reminders based on the user's role.
+
+        Returns:
+            QuerySet: A filtered queryset of homework reminders for the authenticated user.
+        """
         user = self.request.user
         now = timezone.now()
 
-        if user.groups.filter(name="Teachers").exists():
+        if user.groups.filter(
+            name="Teachers"
+        ).exists():  # Assuming you have a 'Teachers' group
             return Homework.objects.filter(
                 lesson__course__groups__teacher=user,
-                review_date__isnull=True,
-                due_date__gte=now,
+                review_deadline__lte=now,
+                submitted_by__isnull=False,
             )
-        elif user.groups.filter(name="Students").exists():
-            return Homework.objects.filter(
-                submitted_by=user, due_date__gte=now, review_date__isnull=True
-            )
-        return Homework.objects.none()
+        return Homework.objects.filter(
+            lesson__course__groups__students=user,
+            due_date__lte=now,
+        )
+
+    def list(self, request, *args, **kwargs):
+        """
+        List homework reminders and customize the response message based on user type.
+        """
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+
+        return Response(
+            {
+                "type": "teacher" if request.user.is_teacher else "student",
+                "message": (
+                    "You have homeworks to review"
+                    if request.user.is_teacher
+                    else "You have homeworks to submit"
+                ),
+                "data": serializer.data,
+            }
+        )
