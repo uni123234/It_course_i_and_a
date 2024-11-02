@@ -8,11 +8,13 @@ import { useCreateHomework } from "../../api";
 interface HomeworkModalProps {
   isOpen: boolean;
   onClose: () => void;
+  courseId: number | undefined;
 }
 
 const CreateHomeworkModal: React.FC<HomeworkModalProps> = ({
   isOpen,
   onClose,
+  courseId
 }) => {
   const { createHomework } = useCreateHomework();
   const { getUserId } = useAuth();
@@ -30,6 +32,7 @@ const CreateHomeworkModal: React.FC<HomeworkModalProps> = ({
             description: fields.description,
             dateTime: fields.dateTime,
             id: userId,
+            courseId: courseId
           });
 
           console.log("Course created successfully:", response);
