@@ -258,11 +258,14 @@ class StudentHomeworkListView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         student_id = self.kwargs.get("student_id")
-
+        
         if user.user_type != "teacher":
             return Homework.objects.none()
 
-        return Homework.objects.filter(submitted_by__id=student_id).distinct()
+        return Homework.objects.filter(
+            submitted_by__id=student_id
+        ).distinct()
+
 
 
 class HomeworkListCreateView(generics.ListCreateAPIView):

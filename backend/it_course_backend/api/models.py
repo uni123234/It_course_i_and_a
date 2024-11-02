@@ -176,7 +176,7 @@ class Lesson(ActiveModel):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="lessons",
-        null=False,
+        null=False,  # Make it non-nullable
     )
     scheduled_time = models.DateTimeField(verbose_name="Scheduled Time")
     content = models.TextField(blank=True, null=True, verbose_name="Content")
