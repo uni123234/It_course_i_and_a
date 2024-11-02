@@ -63,7 +63,7 @@ urlpatterns = [
     path('lessons/create/', LessonCreateView.as_view(), name='lesson-create'),
     path('lessons/edit/<int:pk>/', LessonEditView.as_view(), name='lesson-edit'),
     path("calendar/", LessonCalendarView.as_view(), name="lesson_calendar"),
-     path('homework/', HomeworkListCreateView.as_view(), name='homework-list-create'),
+    path('homework/', HomeworkListCreateView.as_view(), name='homework-list-create'),
     path('homework/<int:pk>/', HomeworkDetailView.as_view(), name='homework-detail'),
     path('homework/submit/', HomeworkSubmissionView.as_view(), name='homework-submit'),
 ]
