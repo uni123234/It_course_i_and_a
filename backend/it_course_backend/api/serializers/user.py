@@ -66,30 +66,33 @@ class HomeworkSerializer(serializers.ModelSerializer):
         ]
 
     @staticmethod
-    def get_homeworks_to_review(user, now):
+    def get_homeworks(user, now):
         """
-        Retrieves homework that needs to be reviewed for the teacher.
-        Assumes Homework is linked to Lesson through a related model.
-        """
-        return Homework.objects.filter(
-            submission_date__isnull=False,
-            due_date__lte=now,
-            submitted_by__isnull=False,
-            lesson__course__groups__teacher__email=user.email,
-        ).distinct()
+        Retrieves homework assignments for the user based on their role.
 
-    @staticmethod
-    def get_homeworks_to_submit(user, now):
+        Args:
+            user: The user requesting the homework list.
+            now: The current datetime for filtering due dates.
+
+        Returns:
+            Queryset of Homework objects for the user's role.
         """
-        Retrieves homework that needs to be submitted for the student.
-        Assumes Homework is linked to Lesson through a related model.
-        """
-        return Homework.objects.filter(
-            submission_date__isnull=False,
-            due_date__lte=now,
-            submitted_by__isnull=False,
-            lesson__course__groups__teacher=user,
-        ).distinct()
+        if user.user_type == "teacher":
+            return Homework.objects.filter(
+                submission_date__isnull=False,
+                due_date__lte=now,
+                submitted_by__isnull=False,
+                lesson__course__groups__teacher=user,
+            ).distinct()
+
+        elif user.user_type == "student":
+            return Homework.objects.filter(
+                lesson__course__groups__students=user,
+                due_date__gte=now,
+                submitted_by=user,
+            ).distinct()
+
+        return Homework.objects.none()
 
 
 class HomeworkGradeSerializer(serializers.ModelSerializer):

@@ -266,9 +266,19 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
         now = timezone.now()
 
         if user.user_type == "teacher":
-            return HomeworkSerializer.get_homeworks_to_review(user, now)
+            return Homework.objects.filter(
+                lesson__course__groups__teacher=user,
+                submission_date__isnull=False,
+                due_date__lte=now,
+            ).distinct()
+
         elif user.user_type == "student":
-            return HomeworkSerializer.get_homeworks_to_submit(user, now)
+            return Homework.objects.filter(
+                lesson__course__groups__students=user,
+                due_date__gte=now,
+                submitted_by=user,
+            ).distinct()
+
         else:
             return Homework.objects.none()
 
@@ -279,7 +289,7 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
         Args:
             serializer: The serializer instance containing the homework data.
         """
-        homework = serializer.save()
+        homework = serializer.save(submitted_by=self.request.user)
         logger.info("Homework created: %s", homework.title)
 
 
@@ -296,6 +306,30 @@ class HomeworkDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     queryset = Homework.objects.all()
     serializer_class = HomeworkSerializer
+
+
+class HomeworkEditView(generics.RetrieveUpdateAPIView):
+    """
+    View for editing homework assignments.
+
+    Methods:
+        GET: Retrieve a homework assignment by ID.
+        PUT: Update an existing homework assignment.
+    """
+
+    permission_classes = [IsAuthenticated]
+    queryset = Homework.objects.all()
+    serializer_class = HomeworkSerializer
+
+    def perform_update(self, serializer):
+        """
+        Update a homework assignment and log the update.
+
+        Args:
+            serializer: The serializer instance containing the updated data.
+        """
+        homework = serializer.save()
+        logger.info("Homework updated: %s", homework.title)
 
 
 class HomeworkSubmissionView(generics.CreateAPIView):
