@@ -7,6 +7,7 @@ from .learns import (
     GroupCreateView,
     GroupEditView,
     LessonCreateView,
+    StudentHomeworkListView,
     HomeworkDetailView,
     HomeworkSubmissionView,
     HomeworkGradeView,
