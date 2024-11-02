@@ -22,33 +22,30 @@ logger = logging.getLogger("api")
 
 
 class CourseListCreateView(generics.ListCreateAPIView):
-    """
-    API view to list and create courses with a role tag indicating if
-    the user is a teacher or student in each course.
-    """
-
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Return courses where the user is a teacher or student."""
+        """Return courses where the user is involved as a teacher or student."""
         user = self.request.user
         return Course.objects.filter(
             Q(teacher=user) | Q(groups__students=user)
         ).distinct()
 
     def get_serializer_class(self):
-        """Return the appropriate serializer class based on user type."""
-        return (
-            TeacherCourseSerializer
-            if self.request.user.user_type == "teacher"
-            else CourseSerializer
-        )
+        """Return appropriate serializer class based on user type."""
+        if self.request.user.user_type == "teacher":
+            return TeacherCourseSerializer
+        return CourseSerializer
 
     def perform_create(self, serializer):
-        """Save a new course entry and log its creation."""
-        course = serializer.save(teacher=self.request.user)
-        logger.info("Course created: %s", course.title)
+        """Save a new course with the creator as the teacher if not specified."""
+        serializer.save(teacher=self.request.user)
+        logger.info(
+            "Course created by %s: %s",
+            self.request.user.email,
+            serializer.instance.title,
+        )
 
 
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
