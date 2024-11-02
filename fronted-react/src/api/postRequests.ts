@@ -8,46 +8,119 @@ interface CourseData {
 }
 
 export const useCreateCourse = () => {
-    const { getAccessToken } = useAuth();
-  
-    const createCourse = async ({
-      title,
-      description,
-    }: CourseData) => {
-      const token = getAccessToken();
-  
-      try {
-        const response = await axios.post(
-          `${API_URL}/courses/create/`,
-          {
-            title,
-            description,
-            state: "not_started",
+  const { getAccessToken } = useAuth();
+
+  const createCourse = async ({ title, description }: CourseData) => {
+    const token = getAccessToken();
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/courses/create/`,
+        {
+          title,
+          description,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Використання заголовка refresh
           },
-          {
-            headers: {
-                Authorization: `Bearer ${token}`, // Використання заголовка refresh
-              },
-          }
-        );
-        return response.data;
-      } catch (error) {
-        console.error("Error creating course:", error);
-        throw error;
-      }
-    };
-  
-    return { createCourse };
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error creating course:", error);
+      throw error;
+    }
   };
 
+  return { createCourse };
+};
+
+
+interface HomeworkData {
+  title: string;
+  description: string;
+  id: number | null;
+  dateTime: string;
+}
+
+export const useCreateHomework = () => {
+  const { getAccessToken } = useAuth();
+
+  const createHomework = async ({ title, description, id, dateTime }: HomeworkData) => {
+    const token = getAccessToken();
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/homework/`,
+        {
+          title,
+          description,
+          submitted_by: id,
+          due_date: dateTime
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Використання заголовка refresh
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error creating course:", error);
+      throw error;
+    }
+  };
+
+  return { createHomework };
+};
+
+
+interface LessonData {
+  title: string;
+  description: string;
+  // id: number | null;
+  // dateTime: string;
+}
+
+export const useCreateLesson = () => {
+  const { getAccessToken } = useAuth();
+
+  const createLesson = async ({ title, description }: LessonData) => {
+    const token = getAccessToken();
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/lessons/create/`,
+        {
+          title,
+          description,
+          // submitted_by: id,
+          // due_date: dateTime
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Використання заголовка refresh
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error creating course:", error);
+      throw error;
+    }
+  };
+
+  return { createLesson };
+};
 
 // export const useCreateLesson = () => {
 //     const { getAccessToken } = useAuth();
-  
+
 //     const createLesson = async ({
 //     }: CourseData) => {
 //       const token = getAccessToken();
-  
+
 //       try {
 //         const response = await axios.post(
 //           `${API_URL}/lessons/create/`,
@@ -68,6 +141,6 @@ export const useCreateCourse = () => {
 //         throw error;
 //       }
 //     };
-  
+
 //     return { createLesson };
 //   };

@@ -3,10 +3,11 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../features";
 import { getHomeworks, fetchCourse } from "../api";
 import { useParams } from "react-router-dom";
+import { CreateHomeworkModal } from "../components"
 
 interface CourseData {
   id: string;
-  name: string;
+  title: string;
   description: string;
   // додайте інші поля відповідно до даних курсу
 }
@@ -46,7 +47,7 @@ const CoursePage: React.FC = () => {
           ]);
 
           setCourse(courseData);
-          console.log('course ', course)
+          console.log('course ', courseData)
           setHomeworks(homeworksData);
           console.log('homeworks', homeworkss)
         }
@@ -60,14 +61,24 @@ const CoursePage: React.FC = () => {
     fetchCourseAndHomeworks();
   }, [courseId]);
 
+
+  const [isHomeworkCreateModalOpen, setisHomeworkCreateModalOpen] = useState(false);
+
+  const openHomeworkCreateModal = () => setisHomeworkCreateModalOpen(true);
+  const closeHomeworkCreateModal = () => setisHomeworkCreateModalOpen(false);
+
   return (
+    <>
     <div className="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen">
       {/* Page Container */}
       <div className="max-w-4xl mx-auto p-4">
         {/* Buttons above Course Info Card */}
-        <div className="flex justify-between space-x-4 mb-6">
+        <div className="flex justify-around space-x-4 mb-6">
           <button className="px-4 py-2 bg-gradient-to-r from-amber-400 to-lime-400 text-white rounded-full hover:shadow-lg transition-transform transform hover:scale-105">
             Course Calendar
+          </button>
+          <button className="px-4 py-2 bg-gradient-to-r from-amber-400 to-lime-400 text-white rounded-full hover:shadow-lg transition-transform transform hover:scale-105" onClick={openHomeworkCreateModal}>
+            Create Homework
           </button>
           <button className="px-4 py-2 bg-gradient-to-r from-amber-400 to-lime-400 text-white rounded-full hover:shadow-lg transition-transform transform hover:scale-105">
             Users
@@ -77,9 +88,9 @@ const CoursePage: React.FC = () => {
         {/* Course Info Card */}
         <div className="bg-gradient-to-br from-pink-400 to-orange-300 text-white p-8 rounded-lg shadow-lg text-center transition-transform transform hover:scale-105">
           <h1 className="text-4xl font-extrabold tracking-wide">
-            Organic Chemistry
+            {course?.title}
           </h1>
-          <p className="mt-2 text-xl">Class 10 - VG</p>
+          <p className="mt-2 text-xl">{course?.description}</p>
         </div>
 
         {/* Homework List */}
@@ -103,6 +114,8 @@ const CoursePage: React.FC = () => {
         </div>
       </div>
     </div>
+    <CreateHomeworkModal isOpen={isHomeworkCreateModalOpen} onClose={closeHomeworkCreateModal} />
+    </>
   );
 };
 
