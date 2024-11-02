@@ -146,16 +146,19 @@ class Course(ActiveModel):
 
         for lesson in self.lessons.all():
             total_homework += lesson.homework_set.count()
-            submitted_homework += lesson.homework_set.filter(submitted_by__isnull=False).count()
+            submitted_homework += lesson.homework_set.filter(
+                submitted_by__isnull=False
+            ).count()
 
-        progress_percentage = (submitted_homework / total_homework * 100) if total_homework > 0 else 0
+        progress_percentage = (
+            (submitted_homework / total_homework * 100) if total_homework > 0 else 0
+        )
 
         return {
             "total_homework": total_homework,
             "submitted_homework": submitted_homework,
             "progress_percentage": progress_percentage,
         }
-
 
 
 class Lesson(ActiveModel):
