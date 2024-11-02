@@ -169,7 +169,15 @@ class Lesson(ActiveModel):
     """
 
     title = models.CharField(max_length=255, verbose_name="Title")
-    course = models.ForeignKey(Course, related_name="lessons", on_delete=models.CASCADE)
+    course = models.ForeignKey(
+        Course, related_name="course_lessons", on_delete=models.CASCADE, null=False
+    )
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="lessons",
+        null=False,  # Make it non-nullable
+    )
     scheduled_time = models.DateTimeField(verbose_name="Scheduled Time")
     content = models.TextField(blank=True, null=True, verbose_name="Content")
     video_url = models.URLField(blank=True, null=True, verbose_name="Video URL")
@@ -190,10 +198,16 @@ class Homework(ActiveModel):
 
     title = models.CharField(max_length=255)
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, null=True, blank=True)
+    course = models.ForeignKey(
+        Course, related_name="homework_courses", on_delete=models.CASCADE, null=True
+    )
     description = models.TextField()
     due_date = models.DateTimeField()
     submitted_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="homeworks"
+        settings.AUTH_USER_MODEL,
+        related_name="submitted_homeworks",
+        on_delete=models.CASCADE,
+        null=False,
     )
     submission_date = models.DateTimeField(blank=True, null=True)
     submission_file = models.FileField(

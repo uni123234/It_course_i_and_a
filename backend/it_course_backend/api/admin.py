@@ -88,12 +88,18 @@ class HomeworkAdmin(admin.ModelAdmin):
         "submission_date",
         "is_active",
         "is_late",
+        "course",
     )
-    search_fields = ("title", "submitted_by__email")
+    search_fields = (
+        "title",
+        "submitted_by__email",
+        "course__title",
+    )
     list_filter = (
         "submitted_by",
         "is_active",
         "due_date",
+        "course",
     )
 
     def is_late(self, obj):
