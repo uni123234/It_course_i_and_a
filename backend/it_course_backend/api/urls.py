@@ -71,8 +71,14 @@ urlpatterns = [
         name="homework-list-create",
     ),
     path("homework/<int:pk>/", HomeworkDetailView.as_view(), name="homework-detail"),
-    path('homework/student/<int:student_id>/', StudentHomeworkListView.as_view(), name='student-homework-list'),
-    path("homework/<int:pk>/grade/", HomeworkGradeView.as_view(), name="homework-grade"),
+    path(
+        "homework/student/<int:student_id>/",
+        StudentHomeworkListView.as_view(),
+        name="student-homework-list",
+    ),
     path("homework/submit/", HomeworkSubmissionView.as_view(), name="homework-submit"),
     path("homework/<int:pk>/edit/", HomeworkEditView.as_view(), name="homework-edit"),
+    path(
+        "homework/<int:pk>/grade/", HomeworkGradeView.as_view(), name="homework-grade"
+    ),
 ]
