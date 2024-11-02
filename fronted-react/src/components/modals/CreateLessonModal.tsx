@@ -2,7 +2,7 @@ import React from "react";
 import CreateModalBase from "./ModalCreateBase";
 import { useCreateLessonForm } from "../../features";
 
-import { createLesson } from "../../api";
+import { useCreateLesson } from "../../api";
 
 interface LessonModalProps {
   isOpen: boolean;
@@ -15,6 +15,7 @@ const CreateLessonModal: React.FC<LessonModalProps> = ({
   onClose,
   courseId,
 }) => {
+  const { createLesson } = useCreateLesson();
   const { fields, errors, isLoading, handleChange, handleSubmit } =
     useCreateLessonForm(async (fields) => {
       try {

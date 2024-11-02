@@ -2,11 +2,8 @@ import axios, { AxiosError } from "axios";
 import API_URL from "./index";
 import { useAuth } from "../features";
 
-// Utility function for POST requests with token retrieval
-const postRequest = async (url: string, data: object) => {
-  const { getAccessToken } = useAuth();
-  const token = getAccessToken();
-
+// Utility function for POST requests
+const postRequest = async (url: string, data: object, token: string) => {
   try {
     const response = await axios.post(url, data, {
       headers: {
@@ -21,32 +18,67 @@ const postRequest = async (url: string, data: object) => {
   }
 };
 
-// Function for creating a course
-export const createCourse = async (courseData: CourseData) => {
-  return postRequest(`${API_URL}/courses/create/`, courseData);
+// Hook for creating a course
+export const useCreateCourse = () => {
+  const { getAccessToken } = useAuth();
+
+  const createCourse = async (courseData: CourseData) => {
+    const token = getAccessToken();
+    if (!token) {
+      throw new Error("Authentication token is missing.");
+    }
+    
+    return postRequest(`${API_URL}/courses/create/`, courseData, token);
+  };
+
+  return { createCourse };
 };
 
-// Function for creating homework
-export const createHomework = async (homeworkData: HomeworkData) => {
-  const data = {
-    title: homeworkData.title,
-    description: homeworkData.description,
-    submitted_by: homeworkData.id,
-    due_date: homeworkData.dateTime,
-    course_id: homeworkData.courseId,
+// Hook for creating homework
+export const useCreateHomework = () => {
+  const { getAccessToken } = useAuth();
+
+  const createHomework = async (homeworkData: HomeworkData) => {
+    const token = getAccessToken();
+
+    if (!token) {
+      throw new Error("Authentication token is missing.");
+    }
+
+    const data = {
+      title: homeworkData.title,
+      description: homeworkData.description,
+      submitted_by: homeworkData.id,
+      due_date: homeworkData.dateTime,
+      course_id: homeworkData.courseId,
+    };
+    return postRequest(`${API_URL}/homework/`, data, token);
   };
-  return postRequest(`${API_URL}/homework/`, data);
+
+  return { createHomework };
 };
 
-// Function for creating a lesson
-export const createLesson = async (lessonData: LessonData) => {
-  const data = {
-    title: lessonData.title,
-    description: lessonData.description,
-    scheduled_time: lessonData.dateTime,
-    course: lessonData.courseId,
+export const useCreateLesson = () => {
+  const { getAccessToken } = useAuth();
+
+  const createLesson = async (lessonData: LessonData) => {
+    const token = getAccessToken();
+    
+    if (!token) {
+      throw new Error("Authentication token is missing.");
+    }
+
+    const data = {
+      title: lessonData.title,
+      description: lessonData.description,
+      scheduled_time: lessonData.dateTime,
+      course: lessonData.courseId,
+    };
+    
+    return postRequest(`${API_URL}/lessons/create/`, data, token);
   };
-  return postRequest(`${API_URL}/lessons/create/`, data);
+
+  return { createLesson };
 };
 
 // Interfaces

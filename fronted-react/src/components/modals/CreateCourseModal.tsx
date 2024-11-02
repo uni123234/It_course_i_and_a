@@ -1,7 +1,7 @@
 import React from "react";
 import CreateModalBase from "./ModalCreateBase";
 import { useCreateCourseForm } from "../../features";
-import { createCourse } from "../../api";
+import { useCreateCourse } from "../../api";
 
 interface CourseModalProps {
   isOpen: boolean;
@@ -9,6 +9,8 @@ interface CourseModalProps {
 }
 
 const CreateCourseModal: React.FC<CourseModalProps> = ({ isOpen, onClose }) => {
+  const { createCourse } = useCreateCourse()
+  
   const { fields, errors, isLoading, handleChange, handleSubmit } =
     useCreateCourseForm(async (fields) => {
       try {

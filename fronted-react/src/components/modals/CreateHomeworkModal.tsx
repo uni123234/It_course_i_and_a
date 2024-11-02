@@ -1,7 +1,7 @@
 import React from "react";
 import CreateModalBase from "./ModalCreateBase";
 import { useCreateHomeworkForm, useAuth } from "../../features";
-import { createHomework } from "../../api";
+import { useCreateHomework } from "../../api";
 
 interface HomeworkModalProps {
   isOpen: boolean;
@@ -17,6 +17,8 @@ const CreateHomeworkModal: React.FC<HomeworkModalProps> = ({
   const { getUserId } = useAuth();
 
   const userId = getUserId();
+
+  const { createHomework } = useCreateHomework()
 
   const { fields, errors, isLoading, handleChange, handleSubmit } =
     useCreateHomeworkForm(async (fields) => {
