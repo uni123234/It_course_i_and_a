@@ -14,11 +14,10 @@ class DateFromDatetimeField(serializers.DateField):
 
     def to_internal_value(self, data):
         if isinstance(data, str):
-            # Attempt to parse the string input first
             try:
                 return super().to_internal_value(data)
             except serializers.ValidationError:
-                pass  # If parsing fails, we'll check for datetime next
+                pass
 
         if isinstance(data, datetime):
             return data.date()
@@ -51,7 +50,6 @@ class CourseSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Create a new Course instance and assign the teacher."""
         validated_data.setdefault("start_date", timezone.now().date())
-
         validated_data["teacher"] = self.context["request"].user
         return super().create(validated_data)
 
@@ -131,6 +129,7 @@ class LessonSerializer(serializers.ModelSerializer):
             "meeting_link",
             "notes_url",
             "notes_content",
+            "course",
             "user_role",
         ]
 

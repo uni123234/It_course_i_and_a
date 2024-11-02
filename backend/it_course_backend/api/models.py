@@ -141,25 +141,27 @@ class Course(ActiveModel):
         return self.title
 
     def homework_progress(self):
-        """Calculate the homework progress for this course."""
-        total_homework = 0
-        submitted_homework = 0
-
+        progress_data = []
         for lesson in self.lessons.all():
-            total_homework += lesson.homework_set.count()
-            submitted_homework += lesson.homework_set.filter(
+            total_homework = lesson.homework_set.count()
+            submitted_homework = lesson.homework_set.filter(
                 submitted_by__isnull=False
             ).count()
 
-        progress_percentage = (
-            (submitted_homework / total_homework * 100) if total_homework > 0 else 0
-        )
+            progress_percentage = (
+                (submitted_homework / total_homework * 100) if total_homework > 0 else 0
+            )
 
-        return {
-            "total_homework": total_homework,
-            "submitted_homework": submitted_homework,
-            "progress_percentage": progress_percentage,
-        }
+            progress_data.append(
+                {
+                    "lesson_title": lesson.title,
+                    "total_homework": total_homework,
+                    "submitted_homework": submitted_homework,
+                    "progress_percentage": progress_percentage,
+                }
+            )
+
+        return progress_data
 
 
 class Lesson(ActiveModel):
@@ -169,7 +171,12 @@ class Lesson(ActiveModel):
     """
 
     title = models.CharField(max_length=255, verbose_name="Title")
-    course = models.ForeignKey(Course, related_name="lessons", on_delete=models.CASCADE)
+    course = models.ForeignKey(
+        "Course",
+        on_delete=models.CASCADE,
+        null=False,
+        related_name="lessons",
+    )
     scheduled_time = models.DateTimeField(verbose_name="Scheduled Time")
     content = models.TextField(blank=True, null=True, verbose_name="Content")
     video_url = models.URLField(blank=True, null=True, verbose_name="Video URL")

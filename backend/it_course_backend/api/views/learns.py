@@ -1,5 +1,5 @@
 import logging
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from rest_framework.response import Response
@@ -32,6 +32,12 @@ class CourseListCreateView(generics.ListCreateAPIView):
             Q(teacher=user) | Q(groups__students=user)
         ).distinct()
 
+    def list(self, request, *args, **kwargs):
+        """Override the list method to include homework progress."""
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     def get_serializer_class(self):
         """Return the appropriate serializer based on user type."""
         return (
@@ -41,17 +47,15 @@ class CourseListCreateView(generics.ListCreateAPIView):
         )
 
     def perform_create(self, serializer):
-        """Save a new course with the creator as 'teacher' and enroll them as a student if applicable."""
+        """Save a new course and enroll the creator as a student."""
         user = self.request.user
         course = serializer.save(teacher=user)
 
-        # Create or get the group associated with the course
-        group, group_created = Group.objects.get_or_create(course=course, teacher=user)
-
-        # Enroll the user in the group as a student
+        group, _ = Group.objects.get_or_create(course=course, teacher=user)
         group.students.add(user)
 
         logger.info("Course created by %s: %s", user.email, course.title)
+        return course
 
 
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -251,11 +255,11 @@ class LessonEditView(generics.RetrieveUpdateDestroyAPIView):
 
 class HomeworkListCreateView(generics.ListCreateAPIView):
     """
-    View for listing and creating homework assignments.
+    View for listing and creating homework assignments for a specific course.
 
     Methods:
-        GET: Retrieve a list of homework assignments.
-        POST: Create a new homework assignment.
+        GET: Retrieve a list of homework assignments for the specified course.
+        POST: Create a new homework assignment for the specified course.
     """
 
     permission_classes = [IsAuthenticated]
@@ -263,32 +267,28 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        course_id = self.kwargs.get("course_id")
         now = timezone.now()
 
         if user.user_type == "teacher":
             return Homework.objects.filter(
-                lesson__course__groups__teacher=user,
+                lesson__course_id=course_id,
                 submission_date__isnull=False,
                 due_date__lte=now,
             ).distinct()
 
         elif user.user_type == "student":
             return Homework.objects.filter(
+                lesson__course_id=course_id,
                 lesson__course__groups__students=user,
                 due_date__gte=now,
                 submitted_by=user,
             ).distinct()
 
-        else:
-            return Homework.objects.none()
+        return Homework.objects.none()
 
     def perform_create(self, serializer):
-        """
-        Save a new homework assignment and log the creation.
-
-        Args:
-            serializer: The serializer instance containing the homework data.
-        """
+        """Save a new homework assignment and log the creation."""
         homework = serializer.save(submitted_by=self.request.user)
         logger.info("Homework created: %s", homework.title)
 
