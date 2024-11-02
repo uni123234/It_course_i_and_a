@@ -14,11 +14,10 @@ class DateFromDatetimeField(serializers.DateField):
 
     def to_internal_value(self, data):
         if isinstance(data, str):
-            # Attempt to parse the string input first
             try:
                 return super().to_internal_value(data)
             except serializers.ValidationError:
-                pass  # If parsing fails, we'll check for datetime next
+                pass
 
         if isinstance(data, datetime):
             return data.date()
@@ -130,6 +129,7 @@ class LessonSerializer(serializers.ModelSerializer):
             "meeting_link",
             "notes_url",
             "notes_content",
+            "course",
             "user_role",
         ]
 

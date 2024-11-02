@@ -171,7 +171,12 @@ class Lesson(ActiveModel):
     """
 
     title = models.CharField(max_length=255, verbose_name="Title")
-    course = models.ForeignKey(Course, related_name="lessons", on_delete=models.CASCADE)
+    course = models.ForeignKey(
+        "Course",
+        on_delete=models.CASCADE,
+        null=False,
+        related_name="lessons",  # Changed to 'lessons'
+    )
     scheduled_time = models.DateTimeField(verbose_name="Scheduled Time")
     content = models.TextField(blank=True, null=True, verbose_name="Content")
     video_url = models.URLField(blank=True, null=True, verbose_name="Video URL")
