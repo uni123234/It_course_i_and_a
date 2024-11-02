@@ -256,7 +256,6 @@ class LessonEditView(generics.RetrieveUpdateDestroyAPIView):
 class HomeworkListCreateView(generics.ListCreateAPIView):
     """
     View for listing and creating homework assignments for a specific course.
-
     Methods:
         GET: Retrieve a list of homework assignments for the specified course.
         POST: Create a new homework assignment for the specified course.
@@ -267,7 +266,7 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        course_id = self.kwargs.get("course_id")
+        course_id = self.request.query_params.get("course_id")
         now = timezone.now()
 
         if user.user_type == "teacher":
