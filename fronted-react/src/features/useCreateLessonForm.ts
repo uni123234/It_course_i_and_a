@@ -1,28 +1,28 @@
 import { useState } from "react";
 
 
-type HomeworkFormFields = {
+type LessonFormFields = {
   homeworkTitle: string;
   description: string;
   dateTime: string; // New dateTime field for due date and time
 };
 
-type UseCreateHomeworkFormProps = {
-  initialFields: HomeworkFormFields;
-  onSubmit: (fields: HomeworkFormFields) => Promise<void>;
+type UseCreateLessonFormProps = {
+  initialFields: LessonFormFields;
+  onSubmit: (fields: LessonFormFields) => Promise<void>;
   validate?: boolean;
 };
 
-const useCreateHomeworkForm = ({
+const useCreateLessonForm = ({
   initialFields,
   onSubmit,
-}: UseCreateHomeworkFormProps) => {
-  const [fields, setFields] = useState<HomeworkFormFields>(initialFields);
+}: UseCreateLessonFormProps) => {
+  const [fields, setFields] = useState<LessonFormFields>(initialFields);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const validateFields = (fieldsToValidate: HomeworkFormFields) => {
+  const validateFields = (fieldsToValidate: LessonFormFields) => {
     const newErrors: Record<string, string> = {};
 
     if (!fieldsToValidate.homeworkTitle) {
@@ -84,4 +84,4 @@ const useCreateHomeworkForm = ({
   };
 };
 
-export default useCreateHomeworkForm;
+export default useCreateLessonForm;
