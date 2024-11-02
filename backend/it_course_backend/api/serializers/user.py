@@ -4,6 +4,7 @@ Serializers for the Homework application, including submission and grading.
 
 from rest_framework import serializers
 from django.utils import timezone
+from django.db.models import Q
 from django.contrib.auth import get_user_model
 from ..models import Homework
 
@@ -68,23 +69,27 @@ class HomeworkSerializer(serializers.ModelSerializer):
     def get_homeworks_to_review(user, now):
         """
         Retrieves homework that needs to be reviewed for the teacher.
+        Assumes Homework is linked to Lesson through a related model.
         """
         return Homework.objects.filter(
-            lesson__course__groups__teacher=user,
-            review_deadline__lte=now,
+            submission_date__isnull=False,
+            due_date__lte=now,
             submitted_by__isnull=False,
-        )
+            lesson__course__groups__teacher__email=user.email,
+        ).distinct()
 
     @staticmethod
     def get_homeworks_to_submit(user, now):
         """
         Retrieves homework that needs to be submitted for the student.
+        Assumes Homework is linked to Lesson through a related model.
         """
         return Homework.objects.filter(
-            lesson__course__groups__students=user,
-            due_date__gte=now,
-            submission_file__isnull=True,
-        )
+            submission_date__isnull=False,
+            due_date__lte=now,
+            submitted_by__isnull=False,
+            lesson__course__groups__teacher=user,
+        ).distinct()
 
 
 class HomeworkGradeSerializer(serializers.ModelSerializer):

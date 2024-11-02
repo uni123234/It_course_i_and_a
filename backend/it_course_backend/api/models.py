@@ -112,11 +112,8 @@ class ActiveModel(models.Model):
         self.save(update_fields=["is_active"])
 
 
-class Course(models.Model):
-    """
-    Model representing a course, including details such as title,
-    description, associated teacher, and course state.
-    """
+class Course(ActiveModel):
+    """Model representing a course, including details such as title, description, associated teacher, and course state."""
 
     COURSE_STATE_CHOICES = (
         ("not_started", "Not Started"),
@@ -124,6 +121,7 @@ class Course(models.Model):
         ("completed", "Completed"),
     )
 
+    groups = models.ManyToManyField("Group", related_name="courses")
     start_date = models.DateField(default=timezone.now)
     title = models.CharField(max_length=255, verbose_name="Title")
     description = models.TextField(blank=True, null=True, verbose_name="Description")
@@ -142,27 +140,22 @@ class Course(models.Model):
         return self.title
 
     def homework_progress(self):
-        """
-        Calculate the homework progress for this course.
-        """
+        """Calculate the homework progress for this course."""
         total_homework = 0
         submitted_homework = 0
 
         for lesson in self.lessons.all():
             total_homework += lesson.homework_set.count()
-            submitted_homework += lesson.homework_set.filter(
-                submitted_by__isnull=False
-            ).count()
+            submitted_homework += lesson.homework_set.filter(submitted_by__isnull=False).count()
 
-        progress_percentage = (
-            (submitted_homework / total_homework * 100) if total_homework > 0 else 0
-        )
+        progress_percentage = (submitted_homework / total_homework * 100) if total_homework > 0 else 0
 
         return {
             "total_homework": total_homework,
             "submitted_homework": submitted_homework,
             "progress_percentage": progress_percentage,
         }
+
 
 
 class Lesson(ActiveModel):
@@ -192,7 +185,7 @@ class Homework(ActiveModel):
     """
 
     title = models.CharField(max_length=255)
-    # lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="homeworks")
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, null=True, blank=True)
     description = models.TextField()
     due_date = models.DateTimeField()
     submitted_by = models.ForeignKey(
@@ -213,7 +206,7 @@ class Homework(ActiveModel):
         Check if the homework is submitted late.
         """
         return (
-            self.submission_date > self.due_date
+            (self.submission_date > self.due_date)
             if self.submission_date and self.due_date
             else False
         )
@@ -222,13 +215,19 @@ class Homework(ActiveModel):
         ordering = ["due_date"]
 
 
-class Group(models.Model):
+class Group(ActiveModel):
     """
     Model representing a student group.
     """
 
     name = models.CharField(max_length=255)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True)
+    course = models.ForeignKey(
+        "Course",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="student_groups",
+    )
     teacher = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
