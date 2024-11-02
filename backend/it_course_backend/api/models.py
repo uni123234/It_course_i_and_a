@@ -175,7 +175,7 @@ class Lesson(ActiveModel):
         "Course",
         on_delete=models.CASCADE,
         null=False,
-        related_name="lessons",  # Changed to 'lessons'
+        related_name="lessons",
     )
     scheduled_time = models.DateTimeField(verbose_name="Scheduled Time")
     content = models.TextField(blank=True, null=True, verbose_name="Content")
