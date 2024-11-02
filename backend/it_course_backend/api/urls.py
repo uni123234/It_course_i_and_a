@@ -70,7 +70,7 @@ urlpatterns = [
         HomeworkListCreateView.as_view(),
         name="homework-list-create",
     ),
-    path("homework/create/<int:pk>/", HomeworkDetailView.as_view(), name="homework-detail"),
+    path("homework/<int:pk>/", HomeworkDetailView.as_view(), name="homework-detail"),
     path(
         "homework/student/<int:student_id>/",
         StudentHomeworkListView.as_view(),

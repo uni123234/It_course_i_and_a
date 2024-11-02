@@ -53,13 +53,12 @@ export const useCreateHomework = () => {
 
     try {
       const response = await axios.post(
-        `${API_URL}/homework/`,
+        `${API_URL}/homework/${courseId}/`,
         {
           title,
           description,
           submitted_by: id,
           due_date: dateTime,
-          course_id: courseId
         },
         {
           headers: {
