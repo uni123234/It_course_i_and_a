@@ -32,6 +32,12 @@ class CourseListCreateView(generics.ListCreateAPIView):
             Q(teacher=user) | Q(groups__students=user)
         ).distinct()
 
+    def list(self, request, *args, **kwargs):
+        """Override the list method to include homework progress."""
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     def get_serializer_class(self):
         """Return the appropriate serializer based on user type."""
         return (
@@ -50,14 +56,6 @@ class CourseListCreateView(generics.ListCreateAPIView):
 
         logger.info("Course created by %s: %s", user.email, course.title)
         return course
-
-    def create(self, request, *args, **kwargs):
-        """Handle the creation of a new course and return its ID."""
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        course = self.perform_create(serializer)
-
-        return Response({"id": course.id}, status=status.HTTP_201_CREATED)
 
 
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -257,11 +255,11 @@ class LessonEditView(generics.RetrieveUpdateDestroyAPIView):
 
 class HomeworkListCreateView(generics.ListCreateAPIView):
     """
-    View for listing and creating homework assignments.
+    View for listing and creating homework assignments for a specific course.
 
     Methods:
-        GET: Retrieve a list of homework assignments.
-        POST: Create a new homework assignment.
+        GET: Retrieve a list of homework assignments for the specified course.
+        POST: Create a new homework assignment for the specified course.
     """
 
     permission_classes = [IsAuthenticated]
@@ -269,32 +267,28 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        course_id = self.kwargs.get("course_id")
         now = timezone.now()
 
         if user.user_type == "teacher":
             return Homework.objects.filter(
-                lesson__course__groups__teacher=user,
+                lesson__course_id=course_id,
                 submission_date__isnull=False,
                 due_date__lte=now,
             ).distinct()
 
         elif user.user_type == "student":
             return Homework.objects.filter(
+                lesson__course_id=course_id,
                 lesson__course__groups__students=user,
                 due_date__gte=now,
                 submitted_by=user,
             ).distinct()
 
-        else:
-            return Homework.objects.none()
+        return Homework.objects.none()
 
     def perform_create(self, serializer):
-        """
-        Save a new homework assignment and log the creation.
-
-        Args:
-            serializer: The serializer instance containing the homework data.
-        """
+        """Save a new homework assignment and log the creation."""
         homework = serializer.save(submitted_by=self.request.user)
         logger.info("Homework created: %s", homework.title)
 
