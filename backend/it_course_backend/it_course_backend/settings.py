@@ -17,12 +17,10 @@ ENV_PATH = "./../../.env"
 if os.path.exists(ENV_PATH):
     with open(ENV_PATH, mode="r", encoding="UTF-8") as f:
         for line in f:
-            if line.strip() and not line.startswith("#"):
-                key, value = line.strip().split("=", 1)
-                if value.startswith('"') and value.endswith('"'):
-                    value = value[1:-1]
-                elif value.startswith("'") and value.endswith("'"):
-                    value = value[1:-1]
+            line = line.strip()
+            if line and not line.startswith("#"):
+                key, value = line.split("=", 1)
+                value = value.strip('"').strip("'")
                 os.environ[key] = value
 
 # Directory for logs
