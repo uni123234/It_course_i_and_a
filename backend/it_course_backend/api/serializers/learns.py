@@ -51,7 +51,6 @@ class CourseSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Create a new Course instance and assign the teacher."""
         validated_data.setdefault("start_date", timezone.now().date())
-
         validated_data["teacher"] = self.context["request"].user
         return super().create(validated_data)
 

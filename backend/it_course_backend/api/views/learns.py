@@ -1,5 +1,5 @@
 import logging
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from rest_framework.response import Response
@@ -41,17 +41,23 @@ class CourseListCreateView(generics.ListCreateAPIView):
         )
 
     def perform_create(self, serializer):
-        """Save a new course with the creator as 'teacher' and enroll them as a student if applicable."""
+        """Save a new course and enroll the creator as a student."""
         user = self.request.user
         course = serializer.save(teacher=user)
 
-        # Create or get the group associated with the course
-        group, group_created = Group.objects.get_or_create(course=course, teacher=user)
-
-        # Enroll the user in the group as a student
+        group, _ = Group.objects.get_or_create(course=course, teacher=user)
         group.students.add(user)
 
         logger.info("Course created by %s: %s", user.email, course.title)
+        return course
+
+    def create(self, request, *args, **kwargs):
+        """Handle the creation of a new course and return its ID."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        course = self.perform_create(serializer)
+
+        return Response({"id": course.id}, status=status.HTTP_201_CREATED)
 
 
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
