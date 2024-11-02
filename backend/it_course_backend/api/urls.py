@@ -29,6 +29,7 @@ from .views import (
     LessonEditView,
     LessonListView,
     HomeworkEditView,
+    HomeworkGradeView,
 )
 
 APP_NAME = "api"
