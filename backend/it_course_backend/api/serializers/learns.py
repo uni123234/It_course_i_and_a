@@ -10,11 +10,10 @@ from ..models import Course, Group, Lesson, User
 
 class CourseSerializer(serializers.ModelSerializer):
     """
-    Serializer for the Course model, including homework progress and user role.
+    Serializer for the Course model, including homework progress.
     """
 
     homework_progress = serializers.SerializerMethodField()
-    user_role = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -31,20 +30,13 @@ class CourseSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        """
-        Create a new Course instance and assign the teacher.
-        """
+        """Create a new Course instance and assign the teacher."""
         validated_data["teacher"] = self.context["request"].user
-        course = Course.objects.create(**validated_data)
-        return course
+        return super().create(validated_data)
 
     def get_homework_progress(self, obj):
         """Return the homework progress for the course."""
         return obj.homework_progress()
-
-    def get_user_role(self, obj):
-        """Return the user's role for this course."""
-        return getattr(obj, "user_role", None)
 
 
 class GroupCreateUpdateSerializer(serializers.ModelSerializer):
@@ -92,10 +84,7 @@ class TeacherCourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = [
-            "title",
-            "description",
-        ]
+        fields = ["title", "description"]
 
     def create(self, validated_data):
         """Assign the requesting user as the teacher during course creation."""

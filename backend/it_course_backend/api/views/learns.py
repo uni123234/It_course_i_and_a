@@ -2,6 +2,8 @@ import logging
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from ..models import Course, Homework, Lesson, Group
 from ..serializers import (
@@ -28,19 +30,14 @@ class CourseListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """
-        Return courses where the user is a teacher or student.
-        """
+        """Return courses where the user is a teacher or student."""
         user = self.request.user
-
         return Course.objects.filter(
-            Q(teacher=user) | Q(group__students=user)
+            Q(teacher=user) | Q(groups__students=user)
         ).distinct()
 
     def get_serializer_class(self):
-        """
-        Return the appropriate serializer class based on user type.
-        """
+        """Return the appropriate serializer class based on user type."""
         return (
             TeacherCourseSerializer
             if self.request.user.user_type == "teacher"
@@ -48,72 +45,55 @@ class CourseListCreateView(generics.ListCreateAPIView):
         )
 
     def perform_create(self, serializer):
-        """
-        Save a new course entry, log its creation, and create a corresponding group.
-        """
+        """Save a new course entry and log its creation."""
         course = serializer.save(teacher=self.request.user)
         logger.info("Course created: %s", course.title)
-
-        group = Group.objects.create(
-            name=f"{course.title} Group",
-            teacher=self.request.user,
-        )
-        logger.info("Group created for course: %s", group.name)
 
 
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
-    API view for retrieving, updating, or deleting a specific course with user role tag.
+    API view for retrieving, updating, or deleting a specific course
+    in which the user is involved as a teacher or a student.
     """
 
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """
-        Return a specific course based on the user's role.
-        """
+        """Return all courses for which the user is a teacher or a student."""
         user = self.request.user
-        course_id = self.kwargs.get("pk")
-
         return Course.objects.filter(
-            Q(id=course_id, teacher=user) | Q(id=course_id, group__students=user)
+            Q(teacher=user) | Q(groups__students=user)
         ).distinct()
+
+    def get_object(self):
+        """Retrieve a course only if it exists in the filtered queryset."""
+        queryset = self.get_queryset()
+        course_id = self.kwargs.get("pk")
+        return get_object_or_404(queryset, pk=course_id)
+
+    def retrieve(self, request, *args, **kwargs):
+        """Handle the retrieval of a specific course."""
+        course = self.get_object()
+        serializer = self.get_serializer(course)
+        return Response(serializer.data)
 
 
 class CourseEditView(generics.UpdateAPIView):
     """
     API view for updating a specific course.
-
-    Methods:
-        PUT: Update an existing course entry.
     """
 
-    permission_classes = [IsAuthenticated, IsCourseTeacher]
+    serializer_class = CourseSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """
-        Return a specific course for editing based on the user's role.
-
-        Returns:
-            QuerySet: A filtered queryset of the course for the authenticated user.
-        """
+        """Return a specific course for editing based on the user's role."""
         user = self.request.user
         course_id = self.kwargs.get("pk")
-        if user.user_type == "teacher":
-            return Course.objects.filter(id=course_id, teacher=user)
-        return Course.objects.none()
-
-    def get_serializer_class(self):
-        """
-        Return the appropriate serializer class based on user type.
-
-        Returns:
-            Type: The serializer class for the current user.
-        """
         return (
-            TeacherCourseSerializer
-            if self.request.user.user_type == "teacher"
-            else CourseSerializer
+            Course.objects.filter(id=course_id, teacher=user)
+            if user.user_type == "teacher"
+            else Course.objects.none()
         )
 
 
@@ -272,8 +252,18 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
     """
 
     permission_classes = [IsAuthenticated]
-    queryset = Homework.objects.all()
     serializer_class = HomeworkSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        now = timezone.now()
+
+        if user.user_type == "teacher":
+            return HomeworkSerializer.get_homeworks_to_review(user, now)
+        elif user.user_type == "student":
+            return HomeworkSerializer.get_homeworks_to_submit(user, now)
+        else:
+            return Homework.objects.none()
 
     def perform_create(self, serializer):
         """
