@@ -10,6 +10,7 @@ from .learns import (
     HomeworkDetailView,
     HomeworkSubmissionView,
     HomeworkListCreateView,
+    HomeworkEditView,
     LessonCalendarView,
     ReminderView,
     LessonListView,

@@ -27,7 +27,8 @@ from .views import (
     GoogleLoginView,
     CourseDetailView,
     LessonEditView,
-    LessonListView
+    LessonListView,
+    HomeworkEditView
 )
 
 APP_NAME = "api"
@@ -65,4 +66,5 @@ urlpatterns = [
     path('homework/', HomeworkListCreateView.as_view(), name='homework-list-create'),
     path('homework/<int:pk>/', HomeworkDetailView.as_view(), name='homework-detail'),
     path('homework/submit/', HomeworkSubmissionView.as_view(), name='homework-submit'),
+    path('homework/<int:pk>/edit/', HomeworkEditView.as_view(), name='homework-edit'),
 ]
