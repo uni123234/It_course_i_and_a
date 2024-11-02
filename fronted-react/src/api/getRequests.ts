@@ -88,10 +88,13 @@ export const getHomeworks = async (token: string, courseId: number) => {
   try {
     console.log("get1221");
     const response = await axios.get(
-      `${API_URL}/homework/${courseId}/`, // Використовуємо POST запит
+      `${API_URL}/homework/`, // Використовуємо POST запит
       {
         headers: {
           Authorization: `Bearer ${token}`,
+        },
+        params: {
+          id: courseId, // Передача courseId як параметр
         },
       }
     );
