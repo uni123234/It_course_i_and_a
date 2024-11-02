@@ -125,6 +125,7 @@ class LessonSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "title",
+            "submitted_by",
             "scheduled_time",
             "content",
             "video_url",
