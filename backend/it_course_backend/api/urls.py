@@ -29,8 +29,6 @@ from .views import (
     LessonEditView,
     LessonListView,
     HomeworkEditView,
-    StudentHomeworkListView,
-    HomeworkGradeView,
 )
 
 APP_NAME = "api"
@@ -70,15 +68,7 @@ urlpatterns = [
         HomeworkListCreateView.as_view(),
         name="homework-list-create",
     ),
-    path("homework/<int:pk>/", HomeworkDetailView.as_view(), name="homework-detail"),
-    path(
-        "homework/student/<int:student_id>/",
-        StudentHomeworkListView.as_view(),
-        name="student-homework-list",
-    ),
+    path("homework/create/<int:pk>/", HomeworkDetailView.as_view(), name="homework-detail"),
     path("homework/submit/", HomeworkSubmissionView.as_view(), name="homework-submit"),
     path("homework/<int:pk>/edit/", HomeworkEditView.as_view(), name="homework-edit"),
-    path(
-        "homework/<int:pk>/grade/", HomeworkGradeView.as_view(), name="homework-grade"
-    ),
 ]
