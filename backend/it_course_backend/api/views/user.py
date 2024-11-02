@@ -1,10 +1,11 @@
 import logging
 from django.contrib.auth import get_user_model
 from django.utils.http import urlsafe_base64_decode
+from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
 from django.conf import settings
 from rest_framework import generics, permissions, status
-from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.generics import UpdateAPIView
 from ..serializers import (
@@ -21,26 +22,6 @@ logger = logging.getLogger("api")
 User = get_user_model()
 
 
-def create_response(message=None, errors=None, status_code=status.HTTP_200_OK):
-    """
-    Utility function to create a standardized response.
-
-    Args:
-        message (str, optional): Message to include in the response.
-        errors (dict, optional): Errors to include in the response.
-        status_code (int): HTTP status code for the response.
-
-    Returns:
-        dict: A dictionary representing the response data.
-    """
-    response_data = {}
-    if message:
-        response_data["message"] = message
-    if errors:
-        response_data["errors"] = errors
-    return response_data, status_code
-
-
 class RegisterView(generics.CreateAPIView):
     """
     API View for user registration.
@@ -52,10 +33,7 @@ class RegisterView(generics.CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         """
-        Handle user registration by validating the provided data and creating a new user.
-
-        Returns:
-            dict: Success or error message with appropriate status code.
+        Handle user registration.
         """
         logger.info("Registration request: %s", request.data)
         serializer = self.get_serializer(data=request.data)
@@ -63,15 +41,13 @@ class RegisterView(generics.CreateAPIView):
         if serializer.is_valid():
             user = serializer.save()
             logger.info("User registered: %s", user.email)
-            return create_response(
-                "User has been registered successfully.",
-                status_code=status.HTTP_201_CREATED,
+            return Response(
+                {"message": "User has been registered successfully."},
+                status=status.HTTP_201_CREATED,
             )
 
         logger.warning("Registration error: %s", serializer.errors)
-        return create_response(
-            errors=serializer.errors, status_code=status.HTTP_400_BAD_REQUEST
-        )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginView(generics.GenericAPIView):
@@ -84,10 +60,7 @@ class LoginView(generics.GenericAPIView):
 
     def post(self, request):
         """
-        Handle user login by validating credentials and returning tokens.
-
-        Returns:
-            dict: Success message with user data and tokens.
+        Handle user login.
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -136,30 +109,25 @@ class LogoutView(generics.GenericAPIView):
 
     def post(self, request):
         """
-        Handle user logout by blacklisting the provided refresh token.
-
-        Returns:
-            dict: Success or error message.
+        Handle user logout.
         """
-        refresh_token = request.data.get("refresh")
-        if refresh_token:
-            try:
+        try:
+            refresh_token = request.data.get("refresh")
+            if refresh_token:
                 token = RefreshToken(refresh_token)
                 token.blacklist()
                 logger.info("User logged out: %s", request.user.email)
-                return create_response("Logout successful")
+                return Response({"detail": "Logout successful"})
 
-            except Exception as er:
-                logger.error("Error during logout: %s", str(er))
-                return create_response(
-                    errors={"detail": "Logout failed"},
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                )
-
-        return create_response(
-            errors={"detail": "No refresh token provided"},
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
+            return Response(
+                {"detail": "No refresh token provided"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as er:
+            logger.error("Error during logout: %s", str(er))
+            return Response(
+                {"detail": "Logout failed"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class ChangePasswordView(UpdateAPIView):
@@ -167,15 +135,12 @@ class ChangePasswordView(UpdateAPIView):
     API View for changing user password.
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     serializer_class = ChangePasswordSerializer
 
     def update(self, request, *args, **kwargs):
         """
-        Update the user's password if the old password is correct.
-
-        Returns:
-            dict: Success or error message.
+        Update the user's password.
         """
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -185,9 +150,9 @@ class ChangePasswordView(UpdateAPIView):
                 logger.warning(
                     "User %s provided incorrect old password", request.user.email
                 )
-                return create_response(
-                    errors={"old_password": ["Old password is incorrect."]},
-                    status_code=status.HTTP_400_BAD_REQUEST,
+                return Response(
+                    {"errors": {"old_password": ["Old password is incorrect."]}},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
             request.user.set_password(serializer.validated_data["new_password"])
@@ -196,15 +161,18 @@ class ChangePasswordView(UpdateAPIView):
             logger.info(
                 "User %s successfully changed their password.", request.user.email
             )
-            return create_response("Password has been successfully changed.")
+            return Response(
+                {"message": "Password has been successfully changed."},
+                status=status.HTTP_200_OK,
+            )
 
         logger.warning(
             "User %s failed to change password: %s",
             request.user.email,
             serializer.errors,
         )
-        return create_response(
-            errors=serializer.errors, status_code=status.HTTP_400_BAD_REQUEST
+        return Response(
+            {"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
         )
 
 
@@ -213,15 +181,12 @@ class ChangeEmailView(UpdateAPIView):
     API View for changing user email.
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     serializer_class = ChangeEmailSerializer
 
     def update(self, request, *args, **kwargs):
         """
-        Update the user's email if the new email is not already in use.
-
-        Returns:
-            dict: Success or error message.
+        Update the user's email.
         """
         serializer = self.get_serializer(
             data=request.data, context={"request": request}
@@ -231,15 +196,20 @@ class ChangeEmailView(UpdateAPIView):
 
             if User.objects.filter(email=new_email).exists():
                 logger.warning("Email %s is already in use.", new_email)
-                return create_response(
-                    errors={"email": ["This email is already in use."]},
-                    status_code=status.HTTP_400_BAD_REQUEST,
+                return Response(
+                    {"errors": {"email": ["This email is already in use."]}},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
+            user = request.user
             serializer.save()
+
             logger.info("Email confirmation link sent to %s.", new_email)
-            return create_response(
-                "Email has been successfully changed. Please confirm it via the link sent to the new address."
+            return Response(
+                {
+                    "message": "Email has been successfully changed. Please confirm it via the link sent to the new address."
+                },
+                status=status.HTTP_200_OK,
             )
 
         logger.warning(
@@ -247,8 +217,8 @@ class ChangeEmailView(UpdateAPIView):
             request.user.username,
             serializer.errors,
         )
-        return create_response(
-            errors=serializer.errors, status_code=status.HTTP_400_BAD_REQUEST
+        return Response(
+            {"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
         )
 
 
@@ -257,14 +227,11 @@ class ConfirmEmailView(generics.GenericAPIView):
     API View for confirming user email.
     """
 
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]
 
     def get(self, request, uidb64, token, *args, **kwargs):
         """
-        Confirm the user's email address using the provided uid and token.
-
-        Returns:
-            dict: Success or error message.
+        Confirm the user's email address.
         """
         try:
             uid = urlsafe_base64_decode(uidb64).decode()
@@ -279,15 +246,18 @@ class ConfirmEmailView(generics.GenericAPIView):
             logger.info(
                 "User %s has successfully confirmed their email.", user.username
             )
-            return create_response(
-                "Email has been successfully confirmed. You can now log in."
+            return Response(
+                {
+                    "message": "Email has been successfully confirmed. You can now log in."
+                },
+                status=status.HTTP_200_OK,
             )
-
-        logger.warning("Invalid confirmation token for uid: %s", uidb64)
-        return create_response(
-            errors={"error": "The confirmation link is invalid or has expired."},
-            status_code=status.HTTP_400_BAD_REQUEST,
-        )
+        else:
+            logger.warning("Invalid confirmation token for uid: %s", uidb64)
+            return Response(
+                {"error": "The confirmation link is invalid or has expired."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class PasswordResetRequestView(generics.GenericAPIView):
@@ -295,20 +265,19 @@ class PasswordResetRequestView(generics.GenericAPIView):
     API View for requesting a password reset.
     """
 
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]
     serializer_class = PasswordResetRequestSerializer
 
     def post(self, request, *args, **kwargs):
         """
-        Handle password reset request by sending a reset email.
-
-        Returns:
-            dict: Success message.
+        Handle password reset request.
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.send_reset_email()
-        return create_response("Password reset link has been sent.")
+        return Response(
+            {"message": "Password reset link has been sent."}, status=status.HTTP_200_OK
+        )
 
 
 class PasswordResetConfirmView(generics.GenericAPIView):
@@ -316,15 +285,12 @@ class PasswordResetConfirmView(generics.GenericAPIView):
     API View for confirming a password reset.
     """
 
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]
     serializer_class = PasswordResetConfirmSerializer
 
     def post(self, request, uidb64, token, *args, **kwargs):
         """
-        Handle password reset confirmation and update the user's password.
-
-        Returns:
-            dict: Success or error message.
+        Handle password reset confirmation.
         """
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -339,25 +305,27 @@ class PasswordResetConfirmView(generics.GenericAPIView):
                     logger.info(
                         "User %s successfully reset their password.", user.email
                     )
-                    return create_response("Password has been reset successfully.")
+                    return Response(
+                        {"message": "Password has been reset successfully."},
+                        status=status.HTTP_200_OK,
+                    )
 
                 logger.warning(
                     "Invalid token for user %s during password reset.", user.email
                 )
-                return create_response(
-                    errors={"error": "The token is invalid."},
-                    status_code=status.HTTP_400_BAD_REQUEST,
+                return Response(
+                    {"error": "The token is invalid."},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
-
             except (TypeError, ValueError, OverflowError, User.DoesNotExist):
                 logger.error("Error decoding uid during password reset.")
-                return create_response(
-                    errors={"error": "User does not exist."},
-                    status_code=status.HTTP_400_BAD_REQUEST,
+                return Response(
+                    {"error": "User does not exist."},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
-        return create_response(
-            errors=serializer.errors, status_code=status.HTTP_400_BAD_REQUEST
+        return Response(
+            {"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
         )
 
 
@@ -371,10 +339,7 @@ class GoogleLoginView(generics.GenericAPIView):
 
     def post(self, request):
         """
-        Handle Google login by validating the provided token and returning tokens.
-
-        Returns:
-            dict: Success message with user data and tokens.
+        Handle Google login.
         """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
