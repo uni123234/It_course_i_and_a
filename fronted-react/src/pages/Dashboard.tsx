@@ -6,6 +6,7 @@ import { useMediaQuery } from "react-responsive";
 import { CreateCourseModal } from "../components"
 import { getCourses, getLessons } from "../api"
 import { useAuth } from "../features";
+import { useNavigate } from "react-router-dom";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -79,6 +80,8 @@ const options = {
 
 const Dashboard: React.FC = () => {
   const { getAccessToken } = useAuth();
+
+  const navigate = useNavigate();
 
   const [userCourses, setUserCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -173,12 +176,13 @@ const Dashboard: React.FC = () => {
     {userCourses.map((course, index) => (
       <div
         key={course.id}
-        className="flex-shrink-0 w-44 md:w-64 p-6 rounded-xl shadow-lg transform transition-transform hover:scale-105"
+        className="flex-shrink-0 w-44 md:w-64 p-6 rounded-xl shadow-lg transform transition-transform hover:scale-105 cursor-pointer"
         style={{
           background: `linear-gradient(135deg, hsl(${
             index * 45
           }, 100%, 85%), hsl(${index * 45}, 100%, 90%))`,
         }}
+        onClick={() => navigate(`/course/${course.id}`)}
       >
         <h2 className="text-2xl font-semibold text-gray-900">
           {course.title}

@@ -60,7 +60,7 @@ export const getLessons = async (token: string | null) => {
     });
     return response.data; // Переконайтеся, що тут повертаються правильні дані
   } catch (error) {
-    console.error("Error fetching courses:", error);
+    console.error("Error fetching lessons:", error);
     throw error; // Переконайтеся, що ви обробляєте помилки
   }
 };
