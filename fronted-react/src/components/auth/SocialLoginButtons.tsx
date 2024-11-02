@@ -17,7 +17,6 @@ const SocialLoginButtons = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({ accessToken }),
         });
 
         if (!response.ok) {
