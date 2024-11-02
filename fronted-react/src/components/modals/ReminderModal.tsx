@@ -9,20 +9,17 @@ interface ReminderModalProps {
 }
 
 const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose }) => {
-  const [reminders, setReminders] = useState([]);
-  const [isReminderOpen, setIsReminderOpen] = useState(false);
   const { getAccessToken } = useAuth();
-  const token = getAccessToken();
+  const [reminders, setReminders] = useState([]);
 
   const fetchReminders = async () => {
+    const token = getAccessToken();
     try {
-      if (token !== null) {
-        const data = await getReminders(token);
-        console.log(data);
+      const data = await getReminders(token);
+      console.log(data);
 
-        if (data) {
-          setReminders(data);
-        }
+      if (data) {
+        setReminders(data);
       }
     } catch (error) {
       console.error("Failed to fetch reminders:", error);

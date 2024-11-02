@@ -1,100 +1,93 @@
-// CoursePage.tsx
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../features";
-import { getHomeworks, fetchCourse } from "../api";
 import { useParams } from "react-router-dom";
-import { CreateHomeworkModal, CreateLessonModal } from "../components"
+import { getHomeworks, fetchCourse } from "../api";
+import { CreateHomeworkModal, CreateLessonModal } from "../components";
+import { useAuth } from "../features";
 
 interface CourseData {
-  id: string;
+  id: number;
   title: string;
   description: string;
-  // додайте інші поля відповідно до даних курсу
+}
+
+interface Homework {
+  title: string;
+  dueDate: string;
 }
 
 const CoursePage: React.FC = () => {
-  const homeworks = [
-    {
-      title: "Homework 1: Introduction to Organic Chemistry",
-      dueDate: "Due Oct 24",
-    },
-    { title: "Homework 2: Hydrocarbons", dueDate: "Due Oct 28" },
-    { title: "Homework 3: Functional Groups", dueDate: "Due Nov 1" },
-  ];
-
   const { getAccessToken } = useAuth();
-  const token = getAccessToken();
-
   const { courseId } = useParams<{ courseId: string }>();
   const courseIdNumber = courseId ? parseInt(courseId, 10) : undefined;
 
-  const [homeworkss, setHomeworks] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [course, setCourse] = useState<CourseData | null>(null);
+  const [homeworks, setHomeworks] = useState<Homework[]>([]);
+  // const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [course, setCourse] = useState<CourseData | null>(null);
+
+  
+  const [isHomeworkModalOpen, setHomeworkModalOpen] = useState(false);
+  const [isLessonModalOpen, setLessonModalOpen] = useState(false);
 
   useEffect(() => {
-    const fetchCourseAndHomeworks = async () => {
-      setLoading(true);
+    const token = getAccessToken();
+    const fetchData = async () => {
+      if (!courseIdNumber) return;
+      // setLoading(true);
       setError(null);
 
       try {
-        if (courseIdNumber !== undefined && token !== null) {
-          const [courseData, homeworksData] = await Promise.all([
-            fetchCourse(token, courseIdNumber),
-            getHomeworks(token, courseIdNumber),
-          ]);
-
-          setCourse(courseData);
-          console.log('course ', courseData)
-          setHomeworks(homeworksData);
-          console.log('homeworks', homeworkss)
-        }
-      } catch (err) {
+        const [courseData, homeworksData] = await Promise.all([
+          fetchCourse(courseIdNumber, token),
+          getHomeworks(courseIdNumber, token),
+        ]);
+        setCourse(courseData);
+        setHomeworks(homeworksData);
+      } catch {
         setError("Не вдалося отримати дані. Спробуйте ще раз.");
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
 
-    fetchCourseAndHomeworks();
-  }, [courseId]);
+    if (error) {
+      console.log(error)
+    }
 
+    fetchData();
+  },);
 
-  const [isHomeworkCreateModalOpen, setisHomeworkCreateModalOpen] = useState(false);
-
-  const openHomeworkCreateModal = () => setisHomeworkCreateModalOpen(true);
-  const closeHomeworkCreateModal = () => setisHomeworkCreateModalOpen(false);
-
-  const [isLessonCreateModalOpen, setisLessonCreateModalOpen] = useState(false);
-
-  const openLessonCreateModal = () => setisLessonCreateModalOpen(true);
-  const closeLessonCreateModal = () => setisLessonCreateModalOpen(false);
+  // if (loading) return <p>Loading...</p>;
+  // if (error) return <p>{error}</p>;
 
   return (
-    <>
     <div className="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen">
-      {/* Page Container */}
       <div className="max-w-4xl mx-auto p-4">
-        {/* Buttons above Course Info Card */}
+        {/* Action Buttons */}
         <div className="flex justify-around space-x-4 mb-6">
-          <button className="px-4 py-2 bg-gradient-to-r from-amber-400 to-lime-400 text-white rounded-full hover:shadow-lg transition-transform transform hover:scale-105">
+          <button className="px-4 py-2 bg-gradient-to-r from-amber-400 to-lime-400 text-white rounded-full hover:shadow-lg transform hover:scale-105">
             Course Calendar
           </button>
-          <button className="px-4 py-2 bg-gradient-to-r from-amber-400 to-lime-400 text-white rounded-full hover:shadow-lg transition-transform transform hover:scale-105" onClick={openHomeworkCreateModal}>
+          <button
+            onClick={() => setHomeworkModalOpen(true)}
+            className="px-4 py-2 bg-gradient-to-r from-amber-400 to-lime-400 text-white rounded-full hover:shadow-lg transform hover:scale-105"
+          >
             Create Homework
           </button>
-          <button className="px-4 py-2 bg-gradient-to-r from-amber-400 to-lime-400 text-white rounded-full hover:shadow-lg transition-transform transform hover:scale-105" onClick={openLessonCreateModal}>
+          <button
+            onClick={() => setLessonModalOpen(true)}
+            className="px-4 py-2 bg-gradient-to-r from-amber-400 to-lime-400 text-white rounded-full hover:shadow-lg transform hover:scale-105"
+          >
             Create Lesson
           </button>
-          <button className="px-4 py-2 bg-gradient-to-r from-amber-400 to-lime-400 text-white rounded-full hover:shadow-lg transition-transform transform hover:scale-105">
+          <button className="px-4 py-2 bg-gradient-to-r from-amber-400 to-lime-400 text-white rounded-full hover:shadow-lg transform hover:scale-105">
             Users
           </button>
         </div>
 
-        {/* Course Info Card */}
-        <div className="bg-gradient-to-br from-pink-400 to-orange-300 text-white p-8 rounded-lg shadow-lg text-center transition-transform transform hover:scale-105">
+        {/* Course Info */}
+        <div className="bg-gradient-to-br from-pink-400 to-orange-300 text-white p-8 rounded-lg shadow-lg text-center transform hover:scale-105">
           <h1 className="text-4xl font-extrabold tracking-wide">
             {course?.title}
           </h1>
@@ -106,7 +99,7 @@ const CoursePage: React.FC = () => {
           {homeworks.map((homework, index) => (
             <div
               key={index}
-              className="p-6 bg-white rounded-lg shadow-lg flex justify-between items-center transition-transform transform hover:scale-105 hover:shadow-xl"
+              className="p-6 bg-white rounded-lg shadow-lg flex justify-between items-center transform hover:scale-105 hover:shadow-xl"
             >
               <div>
                 <h3 className="font-semibold text-xl text-pink-500">
@@ -121,10 +114,18 @@ const CoursePage: React.FC = () => {
           ))}
         </div>
       </div>
+
+      <CreateHomeworkModal
+        isOpen={isHomeworkModalOpen}
+        onClose={() => setHomeworkModalOpen(false)}
+        courseId={courseIdNumber}
+      />
+      <CreateLessonModal
+        isOpen={isLessonModalOpen}
+        onClose={() => setLessonModalOpen(false)}
+        courseId={courseIdNumber}
+      />
     </div>
-    <CreateHomeworkModal isOpen={isHomeworkCreateModalOpen} onClose={closeHomeworkCreateModal} courseId={courseIdNumber} />
-    <CreateLessonModal isOpen={isLessonCreateModalOpen} onClose={closeLessonCreateModal} courseId={courseIdNumber} />
-    </>
   );
 };
 
