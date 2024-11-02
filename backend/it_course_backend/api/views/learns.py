@@ -45,10 +45,8 @@ class CourseListCreateView(generics.ListCreateAPIView):
         user = self.request.user
         course = serializer.save(teacher=user)
 
-        # Create or get the group associated with the course
         group, group_created = Group.objects.get_or_create(course=course, teacher=user)
 
-        # Enroll the user in the group as a student
         group.students.add(user)
 
         logger.info("Course created by %s: %s", user.email, course.title)
@@ -251,11 +249,7 @@ class LessonEditView(generics.RetrieveUpdateDestroyAPIView):
 
 class HomeworkListCreateView(generics.ListCreateAPIView):
     """
-    View for listing and creating homework assignments.
-
-    Methods:
-        GET: Retrieve a list of homework assignments.
-        POST: Create a new homework assignment.
+    View for listing and creating homework assignments for a specific course.
     """
 
     permission_classes = [IsAuthenticated]
@@ -264,17 +258,18 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         now = timezone.now()
+        course_id = self.kwargs.get("course_id")
 
         if user.user_type == "teacher":
             return Homework.objects.filter(
-                lesson__course__groups__teacher=user,
+                lesson__course__id=course_id,
                 submission_date__isnull=False,
                 due_date__lte=now,
             ).distinct()
 
         elif user.user_type == "student":
             return Homework.objects.filter(
-                lesson__course__groups__students=user,
+                lesson__course__id=course_id,
                 due_date__gte=now,
                 submitted_by=user,
             ).distinct()
@@ -285,9 +280,6 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         """
         Save a new homework assignment and log the creation.
-
-        Args:
-            serializer: The serializer instance containing the homework data.
         """
         homework = serializer.save(submitted_by=self.request.user)
         logger.info("Homework created: %s", homework.title)
@@ -443,7 +435,7 @@ class ReminderView(generics.ListAPIView):
 
         if user.groups.filter(
             name="Teachers"
-        ).exists():  # Assuming you have a 'Teachers' group
+        ).exists():
             return Homework.objects.filter(
                 lesson__course__groups__teacher=user,
                 review_deadline__lte=now,

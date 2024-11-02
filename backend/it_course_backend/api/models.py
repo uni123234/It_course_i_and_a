@@ -140,16 +140,18 @@ class Course(ActiveModel):
     def __str__(self):
         return self.title
 
-    def homework_progress(self):
-        """Calculate the homework progress for this course."""
+    @staticmethod
+    def total_homework_progress():
+        """Calculate the total homework progress across all courses."""
         total_homework = 0
         submitted_homework = 0
 
-        for lesson in self.lessons.all():
-            total_homework += lesson.homework_set.count()
-            submitted_homework += lesson.homework_set.filter(
-                submitted_by__isnull=False
-            ).count()
+        for course in Course.objects.all():
+            for lesson in course.lessons.all():
+                total_homework += lesson.homework_set.count()
+                submitted_homework += lesson.homework_set.filter(
+                    submitted_by__isnull=False
+                ).count()
 
         progress_percentage = (
             (submitted_homework / total_homework * 100) if total_homework > 0 else 0
@@ -176,7 +178,7 @@ class Lesson(ActiveModel):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="lessons",
-        null=False,
+        null=False,  # Make it non-nullable
     )
     scheduled_time = models.DateTimeField(verbose_name="Scheduled Time")
     content = models.TextField(blank=True, null=True, verbose_name="Content")
