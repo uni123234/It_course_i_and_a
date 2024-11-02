@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../features";
 import { getHomeworks, fetchCourse } from "../api";
 import { useParams } from "react-router-dom";
-import { CreateHomeworkModal } from "../components"
+import { CreateHomeworkModal, CreateLessonModal } from "../components"
 
 interface CourseData {
   id: string;
@@ -67,6 +67,11 @@ const CoursePage: React.FC = () => {
   const openHomeworkCreateModal = () => setisHomeworkCreateModalOpen(true);
   const closeHomeworkCreateModal = () => setisHomeworkCreateModalOpen(false);
 
+  const [isLessonCreateModalOpen, setisLessonCreateModalOpen] = useState(false);
+
+  const openLessonCreateModal = () => setisLessonCreateModalOpen(true);
+  const closeLessonCreateModal = () => setisLessonCreateModalOpen(false);
+
   return (
     <>
     <div className="bg-gradient-to-br from-blue-50 to-blue-100 min-h-screen">
@@ -79,6 +84,9 @@ const CoursePage: React.FC = () => {
           </button>
           <button className="px-4 py-2 bg-gradient-to-r from-amber-400 to-lime-400 text-white rounded-full hover:shadow-lg transition-transform transform hover:scale-105" onClick={openHomeworkCreateModal}>
             Create Homework
+          </button>
+          <button className="px-4 py-2 bg-gradient-to-r from-amber-400 to-lime-400 text-white rounded-full hover:shadow-lg transition-transform transform hover:scale-105" onClick={openLessonCreateModal}>
+            Create Lesson
           </button>
           <button className="px-4 py-2 bg-gradient-to-r from-amber-400 to-lime-400 text-white rounded-full hover:shadow-lg transition-transform transform hover:scale-105">
             Users
@@ -114,7 +122,8 @@ const CoursePage: React.FC = () => {
         </div>
       </div>
     </div>
-    <CreateHomeworkModal isOpen={isHomeworkCreateModalOpen} onClose={closeHomeworkCreateModal} />
+    <CreateHomeworkModal isOpen={isHomeworkCreateModalOpen} onClose={closeHomeworkCreateModal} courseId={courseIdNumber} />
+    <CreateLessonModal isOpen={isLessonCreateModalOpen} onClose={closeLessonCreateModal} courseId={courseIdNumber} />
     </>
   );
 };

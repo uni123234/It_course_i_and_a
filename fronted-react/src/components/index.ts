@@ -3,4 +3,5 @@ export { default as NavBar } from "./navbar/NavBar";
 export { default as Footer } from "./Footer";
 export { default as CreateCourseModal } from "./modals/CreateCourseModal"
 export { default as CreateHomeworkModal } from "./modals/CreateHomeworkModal"
+export { default as CreateLessonModal } from "./modals/CreateLessonModal"
 

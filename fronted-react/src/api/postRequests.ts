@@ -42,12 +42,13 @@ interface HomeworkData {
   description: string;
   id: number | null;
   dateTime: string;
+  courseId: number | undefined;
 }
 
 export const useCreateHomework = () => {
   const { getAccessToken } = useAuth();
 
-  const createHomework = async ({ title, description, id, dateTime }: HomeworkData) => {
+  const createHomework = async ({ title, description, id, dateTime, courseId }: HomeworkData) => {
     const token = getAccessToken();
 
     try {
@@ -57,7 +58,8 @@ export const useCreateHomework = () => {
           title,
           description,
           submitted_by: id,
-          due_date: dateTime
+          due_date: dateTime,
+          course_id: courseId
         },
         {
           headers: {
@@ -80,13 +82,14 @@ interface LessonData {
   title: string;
   description: string;
   // id: number | null;
-  // dateTime: string;
+  dateTime: string;
+  courseId: number | undefined;
 }
 
 export const useCreateLesson = () => {
   const { getAccessToken } = useAuth();
 
-  const createLesson = async ({ title, description }: LessonData) => {
+  const createLesson = async ({ title, description, dateTime, courseId }: LessonData) => {
     const token = getAccessToken();
 
     try {
@@ -96,7 +99,8 @@ export const useCreateLesson = () => {
           title,
           description,
           // submitted_by: id,
-          // due_date: dateTime
+          scheduled_time: dateTime,
+          course_id: courseId
         },
         {
           headers: {

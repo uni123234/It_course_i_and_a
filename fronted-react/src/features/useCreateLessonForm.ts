@@ -2,7 +2,7 @@ import { useState } from "react";
 
 
 type LessonFormFields = {
-  homeworkTitle: string;
+  lessonTitle: string;
   description: string;
   dateTime: string; // New dateTime field for due date and time
 };
@@ -25,9 +25,9 @@ const useCreateLessonForm = ({
   const validateFields = (fieldsToValidate: LessonFormFields) => {
     const newErrors: Record<string, string> = {};
 
-    if (!fieldsToValidate.homeworkTitle) {
+    if (!fieldsToValidate.lessonTitle) {
       newErrors.homeworkTitle = "Homework title is required.";
-    } else if (fieldsToValidate.homeworkTitle.length < 3) {
+    } else if (fieldsToValidate.lessonTitle.length < 3) {
       newErrors.homeworkTitle = "Homework title must be at least 3 characters long.";
     }
 

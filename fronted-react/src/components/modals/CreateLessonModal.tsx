@@ -3,33 +3,36 @@ import Modal from "./ModalBase";
 import ModalInput from "./ModalInput";
 import { useCreateLessonForm, useAuth } from "../../features";
 
-import { useCreateHomework } from "../../api";
+import { useCreateLesson } from "../../api";
 
-interface HomeworkModalProps {
+interface LessonModalProps {
   isOpen: boolean;
   onClose: () => void;
+  courseId: number | undefined
 }
 
-const CreateHomeworkModal: React.FC<HomeworkModalProps> = ({
+const CreateLessonModal: React.FC<LessonModalProps> = ({
   isOpen,
   onClose,
+  courseId
 }) => {
-  const { createHomework } = useCreateHomework();
+  const { createLesson } = useCreateLesson();
   const { getUserId } = useAuth();
 
   const userId = getUserId()
 
   const { fields, errors, isLoading, handleChange, handleSubmit } =
   useCreateLessonForm({
-      initialFields: { homeworkTitle: "", description: "", dateTime: "" },
+      initialFields: { lessonTitle: "", description: "", dateTime: "" },
       onSubmit: async (fields) => {
         try {
           // Call the createCourse function and pass the required fields
-          const response = await createHomework({
-            title: fields.homeworkTitle,
+          const response = await createLesson({
+            title: fields.lessonTitle,
             description: fields.description,
             dateTime: fields.dateTime,
-            id: userId,
+            courseId: courseId
+            // id: userId,
           });
 
           console.log("Course created successfully:", response);
@@ -50,9 +53,9 @@ const CreateHomeworkModal: React.FC<HomeworkModalProps> = ({
       <form onSubmit={handleSubmit} className="p-4">
         <ModalInput
           label="Homework Title"
-          name="homeworkTitle"
+          name="lessonTitle"
           type="text"
-          value={fields.homeworkTitle}
+          value={fields.lessonTitle}
           onChange={handleChange}
           required
         />
@@ -95,4 +98,4 @@ const CreateHomeworkModal: React.FC<HomeworkModalProps> = ({
   );
 };
 
-export default CreateHomeworkModal;
+export default CreateLessonModal;
