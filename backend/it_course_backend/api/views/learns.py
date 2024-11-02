@@ -27,6 +27,7 @@ class CourseListCreateView(generics.ListCreateAPIView):
     the user is a teacher or student in each course.
     """
 
+    serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
@@ -56,26 +57,22 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
     in which the user is involved as a teacher or a student.
     """
 
+    serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Return all courses for which the user is a teacher or a student."""
+        """Return all courses if the user is a teacher or a student; otherwise return an empty queryset."""
         user = self.request.user
-        return Course.objects.filter(
-            Q(teacher=user) | Q(groups__students=user)
-        ).distinct()
 
-    def get_object(self):
-        """Retrieve a course only if it exists in the filtered queryset."""
-        queryset = self.get_queryset()
-        course_id = self.kwargs.get("pk")
-        return get_object_or_404(queryset, pk=course_id)
+        all_courses = Course.objects.all()
 
-    def retrieve(self, request, *args, **kwargs):
-        """Handle the retrieval of a specific course."""
-        course = self.get_object()
-        serializer = self.get_serializer(course)
-        return Response(serializer.data)
+        is_teacher = any(course.teacher == user for course in all_courses)
+        is_student = any(
+            user.id in course.groups.values_list("students", flat=True)
+            for course in all_courses
+        )
+
+        return all_courses if is_teacher or is_student else Course.objects.none()
 
 
 class CourseEditView(generics.UpdateAPIView):
@@ -400,7 +397,9 @@ class ReminderView(generics.ListAPIView):
         user = self.request.user
         now = timezone.now()
 
-        if user.is_teacher:
+        if user.groups.filter(
+            name="Teachers"
+        ).exists():  # Assuming you have a 'Teachers' group
             return Homework.objects.filter(
                 lesson__course__groups__teacher=user,
                 review_deadline__lte=now,
@@ -414,22 +413,18 @@ class ReminderView(generics.ListAPIView):
     def list(self, request, *args, **kwargs):
         """
         List homework reminders and customize the response message based on user type.
-
-        Args:
-            request: The HTTP request object.
-            *args: Additional positional arguments.
-            **kwargs: Additional keyword arguments.
-
-        Returns:
-            Response: A custom response containing the type of user and their reminders.
         """
         queryset = self.get_queryset()
-        return {
-            "type": "teacher" if request.user.is_teacher else "student",
-            "message": (
-                "You have homeworks to review"
-                if request.user.is_teacher
-                else "You have homeworks to submit"
-            ),
-            "data": self.get_serializer(queryset, many=True).data,
-        }
+        serializer = self.get_serializer(queryset, many=True)
+
+        return Response(
+            {
+                "type": "teacher" if request.user.is_teacher else "student",
+                "message": (
+                    "You have homeworks to review"
+                    if request.user.is_teacher
+                    else "You have homeworks to submit"
+                ),
+                "data": serializer.data,
+            }
+        )
