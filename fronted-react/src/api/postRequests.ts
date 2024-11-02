@@ -100,7 +100,7 @@ export const useCreateLesson = () => {
           description,
           // submitted_by: id,
           scheduled_time: dateTime,
-          course_id: courseId
+          course: courseId
         },
         {
           headers: {

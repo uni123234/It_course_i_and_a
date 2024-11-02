@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -8,7 +8,13 @@ interface ModalProps {
   children: React.ReactNode;
 }
 
-const ModalBase: React.FC<ModalProps> = ({ isOpen, onClose, width = '80%', height = '80vh', children }) => {
+const ModalBase: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  width = "80%",
+  height = "80vh",
+  children,
+}) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -32,7 +38,7 @@ const ModalBase: React.FC<ModalProps> = ({ isOpen, onClose, width = '80%', heigh
       {/* Тло для затемнення */}
       <div
         className={`fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300 backdrop-blur-sm z-10 ${
-          isVisible ? 'opacity-100' : 'opacity-0'
+          isVisible ? "opacity-100" : "opacity-0"
         }`}
         onClick={closeModal}
       ></div>
@@ -42,10 +48,15 @@ const ModalBase: React.FC<ModalProps> = ({ isOpen, onClose, width = '80%', heigh
         <div
           style={{ width, height }}
           className={`bg-white p-4 rounded-2xl shadow-lg overflow-y-auto transition-transform transform duration-500 ${
-            isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+            isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
           }`}
         >
-          <button onClick={closeModal} className="absolute top-4 right-4 text-gray-500">✕</button>
+          <button
+            onClick={closeModal}
+            className="absolute top-4 right-4 text-gray-500"
+          >
+            ✕
+          </button>
           {children}
         </div>
       </div>

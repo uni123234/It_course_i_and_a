@@ -16,10 +16,9 @@ const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, onClose }) => {
 
   const fetchReminders = async () => {
     try {
-        console.log("chmo   aaaaaaaaaaaaaa")
       if (token !== null) {
         const data = await getReminders(token);
-        console.log(data)
+        console.log(data);
 
         if (data) {
           setReminders(data);

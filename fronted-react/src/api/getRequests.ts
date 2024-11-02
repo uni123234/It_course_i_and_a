@@ -94,7 +94,7 @@ export const getHomeworks = async (token: string, courseId: number) => {
           Authorization: `Bearer ${token}`,
         },
         params: {
-          id: courseId, // Передача courseId як параметр
+          course_id: courseId, // Передача courseId як параметр
         },
       }
     );

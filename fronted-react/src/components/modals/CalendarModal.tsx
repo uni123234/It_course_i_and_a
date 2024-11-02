@@ -26,10 +26,9 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose }) => {
 
   const { getAccessToken } = useAuth();
   const token = getAccessToken();
-  
+
   useEffect(() => {
     const fetchLessons = async () => {
-
       setLoading(true);
       setError(null); // Скинути помилку
 
@@ -37,14 +36,14 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose }) => {
         const lessonsData = await getLessons(token);
         setLessons(lessonsData); // Зберегти дані уроків
       } catch (err) {
-        setError('Не вдалося отримати уроки. Спробуйте ще раз.'); // Обробка помилок
+        setError("Не вдалося отримати уроки. Спробуйте ще раз."); // Обробка помилок
       } finally {
         setLoading(false); // Завершити завантаження
       }
     };
 
     fetchLessons();
-  }, [token]); 
+  }, [token]);
   const [currentMonth, setCurrentMonth] = useState(dayjs());
 
   const startDay = currentMonth.startOf("month").startOf("week");
