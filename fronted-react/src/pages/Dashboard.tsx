@@ -6,13 +6,7 @@ import { getCourses } from "../api";
 import { useNavigate } from "react-router-dom";
 import { PopularCourseList, ProgressChart } from "../components";
 import { useAuth } from "../features";
-
-type Course = {
-  id: number;
-  title: string;
-  description: string;
-  progress: number;
-};
+import { Course } from "../types"
 
 const Dashboard: React.FC = () => {
   const { getAccessToken } = useAuth();
@@ -62,12 +56,18 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const addCourse = (newCourse: Course) => {
+    setUserCourses((prevCourses) => [...prevCourses, newCourse]);
+  };
+
   return (
     <div
-      className="bg-gradient-to-b from-blue-50 to-blue-100 text-gray-900 flex flex-col items-center"
+      className="bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200 text-gray-900 flex flex-col items-center"
       style={{ minHeight: `calc(100vh - ${navbarHeight}px)` }}
     >
-      <h1 className="mt-6 text-center text-6xl font-semibold">Your Courses:</h1>
+      <h1 className="mt-6 text-center text-6xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600">
+        Your Courses:
+      </h1>
 
       <section
         className="flex w-[90vw] md:w-[60vw] z-0 h-full mt-8 p-6 overflow-x-auto md:overflow-x-hidden overflow-y-hidden bg-white rounded-2xl shadow-2xl transform transition-transform hover:scale-105"
@@ -83,7 +83,7 @@ const Dashboard: React.FC = () => {
               style={{
                 background: `linear-gradient(135deg, hsl(${
                   index * 45
-                }, 100%, 85%), hsl(${index * 45}, 100%, 90%))`,
+                }, 100%, 75%), hsl(${index * 45}, 100%, 85%))`,
               }}
               onClick={() => navigate(`/course/${course.id}`)}
             >
@@ -93,7 +93,7 @@ const Dashboard: React.FC = () => {
               <p className="text-gray-700 mt-2">{course.description}</p>
               <div className="mt-4 bg-gray-300 rounded-full h-2.5 overflow-hidden">
                 <div
-                  className="bg-green-500 h-2.5 rounded-full"
+                  className="bg-green-500 h-2.5 rounded-full transition-all duration-500 ease-in-out"
                   style={{ width: `${course.progress || 0}%` }}
                 ></div>
               </div>
@@ -108,7 +108,7 @@ const Dashboard: React.FC = () => {
             onClick={openCreateModal}
             className="flex-shrink-0 w-44 md:w-64 p-6 rounded-xl shadow-lg transform transition-transform hover:scale-105 flex items-center justify-center cursor-pointer"
             style={{
-              background: `linear-gradient(135deg, hsl(0, 100%, 85%), hsl(0, 100%, 90%))`,
+              background: `linear-gradient(135deg, hsl(0, 100%, 75%), hsl(0, 100%, 85%))`,
             }}
           >
             <span className="text-4xl font-semibold text-gray-900">+</span>
@@ -117,7 +117,7 @@ const Dashboard: React.FC = () => {
         </div>
       </section>
 
-      <section className="flex flex-col md:flex-row w-[90vw] md:w-[60vw] mt-8 mb-10 space-y-6 md:space-y-0 md:space-x-6">
+      <section className="flex flex-col md:flex-row w-[90vw] md:w-[60vw] mt-8 mb-10 space-y-6 md:space-y-0 md:space-x-6 border border-gray-200 rounded-lg p-4 bg-white shadow-xl">
         <ProgressChart />
         <PopularCourseList />
       </section>
@@ -125,6 +125,7 @@ const Dashboard: React.FC = () => {
       <CreateCourseModal
         isOpen={isCreateModalOpen}
         onClose={closeCreateModal}
+        onCourseCreate={addCourse}
       />
     </div>
   );

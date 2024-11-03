@@ -2,24 +2,28 @@ import React from "react";
 import CreateModalBase from "./ModalCreateBase";
 import { useCreateCourseForm } from "../../features";
 import { useCreateCourse } from "../../api";
+import { Course } from "../../types"
 
 interface CourseModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onCourseCreate: (newCourse: Course) => void;
 }
 
-const CreateCourseModal: React.FC<CourseModalProps> = ({ isOpen, onClose }) => {
-  const { createCourse } = useCreateCourse()
-  
+const CreateCourseModal: React.FC<CourseModalProps> = ({ isOpen, onClose, onCourseCreate }) => {
+  const { createCourse } = useCreateCourse();
+
   const { fields, errors, isLoading, handleChange, handleSubmit } =
     useCreateCourseForm(async (fields) => {
       try {
-        const response = await createCourse({
+        const newCourse = await createCourse({
           title: fields.courseTitle,
           description: fields.description,
         });
 
-        console.log("Course created successfully:", response);
+        console.log("Course created successfully:", newCourse);
+        onCourseCreate(newCourse);
+        onClose();
       } catch (error) {
         console.error("Error creating course:", error);
       }
@@ -53,5 +57,4 @@ const CreateCourseModal: React.FC<CourseModalProps> = ({ isOpen, onClose }) => {
     />
   );
 };
-
 export default CreateCourseModal;

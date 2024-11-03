@@ -26,7 +26,7 @@ const CreateLessonModal: React.FC<LessonModalProps> = ({
           courseId: courseId,
         });
 
-        console.log("Homework created successfully:", response);
+        console.log("Lesson created successfully:", response);
         // За потреби можна очистити поля форми або виконати інші дії
       } catch (error) {
         console.error("Error creating homework:", error);
@@ -38,7 +38,7 @@ const CreateLessonModal: React.FC<LessonModalProps> = ({
     <CreateModalBase
       isOpen={isOpen}
       onClose={onClose}
-      title="Create Homework"
+      title="Create Lesson"
       fields={fields}
       errors={errors}
       isLoading={isLoading}
