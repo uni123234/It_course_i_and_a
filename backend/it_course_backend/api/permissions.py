@@ -1,3 +1,6 @@
+"""
+Custom permissions for the API.
+"""
 from rest_framework.permissions import BasePermission
 from django.core.exceptions import PermissionDenied
 
