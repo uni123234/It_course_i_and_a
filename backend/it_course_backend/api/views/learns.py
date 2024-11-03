@@ -22,6 +22,17 @@ from ..permissions import IsCourseTeacher
 logger = logging.getLogger("api")
 
 
+from django.db.models import Q
+from rest_framework import generics, status
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+import logging
+
+# Assuming CourseSerializer and TeacherCourseSerializer are defined elsewhere
+
+logger = logging.getLogger(__name__)
+
+
 class CourseListCreateView(generics.ListCreateAPIView):
     """
     View for listing and creating courses.
@@ -33,16 +44,17 @@ class CourseListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         """
-        Retrieve the list of courses for the authenticated user.
-        Returns courses where the user is the teacher or a student in the groups associated with the courses.
+        Retrieve all homework assignments for a specific course based on the course_id provided in the request.
 
         Returns:
-            QuerySet: A queryset of Course objects for the authenticated user.
+            QuerySet: A queryset of Homework objects for the specified course.
         """
-        user = self.request.user
-        return Course.objects.filter(
-            Q(teacher=user) | Q(groups__students=user)
-        ).distinct()
+        course_id = self.request.query_params.get("course_id")
+        if course_id is not None:
+            return Homework.objects.filter(course_id=course_id)
+        return (
+            Homework.objects.none()
+        )
 
     def get_serializer_class(self):
         """
@@ -188,7 +200,6 @@ class JoinCourseView(generics.CreateAPIView):
         return Response(
             {"detail": "Successfully joined the course."}, status=status.HTTP_200_OK
         )
-
 
 
 class CourseStudentsView(generics.RetrieveAPIView):
@@ -398,7 +409,9 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         """Save a new homework assignment and log the creation."""
         homework = serializer.save(submitted_by=self.request.user)
-        logger.info("Homework created: %s for lesson %s", homework.title, homework.lesson_id)
+        logger.info(
+            "Homework created: %s for lesson %s", homework.title, homework.lesson_id
+        )
 
 
 class HomeworkDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -509,9 +522,9 @@ class LessonCalendarView(generics.ListAPIView):
         )
         end_date = start_date + timezone.timedelta(days=7)
 
-        user_courses = Course.objects.filter(
-            student_groups__students=user
-        ).values_list("id", flat=True)
+        user_courses = Course.objects.filter(student_groups__students=user).values_list(
+            "id", flat=True
+        )
 
         user_teaching_courses = Course.objects.filter(teacher=user).values_list(
             "id", flat=True
@@ -519,16 +532,17 @@ class LessonCalendarView(generics.ListAPIView):
 
         if user.user_type == "teacher":
             return Lesson.objects.filter(
-                course__id__in=user_teaching_courses, scheduled_time__range=(start_date, end_date)
+                course__id__in=user_teaching_courses,
+                scheduled_time__range=(start_date, end_date),
             )
 
         elif user.user_type == "student":
             return Lesson.objects.filter(
-                course__id__in=user_courses, scheduled_time__range=(start_date, end_date)
+                course__id__in=user_courses,
+                scheduled_time__range=(start_date, end_date),
             )
 
         return Lesson.objects.none()
-
 
 
 class ReminderView(generics.ListAPIView):

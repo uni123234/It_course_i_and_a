@@ -202,6 +202,7 @@ class Homework(ActiveModel):
 
     title = models.CharField(max_length=255)
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, null=True, blank=True)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
     description = models.TextField()
     due_date = models.DateTimeField()
     submitted_by = models.ForeignKey(
