@@ -63,7 +63,9 @@ class HomeworkSerializer(serializers.ModelSerializer):
             "submission_date",
             "submission_file",
             "grade",
+            "lesson", 
         ]
+        read_only_fields = ["submitted_by", "submission_date", "grade"]
 
     @staticmethod
     def get_homeworks(user, now):

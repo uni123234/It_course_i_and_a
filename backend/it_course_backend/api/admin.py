@@ -110,6 +110,7 @@ class CourseAdmin(admin.ModelAdmin):
     list_filter = ("teacher",)
 
 
+
 class GroupAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "teacher")
     search_fields = ("name", "teacher__email")

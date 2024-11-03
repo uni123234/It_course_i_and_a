@@ -15,6 +15,8 @@ from .learns import (
     ReminderView,
     LessonListView,
     LessonEditView,
+    JoinCourseView,
+    CourseStudentsView,
 )
 
 from .user import (
