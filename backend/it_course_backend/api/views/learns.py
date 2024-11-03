@@ -22,17 +22,6 @@ from ..permissions import IsCourseTeacher
 logger = logging.getLogger("api")
 
 
-from django.db.models import Q
-from rest_framework import generics, status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-import logging
-
-# Assuming CourseSerializer and TeacherCourseSerializer are defined elsewhere
-
-logger = logging.getLogger(__name__)
-
-
 class CourseListCreateView(generics.ListCreateAPIView):
     """
     View for listing and creating courses.
@@ -52,9 +41,7 @@ class CourseListCreateView(generics.ListCreateAPIView):
         course_id = self.request.query_params.get("course_id")
         if course_id is not None:
             return Homework.objects.filter(course_id=course_id)
-        return (
-            Homework.objects.none()
-        )
+        return Homework.objects.none()
 
     def get_serializer_class(self):
         """
