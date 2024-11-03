@@ -96,8 +96,8 @@ class ActiveModel(models.Model):
 
     is_active = models.BooleanField(default=True)
 
-    objects = models.Manager()  # Default manager
-    active = ActiveManager()  # Active manager
+    objects = models.Manager()
+    active = ActiveManager()
 
     class Meta:
         abstract = True
