@@ -28,7 +28,6 @@ from .views import (
     CourseDetailView,
     LessonEditView,
     LessonListView,
-    CourseStudentsView,
 )
 
 APP_NAME = "api"
@@ -56,9 +55,9 @@ urlpatterns = [
     path("groups/create/", GroupCreateView.as_view(), name="group-create"),
     path("groups/<int:pk>/edit/", GroupEditView.as_view(), name="group-edit"),
     path("course/", CourseListCreateView.as_view(), name="course_list"),
-    path("course/<int:pk>/", CourseDetailView.as_view(), name="course_list"),
-    path("courses/create/", CourseListCreateView.as_view(), name="course-create"),
-    path("courses/edit/<int:pk>/", CourseEditView.as_view(), name="course-edit"),
+    path("course/<int:pk>/", CourseDetailView.as_view(), name="course_detail"),
+    path("courses/create/", CourseListCreateView.as_view(), name="course_create"),
+    path("courses/edit/<int:pk>/", CourseEditView.as_view(), name="course_edit"),
     path("lessons/", LessonListView.as_view(), name="lesson-list"),
     path("lessons/create/", LessonCreateView.as_view(), name="lesson-create"),
     path("lessons/edit/<int:pk>/", LessonEditView.as_view(), name="lesson-edit"),
@@ -66,9 +65,4 @@ urlpatterns = [
     path("homework/", HomeworkListCreateView.as_view(), name="homework-list-create"),
     path("homework/<int:pk>/", HomeworkDetailView.as_view(), name="homework-detail"),
     path("homework/submit/", HomeworkSubmissionView.as_view(), name="homework-submit"),
-    path(
-        "courses/<int:course_id>/students/",
-        CourseStudentsView.as_view(),
-        name="course-students",
-    ),
 ]
