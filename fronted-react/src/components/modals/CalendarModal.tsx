@@ -3,16 +3,7 @@ import dayjs from "dayjs";
 import ModalBase from "./ModalBase";
 import { getCalendar } from "../../api";
 import { useAuth } from "../../features";
-
-const daysOfWeek = [
-  "Понеділок",
-  "Вівторок",
-  "Середа",
-  "Четвер",
-  "П’ятниця",
-  "Субота",
-  "Неділя",
-];
+import moment from "moment-timezone";
 
 interface CalendarModalProps {
   isOpen: boolean;
@@ -20,18 +11,19 @@ interface CalendarModalProps {
 }
 
 const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose }) => {
-  const [calendar, setCalendar] = useState<[]>([]);
+  const [calendar, setCalendar] = useState<
+    { id: number; title: string; scheduled_time: string }[]
+  >([]);
+  const { getAccessToken } = useAuth();
 
-  const { getAccessToken } = useAuth()
   useEffect(() => {
     const token = getAccessToken();
     const fetchCourses = async () => {
       try {
         const data = await getCalendar(token);
         setCalendar(data);
-        console.log('calendar aa  ', data)
       } catch (err) {
-      } finally {
+        console.error(err);
       }
     };
 
@@ -55,13 +47,18 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose }) => {
   const handleNextMonth = () => setCurrentMonth(currentMonth.add(1, "month"));
   const handleToday = () => setCurrentMonth(dayjs());
 
+  const eventsOnDay = (day: dayjs.Dayjs) => {
+    return calendar.filter((event) =>
+      dayjs(event.scheduled_time).isSame(day, "day")
+    );
+  };
+
   return (
     <ModalBase isOpen={isOpen} onClose={onClose} width="80%" height="85vh">
       <h2 className="text-2xl font-bold text-gray-800 text-center mb-4">
         Календар
       </h2>
 
-      {/* Calendar Layout */}
       <div className="p-4">
         <div className="flex justify-center items-center mb-4">
           <button
@@ -85,7 +82,7 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         <div className="grid grid-cols-7 gap-1 text-center">
-          {daysOfWeek.map((day, index) => (
+          {["Mon", "Tue", "Wen", "Thu", "Fri", "Sat", "Sun"].map((day, index) => (
             <div key={index} className="font-semibold">
               {day}
             </div>
@@ -93,23 +90,34 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         <div className="grid grid-cols-7 gap-1">
-          {days.map((dayItem, index) => (
-            <div
-              key={index}
-              className={`border p-2 min-h-28 min-w-[100px] flex flex-col ${
-                dayItem.month() !== currentMonth.month() ? "text-gray-400" : ""
-              }`}
-            >
-              <span className="text-xs">{dayItem.date()}</span>
-              {/* Event example */}
-              {dayItem.date() === 1 &&
-              dayItem.month() === currentMonth.month() ? (
-                <div className="bg-purple-200 text-purple-700 rounded p-1 mt-2 text-xs">
-                  Презентація проєкта
-                </div>
-              ) : null}
-            </div>
-          ))}
+          {days.map((dayItem, index) => {
+            const events = eventsOnDay(dayItem);
+            const isCurrentMonth = dayItem.month() === currentMonth.month();
+
+            return (
+              <div
+                key={index}
+                className={`border p-2 min-h-28 min-w-[100px] flex flex-col ${
+                  !isCurrentMonth ? "text-gray-400" : ""
+                }`}
+              >
+                <span className="text-xs">{dayItem.date()}</span>
+                {events.map((event) => (
+                  <div
+                    key={event.id}
+                    className="bg-purple-200 text-purple-700 rounded p-1 mt-2 text-xs flex justify-between items-center"
+                  >
+                    <span>{event.title}</span>
+                    <span className="text-gray-600">
+                      {moment(event.scheduled_time)
+                        .tz("Europe/Kiev")
+                        .format("HH:mm")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
         </div>
       </div>
     </ModalBase>

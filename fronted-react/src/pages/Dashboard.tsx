@@ -60,6 +60,11 @@ const Dashboard: React.FC = () => {
     setUserCourses((prevCourses) => [...prevCourses, newCourse]);
   };
 
+  const courseNavigate = (courseId: number) => {
+    handleMouseLeave()
+    navigate(`/course/${courseId}`)
+  }
+
   return (
     <div
       className="bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200 text-gray-900 flex flex-col items-center"
@@ -85,7 +90,7 @@ const Dashboard: React.FC = () => {
                   index * 45
                 }, 100%, 75%), hsl(${index * 45}, 100%, 85%))`,
               }}
-              onClick={() => navigate(`/course/${course.id}`)}
+              onClick={() => courseNavigate(course.id)}
             >
               <h2 className="text-2xl font-semibold text-gray-900">
                 {course.title}
