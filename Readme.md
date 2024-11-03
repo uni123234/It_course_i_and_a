@@ -119,9 +119,6 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 
 Зверніть увагу, що потрібно замінити `your_token`, `your_db_name`, `your_db_user`, `your_db_password`, `your_google_client_id` та `your_google_client_secret` на ваші власні значення.
 
-## Внесок
-
-Внески вітаються! Якщо ви хочете покращити проект, будь ласка, відкрийте запит на злиття (pull request).
 
 # IT Course Management System
 
