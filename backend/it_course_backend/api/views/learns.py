@@ -8,6 +8,7 @@ from rest_framework.exceptions import PermissionDenied
 from django.db.models import Q
 from ..models import Course, Homework, Lesson, Group
 from ..serializers import (
+    UserSerializer,
     CourseSerializer,
     GroupCreateUpdateSerializer,
     TeacherCourseSerializer,
@@ -33,15 +34,16 @@ class CourseListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         """
-        Retrieve all homework assignments for a specific course based on the course_id provided in the request.
+        Retrieve the list of courses for the authenticated user.
+        Returns courses where the user is the teacher or a student in the groups associated with the courses.
 
         Returns:
-            QuerySet: A queryset of Homework objects for the specified course.
+            QuerySet: A queryset of Course objects for the authenticated user.
         """
-        course_id = self.request.query_params.get("course_id")
-        if course_id is not None:
-            return Homework.objects.filter(course_id=course_id)
-        return Homework.objects.none()
+        user = self.request.user
+        return Course.objects.filter(
+            Q(teacher=user) | Q(groups__students=user)
+        ).distinct()
 
     def get_serializer_class(self):
         """
@@ -144,10 +146,6 @@ class CourseEditView(generics.UpdateAPIView):
 
 
 class JoinCourseView(generics.CreateAPIView):
-    """
-    View for joining a course using a unique code.
-    """
-
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated]
 
@@ -173,40 +171,51 @@ class JoinCourseView(generics.CreateAPIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
+        if any(
+            group.students.filter(id=user.id).exists() for group in course.groups.all()
+        ):
+            return Response(
+                {"detail": "You are already a member of a group in this course."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         group = course.groups.first()
         if group:
             print("Adding user to existing group.")
             group.students.add(user)
+            print(
+                f"Students in group after addition: {[student.id for student in group.students.all()]}"
+            )
         else:
             print("Creating a new group.")
             group = Group.objects.create(
                 course=course, teacher=course.teacher, name="Group 1"
             )
             group.students.add(user)
+            print(
+                f"Students in newly created group: {[student.id for student in group.students.all()]}"
+            )
 
         return Response(
             {"detail": "Successfully joined the course."}, status=status.HTTP_200_OK
         )
 
 
-class CourseStudentsView(generics.RetrieveAPIView):
-    permission_classes = [IsAuthenticated]
+class CourseStudentsView(generics.ListAPIView):
+    serializer_class = UserSerializer
 
-    def get(self, request, *args, **kwargs):
-        course_id = kwargs.get("course_id")
-        course = Course.objects.get(id=course_id)
-
+    def get_queryset(self):
+        course = get_object_or_404(Course, id=self.kwargs["course_id"])
         students = []
         for group in course.groups.all():
             students.extend(group.students.all())
+        return students.distinct()  # To ensure no duplicates
 
-        students = list(set(students))
-
-        student_data = [
-            {"id": student.id, "email": student.email} for student in students
-        ]
-
-        return Response({"students": student_data})
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        print(f"Returning students: {[student.id for student in queryset]}")
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class GroupCreateView(generics.CreateAPIView):
