@@ -10,7 +10,7 @@ const fetchData = async (endpoint: string, params: Record<string, any> = {}, tok
       params,
     });
 
-    console.log(response)
+    console.log(response.data)
     return response.data;
   } catch (error) {
     console.error(`Error fetching data from ${endpoint}:`, error);

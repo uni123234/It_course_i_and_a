@@ -50,7 +50,7 @@ export const useCreateHomework = () => {
       description: homeworkData.description,
       submitted_by: homeworkData.id,
       due_date: homeworkData.dateTime,
-      course_id: homeworkData.courseId,
+      course: homeworkData.courseId,
     };
     return postRequest(`${API_URL}/homework/`, data, token);
   };

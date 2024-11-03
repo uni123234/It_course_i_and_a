@@ -41,7 +41,7 @@ const CoursePage: React.FC = () => {
           fetchCourse(courseIdNumber, token),
           getHomeworks(courseIdNumber, token),
         ]);
-        setCourse(courseData);
+        setCourse(courseData.course);
         setHomeworks(homeworksData);
       } catch {
         setError("Не вдалося отримати дані. Спробуйте ще раз.");
@@ -51,6 +51,8 @@ const CoursePage: React.FC = () => {
     if (error) {
       console.log(error);
     }
+
+
   
     fetchData();
   }, [courseIdNumber, error, getAccessToken]);
