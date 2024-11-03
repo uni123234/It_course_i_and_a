@@ -70,9 +70,6 @@ const CoursePage: React.FC = () => {
       <div className="max-w-4xl mx-auto p-4">
         {/* Action Buttons */}
         <div className="flex justify-around space-x-4 mb-6">
-          <button className="px-4 py-2 bg-gradient-to-r from-amber-400 to-lime-400 text-white rounded-full hover:shadow-lg transform transition-transform hover:scale-105">
-            Course Calendar
-          </button>
           <button
             onClick={() => setHomeworkModalOpen(true)}
             className="px-4 py-2 bg-gradient-to-r from-amber-400 to-lime-400 text-white rounded-full hover:shadow-lg transform transition-transform hover:scale-105"
