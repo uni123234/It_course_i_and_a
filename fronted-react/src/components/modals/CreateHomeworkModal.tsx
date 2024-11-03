@@ -8,6 +8,7 @@ interface HomeworkModalProps {
   isOpen: boolean;
   onClose: () => void;
   courseId: number | undefined;
+  lessonId: number | undefined;
   onHomeworkCreate: (newHomework: Homework) => void;
 }
 
@@ -16,6 +17,7 @@ const CreateHomeworkModal: React.FC<HomeworkModalProps> = ({
   onClose,
   courseId,
   onHomeworkCreate,
+  lessonId
 }) => {
   const { getUserId } = useAuth();
 
@@ -32,6 +34,7 @@ const CreateHomeworkModal: React.FC<HomeworkModalProps> = ({
           dateTime: fields.dateTime,
           id: userId,
           courseId: courseId,
+          lesson: lessonId,
         });
 
         onHomeworkCreate(newHomework);

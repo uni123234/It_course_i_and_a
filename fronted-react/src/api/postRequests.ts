@@ -51,7 +51,7 @@ export const useCreateHomework = () => {
       submitted_by: homeworkData.id,
       due_date: homeworkData.dateTime,
       course: homeworkData.courseId,
-      lesson: 1
+      lesson: homeworkData.lesson
     };
     return postRequest(`${API_URL}/homework/`, data, token);
   };
@@ -94,6 +94,7 @@ interface HomeworkData {
   id: number | null;
   dateTime: string;
   courseId: number | undefined;
+  lesson: number | undefined;
 }
 
 interface LessonData {

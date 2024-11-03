@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getHomeworks, fetchCourse } from "../api";
+import { getHomeworks, fetchCourse, getLessons } from "../api";
 import { CreateHomeworkModal, CreateLessonModal } from "../components";
 import { useAuth } from "../features";
 import { Homework } from "../types";
@@ -11,6 +11,11 @@ interface CourseData {
   description: string;
 }
 
+interface Lesson {
+  id: string;
+  course: number;
+}
+
 const CoursePage: React.FC = () => {
   const { getAccessToken } = useAuth();
   const { courseId } = useParams<{ courseId: string }>();
@@ -18,7 +23,7 @@ const CoursePage: React.FC = () => {
 
   const [course, setCourse] = useState<CourseData | null>(null);
   const [homeworks, setHomeworks] = useState<Homework[]>([]);
-  // const [loading, setLoading] = useState(true);
+  const [lessonId, setLessonId] = useState<number>();
   const [error, setError] = useState<string | null>(null);
 
   const [isHomeworkModalOpen, setHomeworkModalOpen] = useState(false);
@@ -31,12 +36,18 @@ const CoursePage: React.FC = () => {
       setError(null);
 
       try {
-        const [courseData, homeworksData] = await Promise.all([
+        const [courseData, homeworksData, lessonsData] = await Promise.all([
           fetchCourse(courseIdNumber, token),
           getHomeworks(courseIdNumber, token),
+          getLessons(courseIdNumber, token),
         ]);
+
+        const firstLesson = lessonsData.find((lesson: Lesson) => lesson.course === courseIdNumber);
+
         setCourse(courseData.course);
         setHomeworks(homeworksData);
+        setLessonId(firstLesson.id);
+        console.log('lessons ', lessonsData[0].id)
       } catch {
         setError("Не вдалося отримати дані. Спробуйте ще раз.");
       }
@@ -51,7 +62,7 @@ const CoursePage: React.FC = () => {
 
   const addHomework = (newHomework: Homework) => {
     setHomeworks((prevHomework) => [...prevHomework, newHomework]);
-    console.log(homeworks)
+    console.log(homeworks);
   };
 
   return (
@@ -100,7 +111,9 @@ const CoursePage: React.FC = () => {
               </div>
               <div className="text-right">
                 <p className="text-gray-500">
-                {new Date(homework.due_date).toLocaleString("uk-UA", { timeZone: "Europe/Kyiv" })}
+                  {new Date(homework.due_date).toLocaleString("uk-UA", {
+                    timeZone: "Europe/Kyiv",
+                  })}
                 </p>
                 <button className="text-yellow-500 font-semibold hover:text-yellow-600 hover:underline mt-2">
                   View Details
@@ -116,6 +129,7 @@ const CoursePage: React.FC = () => {
         onClose={() => setHomeworkModalOpen(false)}
         courseId={courseIdNumber}
         onHomeworkCreate={addHomework}
+        lessonId={lessonId}
       />
       <CreateLessonModal
         isOpen={isLessonModalOpen}
