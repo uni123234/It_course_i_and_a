@@ -415,8 +415,6 @@ class HomeworkGradeView(generics.UpdateAPIView):
         """
         homework = serializer.save()
         logger.info("Homework graded: %s", homework.title)
-
-
 class LessonCalendarView(generics.ListAPIView):
     """
     View for displaying lessons in a calendar format.
@@ -430,16 +428,15 @@ class LessonCalendarView(generics.ListAPIView):
 
     def get_queryset(self):
         """
-        Return lessons for the current week based on user role.
+        Return lessons for the current month based on user role.
 
         Returns:
             QuerySet: A filtered queryset of lessons for the authenticated user.
         """
         user = self.request.user
-        start_date = timezone.now().date() - timezone.timedelta(
-            days=timezone.now().date().weekday()
-        )
-        end_date = start_date + timezone.timedelta(days=7)
+        now = timezone.now()
+        start_date = now.replace(day=1).date()
+        end_date = now.replace(day=monthrange(now.year, now.month)[1]).date()
 
         user_courses = Course.objects.filter(student_groups__students=user).values_list(
             "id", flat=True
@@ -452,13 +449,13 @@ class LessonCalendarView(generics.ListAPIView):
         if user.user_type == "teacher":
             return Lesson.objects.filter(
                 course__id__in=user_teaching_courses,
-                scheduled_time__range=(start_date, end_date),
+                scheduled_time__date__range=(start_date, end_date),
             )
 
         elif user.user_type == "student":
             return Lesson.objects.filter(
                 course__id__in=user_courses,
-                scheduled_time__range=(start_date, end_date),
+                scheduled_time__date__range=(start_date, end_date),
             )
 
         return Lesson.objects.none()
@@ -466,10 +463,10 @@ class LessonCalendarView(generics.ListAPIView):
 
 class ReminderView(generics.ListAPIView):
     """
-    View for listing homework reminders based on user type.
+    View for listing all homework reminders across all courses based on user type.
 
     Methods:
-        GET: Retrieve a list of homework reminders for the authenticated user.
+        GET: Retrieve a list of all homework reminders for the authenticated user.
     """
 
     permission_classes = [IsAuthenticated]
@@ -477,39 +474,51 @@ class ReminderView(generics.ListAPIView):
 
     def get_queryset(self):
         """
-        Return homework reminders based on the user's role.
+        Return all homework reminders across all courses based on the user's role.
 
         Returns:
             QuerySet: A filtered queryset of homework reminders for the authenticated user.
         """
         user = self.request.user
-        now = timezone.now()
+        is_teacher = user.groups.filter(
+            name="Teachers"
+        ).exists()
 
-        if user.groups.filter(name="Teachers").exists():
-            return Homework.objects.filter(
-                lesson__course__groups__teacher=user,
-                review_deadline__lte=now,
-                submitted_by__isnull=False,
+        if is_teacher:
+            return (
+                Homework.objects.filter(
+                    submitted_by__isnull=False
+                )
+                .select_related("lesson", "lesson__course")
+                .order_by("review_deadline")
             )
-        return Homework.objects.filter(
-            lesson__course__groups__students=user,
-            due_date__lte=now,
-        )
+        else:
+            return (
+                Homework.objects.filter(
+                    lesson__course__groups__students=user
+                )
+                .select_related("lesson", "lesson__course")
+                .order_by("due_date")
+            )
 
     def list(self, request, *args, **kwargs):
         """
-        List homework reminders and customize the response message based on user type.
+        List all homework reminders and customize the response message based on user type.
         """
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
 
         return Response(
             {
-                "type": "teacher" if request.user.is_teacher else "student",
+                "type": (
+                    "teacher"
+                    if request.user.groups.filter(name="Teachers").exists()
+                    else "student"
+                ),
                 "message": (
                     "You have homeworks to review"
-                    if request.user.is_teacher
-                    else "You have homeworks to submit"
+                    if request.user.groups.filter(name="Teachers").exists()
+                    else "You have homeworks due soon"
                 ),
                 "data": serializer.data,
             }
