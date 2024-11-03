@@ -26,12 +26,9 @@ class DateFromDatetimeField(serializers.DateField):
 
 
 class CourseSerializer(serializers.ModelSerializer):
-    """Serializer for the Course model, including homework progress."""
+    """Serializer for the Course model, including specific fields."""
 
     homework_progress = serializers.SerializerMethodField()
-    groups = serializers.PrimaryKeyRelatedField(
-        queryset=Group.objects.all(), many=True, required=False
-    )
 
     class Meta:
         model = Course
@@ -103,12 +100,13 @@ class TeacherCourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ["title", "description"]
+        fields = ["id", "title", "description", "homework_progress"]
 
     def create(self, validated_data):
         """Assign the requesting user as the teacher during course creation."""
         validated_data["teacher"] = self.context["request"].user
         return super().create(validated_data)
+
 
 
 class LessonSerializer(serializers.ModelSerializer):

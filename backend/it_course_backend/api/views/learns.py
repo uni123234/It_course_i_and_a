@@ -3,10 +3,12 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import PermissionDenied
 from django.db.models import Q
-from ..models import Course, Homework, Lesson, Group
+from ..models import Course, Homework, Lesson, Group, User
 from ..serializers import (
+    UserSerializer,
     CourseSerializer,
     GroupCreateUpdateSerializer,
     TeacherCourseSerializer,
@@ -22,40 +24,61 @@ logger = logging.getLogger("api")
 
 
 class CourseListCreateView(generics.ListCreateAPIView):
+    """
+    View for listing and creating courses.
+    Users can view courses they are teaching or courses that are available to their groups.
+    """
+
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Return courses where the user is involved as a teacher or student."""
+        """
+        Retrieve the list of courses for the authenticated user.
+        Returns courses where the user is the teacher or a student in the groups associated with the courses.
+
+        Returns:
+            QuerySet: A queryset of Course objects for the authenticated user.
+        """
         user = self.request.user
         return Course.objects.filter(
             Q(teacher=user) | Q(groups__students=user)
         ).distinct()
 
-    def list(self, request, *args, **kwargs):
-        """Override the list method to include homework progress."""
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
     def get_serializer_class(self):
-        """Return the appropriate serializer based on user type."""
-        return (
-            TeacherCourseSerializer
-            if self.request.user.user_type == "teacher"
-            else CourseSerializer
-        )
+        """
+        Determine the serializer class to use based on the user type.
+        If the user is a teacher, use the TeacherCourseSerializer;
+        otherwise, use the default CourseSerializer.
+
+        Returns:
+            Serializer: The appropriate serializer class for the current user.
+        """
+        if self.request.user.user_type == "teacher":
+            return TeacherCourseSerializer
+        return CourseSerializer
 
     def perform_create(self, serializer):
-        """Save a new course and enroll the creator as a student."""
+        """
+        Handle the creation of a new course.
+        Assigns the authenticated user as the teacher for the newly created course,
+        creates a group if it doesn't exist, and adds the user to that group.
+
+        Args:
+            serializer (Serializer): The serializer instance used to validate and save the course data.
+
+        Returns:
+            Response: A response containing the created course details.
+        """
         user = self.request.user
         course = serializer.save(teacher=user)
-
         group, _ = Group.objects.get_or_create(course=course, teacher=user)
         group.students.add(user)
-
         logger.info("Course created by %s: %s", user.email, course.title)
-        return course
+        return Response(
+            {"id": course.id, "title": course.title, "description": course.description},
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -82,6 +105,23 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
 
         return course
 
+    def retrieve(self, request, *args, **kwargs):
+        """Retrieve the course details along with user type information."""
+        course = self.get_object()
+        user = self.request.user
+
+        is_teacher = user == course.teacher
+        is_student = course.groups.filter(students=user).exists()
+
+        serializer = self.get_serializer(course)
+        return Response(
+            {
+                "course": serializer.data,
+                "is_teacher": is_teacher,
+                "is_student": is_student,
+            }
+        )
+
 
 class CourseEditView(generics.UpdateAPIView):
     serializer_class = CourseSerializer
@@ -102,6 +142,80 @@ class CourseEditView(generics.UpdateAPIView):
         if first_course and first_course not in queryset:
             queryset = Course.objects.filter(pk=first_course.pk) | queryset
 
+        return queryset
+
+
+class JoinCourseView(generics.CreateAPIView):
+    serializer_class = CourseSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        unique_code = request.data.get("unique_code")
+        print(f"Received unique_code: {unique_code}")
+
+        if not unique_code:
+            return Response(
+                {"detail": "Unique code is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        course = get_object_or_404(Course, unique_code=unique_code)
+        print(f"Retrieved course: {course}")
+
+        user = request.user
+        print(f"Current user: {user}, user_type: {user.user_type}")
+
+        if user.user_type != "student":
+            return Response(
+                {"detail": "Only students can join courses."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if any(
+            group.students.filter(id=user.id).exists() for group in course.groups.all()
+        ):
+            return Response(
+                {"detail": "You are already a member of a group in this course."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        group = course.groups.first()
+        if group:
+            print("Adding user to existing group.")
+            group.students.add(user)
+            print(
+                f"Students in group after addition: {[student.id for student in group.students.all()]}"
+            )
+        else:
+            print("Creating a new group.")
+            group = Group.objects.create(
+                course=course, teacher=course.teacher, name="Group 1"
+            )
+            group.students.add(user)
+            print(
+                f"Students in newly created group: {[student.id for student in group.students.all()]}"
+            )
+
+        return Response(
+            {"detail": "Successfully joined the course."}, status=status.HTTP_200_OK
+        )
+
+
+class CourseStudentsView(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]  # Specify your permission classes
+
+    def get_queryset(self):
+        course = get_object_or_404(Course, id=self.kwargs["course_id"])
+        students = []
+        for group in course.groups.all():
+            students.extend(group.students.all())  # Витягування студентів з групи
+
+        student_ids = set(student.id for student in students)  # Унікальні ID студентів
+        queryset = User.objects.filter(id__in=student_ids)  # Повертає QuerySet унікальних студентів
+
+        print(f"Student IDs: {student_ids}")  # Додайте це для перевірки
+        print(f"Students found: {queryset}")  # Додайте це для перевірки
         return queryset
 
 
@@ -257,7 +371,7 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
     """
     View for listing and creating homework assignments for a specific course.
     Methods:
-        GET: Retrieve a list of homework assignments for the specified course.
+        GET: Retrieve a list of all homework assignments for the specified course.
         POST: Create a new homework assignment for the specified course.
     """
 
@@ -265,31 +379,33 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
     serializer_class = HomeworkSerializer
 
     def get_queryset(self):
-        user = self.request.user
         course_id = self.request.query_params.get("course_id")
-        now = timezone.now()
+        user = self.request.user
 
-        if user.user_type == "teacher":
-            return Homework.objects.filter(
-                lesson__course_id=course_id,
-                submission_date__isnull=False,
-                due_date__lte=now,
-            ).distinct()
+        logger.info(f"User: {user}, Course ID: {course_id}")
 
-        elif user.user_type == "student":
-            return Homework.objects.filter(
-                lesson__course_id=course_id,
-                lesson__course__groups__students=user,
-                due_date__gte=now,
-                submitted_by=user,
-            ).distinct()
+        if course_id is None:
+            return Homework.objects.none()
 
-        return Homework.objects.none()
+        queryset = Homework.objects.filter(
+            lesson__course_id=course_id,
+        ).distinct()
+
+        logger.info(f"Queryset: {queryset}")
+        return queryset
 
     def perform_create(self, serializer):
-        """Save a new homework assignment and log the creation."""
-        homework = serializer.save(submitted_by=self.request.user)
-        logger.info("Homework created: %s", homework.title)
+        """
+        Save a new homework assignment and log the creation.
+        Automatically associates the assignment with the course of the specified lesson.
+        """
+        homework = serializer.save(
+            submitted_by=self.request.user,
+            course=serializer.validated_data["lesson"].course,
+        )
+        logger.info(
+            "Homework created: %s for lesson %s", homework.title, homework.lesson_id
+        )
 
 
 class HomeworkDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -400,7 +516,9 @@ class LessonCalendarView(generics.ListAPIView):
         )
         end_date = start_date + timezone.timedelta(days=7)
 
-        user_courses = Course.objects.filter(students=user).values_list("id", flat=True)
+        user_courses = Course.objects.filter(student_groups__students=user).values_list(
+            "id", flat=True
+        )
 
         user_teaching_courses = Course.objects.filter(teacher=user).values_list(
             "id", flat=True
@@ -408,12 +526,14 @@ class LessonCalendarView(generics.ListAPIView):
 
         if user.user_type == "teacher":
             return Lesson.objects.filter(
-                course__id__in=user_teaching_courses, date__range=(start_date, end_date)
+                course__id__in=user_teaching_courses,
+                scheduled_time__range=(start_date, end_date),
             )
 
         elif user.user_type == "student":
             return Lesson.objects.filter(
-                course__id__in=user_courses, date__range=(start_date, end_date)
+                course__id__in=user_courses,
+                scheduled_time__range=(start_date, end_date),
             )
 
         return Lesson.objects.none()

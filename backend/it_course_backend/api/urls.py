@@ -28,6 +28,8 @@ from .views import (
     CourseDetailView,
     LessonEditView,
     LessonListView,
+    JoinCourseView,
+    CourseStudentsView,
 )
 
 APP_NAME = "api"
@@ -65,4 +67,10 @@ urlpatterns = [
     path("homework/", HomeworkListCreateView.as_view(), name="homework-list-create"),
     path("homework/<int:pk>/", HomeworkDetailView.as_view(), name="homework-detail"),
     path("homework/submit/", HomeworkSubmissionView.as_view(), name="homework-submit"),
+    path("course/join/", JoinCourseView.as_view(), name="join_course"),
+    path(
+        "courses/<int:course_id>/students/",
+        CourseStudentsView.as_view(),
+        name="course-students",
+    ),
 ]

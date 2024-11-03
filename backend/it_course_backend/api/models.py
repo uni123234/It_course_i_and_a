@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser,
@@ -121,8 +122,9 @@ class Course(ActiveModel):
         ("in_progress", "In Progress"),
         ("completed", "Completed"),
     )
-
+    unique_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     groups = models.ManyToManyField("Group", related_name="courses")
+    lessons = models.ManyToManyField("Lesson", related_name="courses_in_lesson")
     start_date = models.DateField(default=timezone.now)
     title = models.CharField(max_length=255, verbose_name="Title")
     description = models.TextField(blank=True, null=True, verbose_name="Description")
@@ -141,6 +143,12 @@ class Course(ActiveModel):
         return self.title
 
     def homework_progress(self):
+        """
+        Calculate and return the homework submission progress for each lesson in the course.
+
+        Returns:
+            List[Dict]: A list of dictionaries containing homework progress data for each lesson.
+        """
         progress_data = []
         for lesson in self.lessons.all():
             total_homework = lesson.homework_set.count()
@@ -171,12 +179,7 @@ class Lesson(ActiveModel):
     """
 
     title = models.CharField(max_length=255, verbose_name="Title")
-    course = models.ForeignKey(
-        "Course",
-        on_delete=models.CASCADE,
-        null=False,
-        related_name="lessons",
-    )
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
     scheduled_time = models.DateTimeField(verbose_name="Scheduled Time")
     content = models.TextField(blank=True, null=True, verbose_name="Content")
     video_url = models.URLField(blank=True, null=True, verbose_name="Video URL")
@@ -197,6 +200,7 @@ class Homework(ActiveModel):
 
     title = models.CharField(max_length=255)
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, null=True, blank=True)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
     description = models.TextField()
     due_date = models.DateTimeField()
     submitted_by = models.ForeignKey(
