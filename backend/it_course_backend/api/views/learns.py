@@ -310,13 +310,16 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
         logger.info(f"User: {user}, Course ID: {course_id}")
 
         if course_id is None:
+            logger.warning("No course_id provided in request.")
             return Homework.objects.none()
 
+        # Filtering homeworks for the specified course
         queryset = Homework.objects.filter(
             lesson__course_id=course_id,
+            lesson__course__is_active=True,  # Ensure the course is active
         ).distinct()
 
-        logger.info(f"Queryset: {queryset}")
+        logger.info(f"Retrieved queryset: {queryset}")
         return queryset
 
     def perform_create(self, serializer):
@@ -324,12 +327,18 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
         Save a new homework assignment and log the creation.
         Automatically associates the assignment with the course of the specified lesson.
         """
-        homework = serializer.save(
-            submitted_by=self.request.user,
-            course=serializer.validated_data["lesson"].course,
-        )
+        lesson = serializer.validated_data.get("lesson")
+        if lesson is None:
+            logger.error("Lesson is required to create homework.")
+            raise ValueError("Lesson is required to create homework.")
+
+        homework = serializer.save(submitted_by=self.request.user, course=lesson.course)
+
         logger.info(
-            "Homework created: %s for lesson %s", homework.title, homework.lesson_id
+            "Homework created: %s for lesson %s and course %s",
+            homework.title,
+            homework.lesson_id,
+            homework.course_id,
         )
 
 
@@ -415,6 +424,8 @@ class HomeworkGradeView(generics.UpdateAPIView):
         """
         homework = serializer.save()
         logger.info("Homework graded: %s", homework.title)
+
+
 class LessonCalendarView(generics.ListAPIView):
     """
     View for displaying lessons in a calendar format.
@@ -480,23 +491,17 @@ class ReminderView(generics.ListAPIView):
             QuerySet: A filtered queryset of homework reminders for the authenticated user.
         """
         user = self.request.user
-        is_teacher = user.groups.filter(
-            name="Teachers"
-        ).exists()
+        is_teacher = user.groups.filter(name="Teachers").exists()
 
         if is_teacher:
             return (
-                Homework.objects.filter(
-                    submitted_by__isnull=False
-                )
+                Homework.objects.filter(submitted_by__isnull=False)
                 .select_related("lesson", "lesson__course")
                 .order_by("review_deadline")
             )
         else:
             return (
-                Homework.objects.filter(
-                    lesson__course__groups__students=user
-                )
+                Homework.objects.filter(lesson__course__groups__students=user)
                 .select_related("lesson", "lesson__course")
                 .order_by("due_date")
             )
