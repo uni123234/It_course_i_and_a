@@ -63,7 +63,8 @@ class HomeworkSerializer(serializers.ModelSerializer):
             "submission_date",
             "submission_file",
             "grade",
-            "lesson", 
+            "lesson",
+            "course",
         ]
         read_only_fields = ["submitted_by", "submission_date", "grade"]
 

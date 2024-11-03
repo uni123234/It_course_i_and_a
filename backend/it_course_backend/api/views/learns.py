@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import PermissionDenied
 from django.db.models import Q
-from ..models import Course, Homework, Lesson, Group
+from ..models import Course, Homework, Lesson, Group, User
 from ..serializers import (
     UserSerializer,
     CourseSerializer,
@@ -203,19 +203,20 @@ class JoinCourseView(generics.CreateAPIView):
 
 class CourseStudentsView(generics.ListAPIView):
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]  # Specify your permission classes
 
     def get_queryset(self):
         course = get_object_or_404(Course, id=self.kwargs["course_id"])
         students = []
         for group in course.groups.all():
-            students.extend(group.students.all())
-        return students.distinct()  # To ensure no duplicates
+            students.extend(group.students.all())  # Витягування студентів з групи
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        print(f"Returning students: {[student.id for student in queryset]}")
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        student_ids = set(student.id for student in students)  # Унікальні ID студентів
+        queryset = User.objects.filter(id__in=student_ids)  # Повертає QuerySet унікальних студентів
+
+        print(f"Student IDs: {student_ids}")  # Додайте це для перевірки
+        print(f"Students found: {queryset}")  # Додайте це для перевірки
+        return queryset
 
 
 class GroupCreateView(generics.CreateAPIView):
@@ -370,7 +371,7 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
     """
     View for listing and creating homework assignments for a specific course.
     Methods:
-        GET: Retrieve a list of homework assignments for the specified course.
+        GET: Retrieve a list of all homework assignments for the specified course.
         POST: Create a new homework assignment for the specified course.
     """
 
@@ -378,33 +379,30 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
     serializer_class = HomeworkSerializer
 
     def get_queryset(self):
-        user = self.request.user
         course_id = self.request.query_params.get("course_id")
-        now = timezone.now()
+        user = self.request.user
+
+        logger.info(f"User: {user}, Course ID: {course_id}")
 
         if course_id is None:
             return Homework.objects.none()
 
-        if user.user_type == "teacher":
-            return Homework.objects.filter(
-                lesson__course_id=course_id,
-                submission_date__isnull=False,
-                due_date__lte=now,
-            ).distinct()
+        queryset = Homework.objects.filter(
+            lesson__course_id=course_id,
+        ).distinct()
 
-        elif user.user_type == "student":
-            return Homework.objects.filter(
-                lesson__course_id=course_id,
-                lesson__course__groups__students=user,
-                due_date__gte=now,
-                submitted_by=user,
-            ).distinct()
-
-        return Homework.objects.none()
+        logger.info(f"Queryset: {queryset}")
+        return queryset
 
     def perform_create(self, serializer):
-        """Save a new homework assignment and log the creation."""
-        homework = serializer.save(submitted_by=self.request.user)
+        """
+        Save a new homework assignment and log the creation.
+        Automatically associates the assignment with the course of the specified lesson.
+        """
+        homework = serializer.save(
+            submitted_by=self.request.user,
+            course=serializer.validated_data["lesson"].course,
+        )
         logger.info(
             "Homework created: %s for lesson %s", homework.title, homework.lesson_id
         )
