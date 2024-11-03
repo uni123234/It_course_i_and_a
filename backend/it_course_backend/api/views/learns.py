@@ -145,77 +145,21 @@ class CourseEditView(generics.UpdateAPIView):
         return queryset
 
 
-class JoinCourseView(generics.CreateAPIView):
-    serializer_class = CourseSerializer
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, *args, **kwargs):
-        unique_code = request.data.get("unique_code")
-        print(f"Received unique_code: {unique_code}")
-
-        if not unique_code:
-            return Response(
-                {"detail": "Unique code is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        course = get_object_or_404(Course, unique_code=unique_code)
-        print(f"Retrieved course: {course}")
-
-        user = request.user
-        print(f"Current user: {user}, user_type: {user.user_type}")
-
-        if user.user_type != "student":
-            return Response(
-                {"detail": "Only students can join courses."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        if any(
-            group.students.filter(id=user.id).exists() for group in course.groups.all()
-        ):
-            return Response(
-                {"detail": "You are already a member of a group in this course."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        group = course.groups.first()
-        if group:
-            print("Adding user to existing group.")
-            group.students.add(user)
-            print(
-                f"Students in group after addition: {[student.id for student in group.students.all()]}"
-            )
-        else:
-            print("Creating a new group.")
-            group = Group.objects.create(
-                course=course, teacher=course.teacher, name="Group 1"
-            )
-            group.students.add(user)
-            print(
-                f"Students in newly created group: {[student.id for student in group.students.all()]}"
-            )
-
-        return Response(
-            {"detail": "Successfully joined the course."}, status=status.HTTP_200_OK
-        )
-
-
 class CourseStudentsView(generics.ListAPIView):
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]  # Specify your permission classes
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         course = get_object_or_404(Course, id=self.kwargs["course_id"])
         students = []
         for group in course.groups.all():
-            students.extend(group.students.all())  # Витягування студентів з групи
+            students.extend(group.students.all())
 
-        student_ids = set(student.id for student in students)  # Унікальні ID студентів
-        queryset = User.objects.filter(id__in=student_ids)  # Повертає QuerySet унікальних студентів
+        student_ids = set(student.id for student in students)
+        queryset = User.objects.filter(id__in=student_ids)
 
-        print(f"Student IDs: {student_ids}")  # Додайте це для перевірки
-        print(f"Students found: {queryset}")  # Додайте це для перевірки
+        print(f"Student IDs: {student_ids}")
+        print(f"Students found: {queryset}")
         return queryset
 
 
@@ -562,7 +506,7 @@ class ReminderView(generics.ListAPIView):
 
         if user.groups.filter(
             name="Teachers"
-        ).exists():  # Assuming you have a 'Teachers' group
+        ).exists():
             return Homework.objects.filter(
                 lesson__course__groups__teacher=user,
                 review_deadline__lte=now,
