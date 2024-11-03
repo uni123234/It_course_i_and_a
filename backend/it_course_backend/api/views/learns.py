@@ -417,6 +417,9 @@ class HomeworkGradeView(generics.UpdateAPIView):
         logger.info("Homework graded: %s", homework.title)
 
 
+from django.utils import timezone
+from calendar import monthrange
+
 class LessonCalendarView(generics.ListAPIView):
     """
     View for displaying lessons in a calendar format.
@@ -430,16 +433,15 @@ class LessonCalendarView(generics.ListAPIView):
 
     def get_queryset(self):
         """
-        Return lessons for the current week based on user role.
+        Return lessons for the current month based on user role.
 
         Returns:
             QuerySet: A filtered queryset of lessons for the authenticated user.
         """
         user = self.request.user
-        start_date = timezone.now().date() - timezone.timedelta(
-            days=timezone.now().date().weekday()
-        )
-        end_date = start_date + timezone.timedelta(days=7)
+        now = timezone.now()
+        start_date = now.replace(day=1).date()
+        end_date = now.replace(day=monthrange(now.year, now.month)[1]).date()
 
         user_courses = Course.objects.filter(student_groups__students=user).values_list(
             "id", flat=True
@@ -452,13 +454,13 @@ class LessonCalendarView(generics.ListAPIView):
         if user.user_type == "teacher":
             return Lesson.objects.filter(
                 course__id__in=user_teaching_courses,
-                scheduled_time__range=(start_date, end_date),
+                scheduled_time__date__range=(start_date, end_date),
             )
 
         elif user.user_type == "student":
             return Lesson.objects.filter(
                 course__id__in=user_courses,
-                scheduled_time__range=(start_date, end_date),
+                scheduled_time__date__range=(start_date, end_date),
             )
 
         return Lesson.objects.none()
