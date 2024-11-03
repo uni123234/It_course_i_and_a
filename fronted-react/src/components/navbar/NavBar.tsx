@@ -13,7 +13,7 @@ const NavBar: React.FC = () => {
   const navigate = useNavigate();
 
 
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, fullname } = useAuth();
 
   const handleLogoClick = () => {
     if (isAuthenticated) {
@@ -57,6 +57,9 @@ const NavBar: React.FC = () => {
         </li>
         <li>
           <NavButton label="Logout" onClick={handleLogout} className="text-gray-800 hover:text-purple-600 transition-colors duration-300" />
+        </li>
+        <li>
+          <p className="text-gray-400">{fullname}</p>
         </li>
       </>
     )}
