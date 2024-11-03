@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from calendar import monthrange
 from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
 from django.db.models import Q
 from ..models import Course, Homework, Lesson, Group, User
@@ -313,10 +314,9 @@ class HomeworkListCreateView(generics.ListCreateAPIView):
             logger.warning("No course_id provided in request.")
             return Homework.objects.none()
 
-        # Filtering homeworks for the specified course
         queryset = Homework.objects.filter(
             lesson__course_id=course_id,
-            lesson__course__is_active=True,  # Ensure the course is active
+            lesson__course__is_active=True,
         ).distinct()
 
         logger.info(f"Retrieved queryset: {queryset}")
