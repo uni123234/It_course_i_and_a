@@ -122,7 +122,6 @@ class Course(ActiveModel):
         ("in_progress", "In Progress"),
         ("completed", "Completed"),
     )
-    unique_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     groups = models.ManyToManyField("Group", related_name="courses")
     lessons = models.ManyToManyField("Lesson", related_name="courses_in_lesson")
     start_date = models.DateField(default=timezone.now)

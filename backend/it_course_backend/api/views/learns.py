@@ -4,11 +4,10 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
 from django.db.models import Q
 from ..models import Course, Homework, Lesson, Group, User
 from ..serializers import (
-    UserSerializer,
     CourseSerializer,
     GroupCreateUpdateSerializer,
     TeacherCourseSerializer,
@@ -142,24 +141,6 @@ class CourseEditView(generics.UpdateAPIView):
         if first_course and first_course not in queryset:
             queryset = Course.objects.filter(pk=first_course.pk) | queryset
 
-        return queryset
-
-
-class CourseStudentsView(generics.ListAPIView):
-    serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        course = get_object_or_404(Course, id=self.kwargs["course_id"])
-        students = []
-        for group in course.groups.all():
-            students.extend(group.students.all())
-
-        student_ids = set(student.id for student in students)
-        queryset = User.objects.filter(id__in=student_ids)
-
-        print(f"Student IDs: {student_ids}")
-        print(f"Students found: {queryset}")
         return queryset
 
 
@@ -504,9 +485,7 @@ class ReminderView(generics.ListAPIView):
         user = self.request.user
         now = timezone.now()
 
-        if user.groups.filter(
-            name="Teachers"
-        ).exists():
+        if user.groups.filter(name="Teachers").exists():
             return Homework.objects.filter(
                 lesson__course__groups__teacher=user,
                 review_deadline__lte=now,
