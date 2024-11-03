@@ -65,7 +65,7 @@ const CreateLessonModal: React.FC<LessonModalProps> = ({
           min: new Date().toISOString().slice(0, 16),
         },
       ]}
-      submitLabel="Додати завдання"
+      submitLabel="Create Lesson"
     />
   );
 };

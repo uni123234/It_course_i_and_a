@@ -53,7 +53,7 @@ const CreateCourseModal: React.FC<CourseModalProps> = ({ isOpen, onClose, onCour
           required: true,
         },
       ]}
-      submitLabel="Додати курс"
+      submitLabel="Create Course"
     />
   );
 };

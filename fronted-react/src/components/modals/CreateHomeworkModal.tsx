@@ -2,17 +2,20 @@ import React from "react";
 import CreateModalBase from "./ModalCreateBase";
 import { useCreateHomeworkForm, useAuth } from "../../features";
 import { useCreateHomework } from "../../api";
+import { Homework } from "../../types";
 
 interface HomeworkModalProps {
   isOpen: boolean;
   onClose: () => void;
   courseId: number | undefined;
+  onHomeworkCreate: (newHomework: Homework) => void;
 }
 
 const CreateHomeworkModal: React.FC<HomeworkModalProps> = ({
   isOpen,
   onClose,
   courseId,
+  onHomeworkCreate,
 }) => {
   const { getUserId } = useAuth();
 
@@ -23,7 +26,7 @@ const CreateHomeworkModal: React.FC<HomeworkModalProps> = ({
   const { fields, errors, isLoading, handleChange, handleSubmit } =
     useCreateHomeworkForm(async (fields) => {
       try {
-        const response = await createHomework({
+        const newHomework = await createHomework({
           title: fields.homeworkTitle,
           description: fields.description,
           dateTime: fields.dateTime,
@@ -31,7 +34,9 @@ const CreateHomeworkModal: React.FC<HomeworkModalProps> = ({
           courseId: courseId,
         });
 
-        console.log("Homework created successfully:", response);
+        onHomeworkCreate(newHomework);
+
+        console.log("Homework created successfully:", newHomework);
       } catch (error) {
         console.error("Error creating homework:", error);
       }
@@ -61,14 +66,14 @@ const CreateHomeworkModal: React.FC<HomeworkModalProps> = ({
           required: true,
         },
         {
-          label: "Start Date & Time",
+          label: "Deadline",
           name: "dateTime",
           type: "datetime-local",
           required: true,
           min: new Date().toISOString().slice(0, 16),
         },
       ]}
-      submitLabel="Додати завдання"
+      submitLabel="Create Homework"
     />
   );
 };
