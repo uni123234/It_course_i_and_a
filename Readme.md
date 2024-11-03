@@ -1,6 +1,4 @@
-Ось файл `README.md` на українській та англійській мовах, форматований для зручного копіювання:
 
-```markdown
 # IT Course Management System
 
 ## Опис проекту
@@ -125,14 +123,6 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 
 Внески вітаються! Якщо ви хочете покращити проект, будь ласка, відкрийте запит на злиття (pull request).
 
-## Ліцензія
-
-Цей проект ліцензований під [MIT License](LICENSE).
-```
-
----
-
-```markdown
 # IT Course Management System
 
 ## Project Description
@@ -252,16 +242,3 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 ```
 
 Make sure to replace `your_token`, `your_db_name`, `your_db_user`, `your_db_password`, `your_google_client_id`, and `your_google_client_secret` with your own values.
-
-## Contribution
-
-Contributions are welcome! If you want to improve the project, please open a pull request.
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-```
-
----
-
-Тепер у вас є двомовний файл `README.md`, який можна легко копіювати. Якщо потрібно внести ще якісь зміни, дайте знати!
