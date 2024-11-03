@@ -34,9 +34,8 @@ const CoursePage: React.FC = () => {
     const token = getAccessToken();
     const fetchData = async () => {
       if (!courseIdNumber) return;
-      // setLoading(true);
       setError(null);
-
+  
       try {
         const [courseData, homeworksData] = await Promise.all([
           fetchCourse(courseIdNumber, token),
@@ -46,17 +45,16 @@ const CoursePage: React.FC = () => {
         setHomeworks(homeworksData);
       } catch {
         setError("Не вдалося отримати дані. Спробуйте ще раз.");
-      } finally {
-        // setLoading(false);
       }
     };
-
+  
     if (error) {
-      console.log(error)
+      console.log(error);
     }
-
+  
     fetchData();
-  },);
+  }, [courseIdNumber, error, getAccessToken]);
+  
 
   // if (loading) return <p>Loading...</p>;
   // if (error) return <p>{error}</p>;

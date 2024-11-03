@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import ModalBase from "./ModalBase";
 import { getCalendar } from "../../api";
+import { useAuth } from "../../features";
 
 const daysOfWeek = [
   "Понеділок",
@@ -19,11 +20,24 @@ interface CalendarModalProps {
 }
 
 const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose }) => {
-  useEffect(() => {
-    const fetchCalendar = async () => {};
+  const [calendar, setCalendar] = useState<[]>([]);
 
-    fetchCalendar();
-  });
+  const { getAccessToken } = useAuth()
+  useEffect(() => {
+    const token = getAccessToken();
+    const fetchCourses = async () => {
+      try {
+        const data = await getCalendar(token);
+        setCalendar(data);
+        console.log('calendar aa  ', data)
+      } catch (err) {
+      } finally {
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
   const [currentMonth, setCurrentMonth] = useState(dayjs());
 
   const startDay = currentMonth.startOf("month").startOf("week");

@@ -57,11 +57,11 @@ const CreateModalBase: React.FC<GenericModalFormProps> = ({
           </div>
         ))}
 
-        <button
-          type="submit"
-          className="mt-4 w-full bg-purple-500 text-white py-2 rounded-lg hover:bg-purple-600 transition duration-200"
-          disabled={isLoading}
-        >
+<button
+            type="submit"
+            className="mt-6 w-full bg-purple-600 text-white font-medium py-2.5 rounded-lg hover:bg-purple-700 transition duration-200 focus:outline-none focus:ring-4 focus:ring-purple-300"
+            disabled={isLoading}
+          >
           {isLoading ? "Завантаження..." : submitLabel}
         </button>
       </form>
