@@ -15,6 +15,9 @@ from .views import (
     HomePageView,
     HomeworkListCreateView,
     HomeworkSubmissionView,
+    HomeworkDetailView,
+    HomeworkEditView,
+    HomeworkGradeView,
     LessonCalendarView,
     LessonCreateView,
     LoginView,
@@ -22,18 +25,23 @@ from .views import (
     RegisterView,
     PasswordResetConfirmView,
     ReminderView,
-    HomeworkDetailView,
     CourseListCreateView,
     GoogleLoginView,
     CourseDetailView,
     LessonEditView,
     LessonListView,
+    CustomTokenObtainPairView,
+    CustomTokenRefreshView,
+    ChangeRoleView,
+    TeacherHomeworkDetailView,
 )
 
 APP_NAME = "api"
 
 urlpatterns = [
     path("", HomePageView.as_view(), name="home"),
+    path("token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("token/refresh/", CustomTokenRefreshView.as_view(), name="token_refresh"),
     path("auth/google/", GoogleLoginView.as_view(), name="google-login"),
     path("login/", LoginView.as_view(), name="login"),
     path("register/", RegisterView.as_view(), name="register"),
@@ -53,6 +61,11 @@ urlpatterns = [
     path("reminders/", ReminderView.as_view(), name="reminders"),
     path("groups/<int:pk>", GroupCreateView.as_view(), name="group-list"),
     path("groups/create/", GroupCreateView.as_view(), name="group-create"),
+    path(
+        "groups/<int:group_id>/users/<int:user_id>/change-role/",
+        ChangeRoleView.as_view(),
+        name="change-role",
+    ),
     path("groups/<int:pk>/edit/", GroupEditView.as_view(), name="group-edit"),
     path("course/", CourseListCreateView.as_view(), name="course_list"),
     path("course/<int:pk>/", CourseDetailView.as_view(), name="course_detail"),
@@ -64,5 +77,18 @@ urlpatterns = [
     path("calendar/", LessonCalendarView.as_view(), name="lesson_calendar"),
     path("homework/", HomeworkListCreateView.as_view(), name="homework-list-create"),
     path("homework/<int:pk>/", HomeworkDetailView.as_view(), name="homework-detail"),
-    path("homework/submit/", HomeworkSubmissionView.as_view(), name="homework-submit"),
+    path("homework/<int:pk>/edit/", HomeworkEditView.as_view(), name="homework-edit"),
+    path(
+        "homework/<int:pk>/submit/",
+        HomeworkSubmissionView.as_view(),
+        name="homework-submit",
+    ),
+    path(
+        "homework/<int:pk>/grade/", HomeworkGradeView.as_view(), name="homework-grade"
+    ),
+    path(
+        "homework/<int:pk>/teacher/",
+        TeacherHomeworkDetailView.as_view(),
+        name="teacher-homework-detail",
+    ),
 ]

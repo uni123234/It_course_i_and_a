@@ -3,6 +3,7 @@ from .models import (
     Course,
     Group,
     Homework,
+    HomeworkSubmission,
     Lesson,
     User,
 )
@@ -18,17 +19,17 @@ class UserAdmin(BaseUserAdmin):
         "first_name",
         "last_name",
         "is_active",
-        "user_type",
+        "is_staff",
         "date_joined",
         "date_updated",
     )
     search_fields = ("email", "first_name", "last_name")
-    list_filter = ("is_active", "user_type", "date_joined")
+    list_filter = ("is_active", "is_staff", "date_joined")
     ordering = ("email",)
 
     fieldsets = (
         (None, {"fields": ("email", "password")}),
-        (_("Personal info"), {"fields": ("first_name", "last_name", "user_type")}),
+        (_("Personal info"), {"fields": ("first_name", "last_name")}),
         (
             _("Permissions"),
             {"fields": ("is_active", "is_staff", "is_superuser", "user_permissions")},
@@ -50,7 +51,6 @@ class UserAdmin(BaseUserAdmin):
                     "password2",
                     "is_active",
                     "is_staff",
-                    "user_type",
                 ),
             },
         ),
@@ -58,15 +58,14 @@ class UserAdmin(BaseUserAdmin):
 
     def get_queryset(self, request):
         """Override get_queryset to return the user list."""
-        return super().get_queryset(request).select_related("groups")
+        return super().get_queryset(request)
 
     def save_model(self, request, obj, form, change):
         """Override save_model to handle password encryption."""
         if not change:
             obj.set_password(form.cleaned_data["password1"])
-        else:
-            if form.cleaned_data["password1"]:
-                obj.set_password(form.cleaned_data["password1"])
+        elif form.cleaned_data["password1"]:
+            obj.set_password(form.cleaned_data["password1"])
         super().save_model(request, obj, form, change)
 
 
@@ -83,6 +82,7 @@ class HomeworkAdmin(admin.ModelAdmin):
 
     list_display = (
         "title",
+        "course",
         "due_date",
         "submitted_by",
         "submission_date",
@@ -104,21 +104,41 @@ class HomeworkAdmin(admin.ModelAdmin):
     is_late.short_description = "Late Submission"
 
 
-class CourseAdmin(admin.ModelAdmin):
-    list_display = ("title", "teacher")
-    search_fields = ("title", "teacher__email")
-    list_filter = ("teacher",)
+class HomeworkSubmissionAdmin(admin.ModelAdmin):
+    """Admin interface for the Homework Submission model."""
 
+    list_display = (
+        "homework",
+        "student",
+        "submission_date",
+        "grade",
+    )
+    search_fields = ("homework__title", "student__email")
+    list_filter = ("submission_date", "grade")
+
+
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ("title", "teacher", "state")
+    search_fields = ("title", "teacher__email")
+    list_filter = ("teacher", "state")
 
 
 class GroupAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "teacher")
-    search_fields = ("name", "teacher__email")
-    list_filter = ("teacher",)
+    list_display = ("id", "name", "get_teacher")
+    search_fields = ("name", "memberships__user__email")
+    list_filter = ("groupmembership__role",)
+
+    def get_teacher(self, obj):
+        """Return the teacher of the group."""
+        teacher = obj.memberships.filter(groupmembership__role="teacher").first()
+        return teacher.user if teacher else None
+
+    get_teacher.short_description = "Teacher"
 
 
 admin.site.register(Group, GroupAdmin)
 admin.site.register(Homework, HomeworkAdmin)
+admin.site.register(HomeworkSubmission, HomeworkSubmissionAdmin)
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Lesson, LessonAdmin)
 admin.site.register(User, UserAdmin)

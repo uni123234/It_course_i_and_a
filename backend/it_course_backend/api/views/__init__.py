@@ -15,6 +15,9 @@ from .learns import (
     ReminderView,
     LessonListView,
     LessonEditView,
+    ChangeRoleView,
+    HomeworkGradeView,
+    TeacherHomeworkDetailView,
 )
 
 from .user import (
@@ -27,4 +30,6 @@ from .user import (
     PasswordResetRequestView,
     PasswordResetConfirmView,
     GoogleLoginView,
+    CustomTokenRefreshView,
+    CustomTokenObtainPairView,
 )

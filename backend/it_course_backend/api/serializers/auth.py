@@ -21,39 +21,56 @@ logger = logging.getLogger("api")
 
 class UserSerializer(serializers.ModelSerializer):
     """
-    Serializer for the User model.
+    Serializer for user details.
+
+    Fields:
+        - id: Unique identifier of the user.
+        - email: User's email address.
+        - first_name: User's first name.
+        - last_name: User's last name.
+
+    Notes for Frontend:
+        - Use this serializer for viewing basic user information.
     """
 
     class Meta:
         model = User
-        fields = ("id", "email", "first_name", "last_name", "user_type")
+        fields = ("id", "email", "first_name", "last_name")
 
 
 class RegisterSerializer(serializers.ModelSerializer):
     """
-    Serializer for registering a new user with validation for user types.
+    Serializer for user registration.
+
+    Fields:
+        - email: User's email address.
+        - password: User's password (write-only).
+        - first_name: User's first name.
+        - last_name: User's last name.
+
+    Notes for Frontend:
+        - Ensure email uniqueness during registration.
+        - Password must be provided.
     """
 
     password = serializers.CharField(write_only=True)
-    USER_TYPE_CHOICES = ["teacher", "student"]
 
     class Meta:
         model = User
-        fields = ("email", "password", "first_name", "last_name", "user_type")
-
-    def validate_user_type(self, value):
-        """
-        Validate that the user_type is either 'teacher' or 'student'.
-        """
-        if value not in self.USER_TYPE_CHOICES:
-            raise serializers.ValidationError(
-                f"User type must be one of: {', '.join(self.USER_TYPE_CHOICES)}."
-            )
-        return value
+        fields = ("email", "password", "first_name", "last_name")
 
     def create(self, validated_data):
         """
-        Create a new user instance.
+        Create a new user account.
+
+        Args:
+            validated_data: The validated registration data.
+
+        Returns:
+            Newly created user instance.
+
+        Raises:
+            ValidationError: If a user with the same email already exists.
         """
         if User.objects.filter(email=validated_data["email"]).exists():
             raise ValidationError("A user with this email already exists.")
@@ -62,7 +79,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             email=validated_data["email"],
             first_name=validated_data["first_name"],
             last_name=validated_data["last_name"],
-            user_type=validated_data["user_type"],
         )
         user.set_password(validated_data["password"])
         user.save()
@@ -72,6 +88,13 @@ class RegisterSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     """
     Serializer for user login.
+
+    Fields:
+        - email: User's email address.
+        - password: User's password (write-only).
+
+    Notes for Frontend:
+        - Validate credentials and return user details on success.
     """
 
     email = serializers.EmailField()
@@ -79,7 +102,16 @@ class LoginSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         """
-        Validate the user's email and password.
+        Validate the email and password combination.
+
+        Args:
+            attrs: Dictionary containing email and password.
+
+        Returns:
+            Validated data with the user instance.
+
+        Raises:
+            ValidationError: If the credentials are invalid.
         """
         email = attrs.get("email")
         password = attrs.get("password")
@@ -93,9 +125,16 @@ class LoginSerializer(serializers.Serializer):
         return attrs
 
 
-class ChangePasswordSerializer(serializers.ModelSerializer):
+class ChangePasswordSerializer(serializers.Serializer):
     """
-    Serializer for changing user password.
+    Serializer for changing user passwords.
+
+    Fields:
+        - old_password: User's current password.
+        - new_password: New password to be set.
+
+    Notes for Frontend:
+        - Validate the old password before setting a new one.
     """
 
     old_password = serializers.CharField(required=True)
@@ -104,6 +143,15 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
     def validate_old_password(self, value):
         """
         Validate the old password.
+
+        Args:
+            value: Old password provided by the user.
+
+        Returns:
+            The old password if valid.
+
+        Raises:
+            ValidationError: If the old password is incorrect.
         """
         user = self.context["request"].user
         if not user.check_password(value):
@@ -113,22 +161,58 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
     def validate_new_password(self, value):
         """
         Validate the new password.
+
+        Args:
+            value: New password provided by the user.
+
+        Returns:
+            The new password if it meets requirements.
+
+        Raises:
+            ValidationError: If the new password is too short.
         """
         if len(value) < 8:
             raise ValidationError("New password must be at least 8 characters long.")
         return value
 
+    def save(self, **kwargs):
+        """
+        Save the new password for the user.
 
-class ChangeEmailSerializer(serializers.ModelSerializer):
+        Returns:
+            Updated user instance.
+        """
+        user = self.context["request"].user
+        user.set_password(self.validated_data["new_password"])
+        user.save()
+        return user
+
+
+class ChangeEmailSerializer(serializers.Serializer):
     """
-    Serializer for changing user email.
+    Serializer for changing user email addresses.
+
+    Fields:
+        - email: New email address to be set.
+
+    Notes for Frontend:
+        - A confirmation email is sent after updating the email address.
     """
 
     email = serializers.EmailField(required=True)
 
     def validate_email(self, value):
         """
-        Validate that the new email is not already in use by another user.
+        Validate that the email is unique and not already in use.
+
+        Args:
+            value: New email address provided by the user.
+
+        Returns:
+            The email address if valid.
+
+        Raises:
+            ValidationError: If the email is already in use.
         """
         user = self.context["request"].user
         if User.objects.filter(email=value).exists() and user.email != value:
@@ -149,7 +233,13 @@ class ChangeEmailSerializer(serializers.ModelSerializer):
 
 class PasswordResetRequestSerializer(serializers.Serializer):
     """
-    Serializer for handling password reset requests.
+    Serializer for password reset requests.
+
+    Fields:
+        - email: Email address of the user requesting the reset.
+
+    Notes for Frontend:
+        - Ensure the email exists in the system before initiating a reset.
     """
 
     email = serializers.EmailField()
@@ -157,6 +247,15 @@ class PasswordResetRequestSerializer(serializers.Serializer):
     def validate_email(self, value):
         """
         Validate that the email exists in the system.
+
+        Args:
+            value: Email address provided by the user.
+
+        Returns:
+            The email address if valid.
+
+        Raises:
+            ValidationError: If no user is associated with the email.
         """
         if not User.objects.filter(email=value).exists():
             raise serializers.ValidationError(_("No user with this email found."))
@@ -164,7 +263,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
     def send_reset_email(self):
         """
-        Send the password reset email after validation.
+        Send a password reset email to the user.
         """
         email = self.validated_data["email"]
         user = User.objects.get(email=email)
@@ -176,7 +275,15 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     """
-    Serializer for confirming the password reset.
+    Serializer for confirming a password reset.
+
+    Fields:
+        - new_password: New password to be set.
+        - token: Token provided in the reset email.
+        - uid: User ID encoded in base64.
+
+    Notes for Frontend:
+        - Ensure the token and UID are valid before setting the new password.
     """
 
     new_password = serializers.CharField(min_length=8)
@@ -186,6 +293,12 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     def validate(self, attrs):
         """
         Validate the UID and token.
+
+        Returns:
+            Validated data if the token and UID are valid.
+
+        Raises:
+            ValidationError: If the token or UID is invalid.
         """
         user_model = get_user_model()
         try:
@@ -204,7 +317,13 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
 class GoogleLoginSerializer(serializers.Serializer):
     """
-    Serializer for Google login.
+    Serializer for handling Google login.
+
+    Fields:
+        - access_token: Token retrieved from Google after authentication.
+
+    Notes for Frontend:
+        - Validate the token with Google's API to retrieve user data.
     """
 
     access_token = serializers.CharField(required=True)
@@ -212,6 +331,12 @@ class GoogleLoginSerializer(serializers.Serializer):
     def validate_access_token(self, value):
         """
         Validate the access token and retrieve or create the user.
+
+        Returns:
+            User instance associated with the token.
+
+        Raises:
+            ValidationError: If the token is invalid.
         """
         user_data = self.verify_google_token(value)
         user = self.get_or_create_user(user_data)
@@ -221,6 +346,15 @@ class GoogleLoginSerializer(serializers.Serializer):
     def verify_google_token(self, access_token):
         """
         Verify the Google access token.
+
+        Args:
+            access_token: Token provided by Google.
+
+        Returns:
+            User data retrieved from Google's API.
+
+        Raises:
+            ValidationError: If the token is invalid.
         """
         url = (
             f"https://www.googleapis.com/oauth2/v3/userinfo?access_token={access_token}"
@@ -240,14 +374,19 @@ class GoogleLoginSerializer(serializers.Serializer):
 
     def get_or_create_user(self, user_data):
         """
-        Get or create a user based on the provided user data.
+        Get or create a user based on the Google user data.
+
+        Args:
+            user_data: User information retrieved from Google.
+
+        Returns:
+            User instance.
         """
         user, created = User.objects.get_or_create(
             email=user_data["email"],
             defaults={
                 "first_name": user_data["name"].split()[0],
                 "last_name": " ".join(user_data["name"].split()[1:]),
-                "user_type": "student",
             },
         )
         return user

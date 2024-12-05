@@ -1,25 +1,112 @@
 import logging
-from django.contrib.auth import get_user_model
-from django.utils.http import urlsafe_base64_decode
-from rest_framework.response import Response
-from django.contrib.auth.tokens import default_token_generator
+import os
+
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from django.http import HttpResponse
+from django.utils.http import urlsafe_base64_decode
+
 from rest_framework import generics, permissions, status
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.generics import UpdateAPIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
 from ..serializers import (
     ChangeEmailSerializer,
     ChangePasswordSerializer,
-    PasswordResetRequestSerializer,
-    PasswordResetConfirmSerializer,
-    RegisterSerializer,
-    LoginSerializer,
     GoogleLoginSerializer,
+    LoginSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
+    RegisterSerializer,
 )
+
 
 logger = logging.getLogger("api")
 User = get_user_model()
+
+
+def set_cookie(response: HttpResponse, key: str, value: str, max_age: int):
+    """
+    Set a cookie with the given key, value, and max_age.
+
+    Args:
+        response (HttpResponse): The HTTP response to set the cookie on.
+        key (str): The name of the cookie.
+        value (str): The value of the cookie.
+        max_age (int): The max age of the cookie in seconds.
+    """
+    response.set_cookie(
+        key,
+        value,
+        max_age=max_age,
+        secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
+        httponly=True,
+        samesite="Lax",
+    )
+
+
+def delete_cookie(response: HttpResponse, key: str):
+    """
+    Delete a cookie with the given key.
+
+    Args:
+        response (HttpResponse): The HTTP response to delete the cookie from.
+        key (str): The name of the cookie to delete.
+    """
+    response.delete_cookie(key, path="/", domain=None)
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    """
+    Custom view for obtaining JWT token pairs.
+    """
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests to obtain JWT token pairs and set them as cookies.
+
+        Args:
+            request (HttpRequest): The HTTP request.
+
+        Returns:
+            HttpResponse: The HTTP response with JWT tokens set as cookies.
+        """
+        response = super().post(request, *args, **kwargs)
+        tokens = response.data
+        access_token = tokens.get("access")
+        refresh_token = tokens.get("refresh")
+
+        set_cookie(response, "accessToken", access_token, 60 * 60)
+        set_cookie(response, "refreshToken", refresh_token, 24 * 60 * 60)
+
+        return response
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    """
+    Custom view for refreshing JWT access tokens.
+    """
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests to refresh JWT access tokens and update the cookie.
+
+        Args:
+            request (HttpRequest): The HTTP request.
+
+        Returns:
+            HttpResponse: The HTTP response with the new access token set as a cookie.
+        """
+        response = super().post(request, *args, **kwargs)
+        new_access_token = response.data.get("access")
+
+        set_cookie(response, "accessToken", new_access_token, 60 * 60)
+
+        return response
 
 
 class RegisterView(generics.CreateAPIView):
@@ -54,6 +141,7 @@ class LoginView(generics.GenericAPIView):
     """
     API View for user login.
     """
+
     serializer_class = LoginSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -76,25 +164,12 @@ class LoginView(generics.GenericAPIView):
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-                "user_type": user.user_type,
             },
         }
 
         response = Response(response_data, status=status.HTTP_200_OK)
-        response.set_cookie(
-            key="accessToken",
-            value=str(refresh.access_token),
-            httponly=True,
-            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-            samesite="Lax",
-        )
-        response.set_cookie(
-            key="refreshToken",
-            value=str(refresh),
-            httponly=True,
-            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-            samesite="Lax",
-        )
+        set_cookie(response, "accessToken", str(refresh.access_token), 60 * 60)
+        set_cookie(response, "refreshToken", str(refresh), 24 * 60 * 60)
 
         return response
 
@@ -116,7 +191,13 @@ class LogoutView(generics.GenericAPIView):
                 token = RefreshToken(refresh_token)
                 token.blacklist()
                 logger.info("User logged out: %s", request.user.email)
-                return Response({"detail": "Logout successful"})
+
+                response = Response(
+                    {"detail": "Logout successful"}, status=status.HTTP_200_OK
+                )
+                delete_cookie(response, "accessToken")
+                delete_cookie(response, "refreshToken")
+                return response
 
             return Response(
                 {"detail": "No refresh token provided"},
@@ -160,10 +241,14 @@ class ChangePasswordView(UpdateAPIView):
             logger.info(
                 "User %s successfully changed their password.", request.user.email
             )
-            return Response(
+
+            response = Response(
                 {"message": "Password has been successfully changed."},
                 status=status.HTTP_200_OK,
             )
+            delete_cookie(response, "accessToken")
+            delete_cookie(response, "refreshToken")
+            return response
 
         logger.warning(
             "User %s failed to change password: %s",
@@ -204,12 +289,15 @@ class ChangeEmailView(UpdateAPIView):
             serializer.save()
 
             logger.info("Email confirmation link sent to %s.", new_email)
-            return Response(
+            response = Response(
                 {
                     "message": "Email has been successfully changed. Please confirm it via the link sent to the new address."
                 },
                 status=status.HTTP_200_OK,
             )
+            delete_cookie(response, "accessToken")
+            delete_cookie(response, "refreshToken")
+            return response
 
         logger.warning(
             "User %s failed to change email: %s",
@@ -304,10 +392,13 @@ class PasswordResetConfirmView(generics.GenericAPIView):
                     logger.info(
                         "User %s successfully reset their password.", user.email
                     )
-                    return Response(
+                    response = Response(
                         {"message": "Password has been reset successfully."},
                         status=status.HTTP_200_OK,
                     )
+                    delete_cookie(response, "accessToken")
+                    delete_cookie(response, "refreshToken")
+                    return response
 
                 logger.warning(
                     "Invalid token for user %s during password reset.", user.email
@@ -332,6 +423,7 @@ class GoogleLoginView(generics.GenericAPIView):
     """
     API View for Google login.
     """
+
     serializer_class = GoogleLoginSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -345,33 +437,22 @@ class GoogleLoginView(generics.GenericAPIView):
 
         refresh = RefreshToken.for_user(user)
 
-        response_data = {
-            "message": "Login successful",
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "user_type": user.user_type,
+        response = Response(
+            {
+                "message": "Login successful",
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                },
             },
-        }
+            status=status.HTTP_200_OK,
+        )
 
-        response = Response(response_data, status=status.HTTP_200_OK)
-        response.set_cookie(
-            key="accessToken",
-            value=str(refresh.access_token),
-            httponly=True,
-            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-            samesite="Lax",
-        )
-        response.set_cookie(
-            key="refreshToken",
-            value=str(refresh),
-            httponly=True,
-            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-            samesite="Lax",
-        )
+        set_cookie(response, "accessToken", str(refresh.access_token), 60 * 60)
+        set_cookie(response, "refreshToken", str(refresh), 24 * 60 * 60)
 
         return response

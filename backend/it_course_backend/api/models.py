@@ -6,6 +6,7 @@ from django.contrib.auth.models import (
 )
 from django.utils import timezone
 from django.core.validators import EmailValidator
+from django.utils.crypto import get_random_string
 from django.conf import settings
 
 
@@ -38,17 +39,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     Custom user model where email is the unique identifier.
     """
 
-    USER_TYPE_CHOICES = (
-        ("student", "Student"),
-        ("teacher", "Teacher"),
-    )
-
     email = models.EmailField(unique=True, validators=[EmailValidator()])
-    user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES)
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     is_active = models.BooleanField(default=True)
-    is_teacher = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     last_login = models.DateTimeField(null=True, blank=True)
     date_joined = models.DateTimeField(auto_now_add=True)
@@ -57,7 +51,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "last_name", "user_type"]
+    REQUIRED_FIELDS = ["first_name", "last_name"]
 
     def __str__(self):
         return self.email
@@ -122,6 +116,9 @@ class Course(ActiveModel):
         ("completed", "Completed"),
     )
     groups = models.ManyToManyField("Group", related_name="courses")
+    enrollment_code = models.CharField(
+        max_length=10, unique=True, default=get_random_string(10)
+    )
     lessons = models.ManyToManyField("Lesson", related_name="courses_in_lesson")
     start_date = models.DateField(default=timezone.now)
     title = models.CharField(max_length=255, verbose_name="Title")
@@ -169,6 +166,11 @@ class Course(ActiveModel):
 
         return progress_data
 
+    def save(self, *args, **kwargs):
+        if not self.enrollment_code:
+            self.enrollment_code = get_random_string(10)
+        super().save(*args, **kwargs)
+
 
 class Lesson(ActiveModel):
     """
@@ -189,6 +191,18 @@ class Lesson(ActiveModel):
 
     def __str__(self):
         return f"{self.title} ({self.course.title if self.course else 'No Course'})"
+
+    def get_user_role(self, user):
+        """
+        Determine the role of the user (teacher or student) for this lesson.
+        """
+        if self.course.teacher == user:
+            return "teacher"
+        elif self.course.groups.filter(
+            memberships__user=user, memberships__role="student"
+        ).exists():
+            return "student"
+        return "none"
 
 
 class Homework(ActiveModel):
@@ -228,6 +242,49 @@ class Homework(ActiveModel):
         ordering = ["due_date"]
 
 
+class HomeworkSubmission(ActiveModel):
+    """
+    Model representing a student's submission for a homework assignment.
+    """
+
+    homework = models.ForeignKey(Homework, on_delete=models.CASCADE)
+    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    submission_text = models.TextField()
+    submission_file = models.FileField(
+        upload_to="homework_submissions/", blank=True, null=True
+    )
+    submission_image = models.ImageField(
+        upload_to="homework_images/", blank=True, null=True
+    )
+    submission_date = models.DateTimeField(auto_now_add=True)
+    grade = models.IntegerField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Submission by {self.student} for {self.homework.title}"
+
+
+class GroupMembership(ActiveModel):
+    """
+    Intermediate model representing the membership of a user in a group.
+    """
+
+    ROLE_CHOICES = (
+        ("student", "Student"),
+        ("teacher", "Teacher"),
+        ("assistant", "Assistant"),
+    )
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    group = models.ForeignKey("Group", on_delete=models.CASCADE)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="student")
+
+    class Meta:
+        unique_together = ("user", "group")
+
+    def __str__(self):
+        return f"{self.user} - {self.group} ({self.role})"
+
+
 class Group(ActiveModel):
     """
     Model representing a student group.
@@ -241,18 +298,8 @@ class Group(ActiveModel):
         blank=True,
         related_name="student_groups",
     )
-    teacher = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="teacher_groups",
-        limit_choices_to={"user_type": "teacher"},
-        verbose_name="Teacher",
-    )
-    students = models.ManyToManyField(
-        User,
-        related_name="student_groups",
-        limit_choices_to={"user_type": "student"},
-        verbose_name="Students",
+    memberships = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, through=GroupMembership
     )
 
     def __str__(self):
@@ -261,12 +308,12 @@ class Group(ActiveModel):
     @property
     def student_count(self):
         """Return the number of students in the group."""
-        return self.students.count()
+        return self.memberships.filter(groupmembership__role="student").count()
 
     @property
     def has_teacher(self):
         """Check if the group has an assigned teacher."""
-        return self.teacher is not None
+        return self.memberships.filter(groupmembership__role="teacher").exists()
 
     @property
     def is_completed(self):

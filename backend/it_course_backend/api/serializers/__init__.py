@@ -4,6 +4,7 @@ from .learns import (
     TeacherCourseSerializer,
     LessonSerializer,
     LessonCalendarSerializer,
+    MembershipRoleSerializer,
 )
 
 from .user import (
